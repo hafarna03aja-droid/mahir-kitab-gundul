@@ -1,0 +1,45 @@
+{
+  "name": "mahir-arab-gundul",
+  "private": false,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Platform pembelajaran Bahasa Arab berbasis AI dengan fitur analisis gramatikal, kitab digital, dan tutor audio interaktif",
+  "author": "24 Learning Centre",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/mahir-arab-gundul.git"
+  },
+  "keywords": [
+    "arabic",
+    "learning",
+    "education",
+    "ai",
+    "grammar",
+    "nahwu",
+    "sharaf",
+    "kitab"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "deploy:check": "powershell -ExecutionPolicy Bypass -File ./deploy-check.ps1"
+  },
+  "dependencies": {
+    "@google/genai": "^1.29.1",
+    "lucide-react": "^0.263.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.1"
+  }
+}
