@@ -274,56 +274,55 @@ Sapa pengguna dengan format:
             return;
         }
 
-        // Extract Arabic text only (between [ARAB] and [INDO])
-        const arabicMatch = text.match(/\[ARAB\]\s*(.+?)(?:\s*\[INDO\]|$)/s);
-        const arabicText = arabicMatch ? arabicMatch[1].trim() : text;
+        // Extract Indonesian text only (after [INDO] tag)
+        const indonesianMatch = text.match(/\[INDO\]\s*(.+?)$/s);
+        const indonesianText = indonesianMatch ? indonesianMatch[1].trim() : text;
 
-        console.log('📢 Speaking Arabic:', arabicText);
+        console.log('📢 Speaking Indonesian tutor:', indonesianText);
 
         setIsSpeaking(true);
-        setStatusMessage('🔊 Ustadz Cerdas sedang berbicara dalam Bahasa Arab...');
+        setStatusMessage('🔊 Ustadz Cerdas sedang menjelaskan dalam Bahasa Indonesia...');
 
-        const utterance = new SpeechSynthesisUtterance(arabicText);
-        utterance.lang = 'ar-SA'; // Arab Saudi
-        utterance.rate = 0.85; // Sedikit lebih lambat untuk kejelasan
+        const utterance = new SpeechSynthesisUtterance(indonesianText);
+        utterance.lang = 'id-ID'; // Bahasa Indonesia
+        utterance.rate = 0.9; // Natural speaking rate
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
 
-        // Load voices and select best Arabic voice
+        // Load voices and select best Indonesian voice
         const loadVoicesAndSpeak = () => {
             const voices = synthRef.current!.getVoices();
             console.log('🎤 Available voices:', voices.length);
             
-            // Priority order for Arabic Saudi voices
-            let arabicVoice = 
-                // 1. Saudi Arabic voices
-                voices.find(v => v.lang === 'ar-SA') ||
-                voices.find(v => v.name.includes('Saudi')) ||
-                voices.find(v => v.name.includes('Majed')) ||
-                voices.find(v => v.name.includes('Maged')) ||
-                // 2. Any Arabic voice
-                voices.find(v => v.lang.startsWith('ar-')) ||
-                voices.find(v => v.name.includes('Arabic')) ||
-                voices.find(v => v.name.includes('عربي')) ||
-                // 3. Generic Arabic
-                voices.find(v => v.lang === 'ar');
+            // Priority order for Indonesian voices
+            let indonesianVoice = 
+                // 1. Indonesian voices (id-ID)
+                voices.find(v => v.lang === 'id-ID') ||
+                voices.find(v => v.name.includes('Indonesian')) ||
+                voices.find(v => v.name.includes('Indonesia')) ||
+                voices.find(v => v.name.includes('Damayanti')) ||
+                // 2. Any Indonesian variant
+                voices.find(v => v.lang.startsWith('id-')) ||
+                // 3. Malay as fallback (similar language)
+                voices.find(v => v.lang === 'ms-MY') ||
+                voices.find(v => v.name.includes('Malay'));
             
-            if (arabicVoice) {
-                utterance.voice = arabicVoice;
-                console.log('✅ Using voice:', arabicVoice.name, '(' + arabicVoice.lang + ')');
+            if (indonesianVoice) {
+                utterance.voice = indonesianVoice;
+                console.log('✅ Using Indonesian voice:', indonesianVoice.name, '(' + indonesianVoice.lang + ')');
             } else {
-                console.warn('⚠️ No Arabic voice found, using default');
+                console.warn('⚠️ No Indonesian voice found, using default (voice may sound unnatural)');
             }
 
             utterance.onstart = () => {
-                console.log('🔊 Started speaking Arabic');
+                console.log('🔊 Started speaking Indonesian explanation');
             };
 
             utterance.onend = () => {
-                console.log('✅ Finished speaking');
+                console.log('✅ Finished speaking Indonesian');
                 setIsSpeaking(false);
                 setIsProcessing(false);
-                setStatusMessage('✅ Giliran Anda! Klik mikrofon untuk berbicara.');
+                setStatusMessage('✅ Giliran Anda! Klik mikrofon untuk berbicara dalam Bahasa Arab.');
             };
 
             utterance.onerror = (event) => {
