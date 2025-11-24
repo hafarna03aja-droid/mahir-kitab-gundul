@@ -1,6 +1,10 @@
-// File ini berisi integrasi dengan Google Gemini API
-// Untuk menggunakan API, Anda perlu mendapatkan API key dari Google AI Studio
-
+// File ini menggunakan Google Generative AI SDK resmi untuk stabilitas lebih baik
+import {
+    GoogleGenerativeAI,
+    HarmCategory,
+    HarmBlockThreshold,
+    GenerativeModel
+} from "@google/generative-ai";
 import type { AnalysisResult } from '../types';
 
 const ENV_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
@@ -13,84 +17,69 @@ export const getApiKey = (): string => {
 };
 
 /**
- * Memanggil Google Gemini menggunakan endpoint REST.
- * @param prompt Prompt yang akan dikirim ke model.
- * @returns Teks respons dari Gemini.
+ * Inisialisasi Model Gemini dengan konfigurasi "Anti Gagal".
+ * Menggunakan gemini-1.5-flash yang lebih cepat dan mendukung JSON Mode native.
  */
-async function callGeminiAPI(prompt: string): Promise<string> {
+const getGeminiModel = (jsonMode: boolean = false): GenerativeModel => {
     const API_KEY = getApiKey();
 
     if (!API_KEY) {
-        throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di menu Pengaturan (ikon gerigi di pojok kanan atas) atau tambahkan VITE_GEMINI_API_KEY ke file .env Anda.');
+        throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di pengaturan.');
     }
 
-    console.log('🔄 Mengirim request ke Google Gemini API (v1beta) dengan model gemini-1.5-flash...');
-    console.log('🔑 API Key:', API_KEY.substring(0, 10) + '...');
+    const genAI = new GoogleGenerativeAI(API_KEY);
 
+    return genAI.getGenerativeModel({
+        model: "gemini-1.5-flash", // LEBIH CEPAT & STABIL DIBANDING GEMINI-PRO
+        generationConfig: {
+            // Jika jsonMode true, paksa output jadi JSON valid
+            responseMimeType: jsonMode ? "application/json" : "text/plain",
+            temperature: 0.3, // Rendah agar analisis konsisten/tidak halu
+        },
+        // PENTING: Matikan safety filter agar teks Arab/Agama tidak dianggap berbahaya
+        safetySettings: [
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ]
+    });
+};
+
+/**
+ * Wrapper umum untuk memanggil Gemini
+ */
+async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise<string> {
     try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                }),
-            }
-        );
+        const model = getGeminiModel(jsonMode);
+        console.log('🔄 Mengirim request ke Gemini 1.5 Flash...');
 
-        if (!response.ok) {
-            let errorMsg = `HTTP ${response.status}`;
-            try {
-                const errorData = await response.json();
-                errorMsg = errorData.error?.message || JSON.stringify(errorData);
-            } catch {
-                errorMsg = await response.text();
-            }
-            throw new Error(errorMsg);
-        }
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) {
-            throw new Error('Response format unexpected or empty');
-        }
+        if (!text) throw new Error("Response kosong dari Gemini.");
 
-        console.log('✅ Berhasil mendapat response dari Google Gemini API!');
-        console.log('📝 Response length:', text.length);
+        console.log('✅ Berhasil!');
         return text;
-    } catch (error) {
-        console.error('❌ Error calling Google Gemini API:', error);
-        if (error instanceof Error) {
-            const msg = error.message.toLowerCase();
-            let errorMessage = `Gagal menghubungi Google Gemini API\n\n`;
+    } catch (error: any) {
+        console.error('❌ Error calling Gemini SDK:', error);
 
-            if (msg.includes('api key') || msg.includes('400') || msg.includes('invalid_argument')) {
-                errorMessage += `⚠️ API Key tidak valid. Mohon periksa kembali API Key Anda.\n`;
-            } else if (msg.includes('404') || msg.includes('not found')) {
-                errorMessage += `⚠️ Model tidak ditemukan atau endpoint salah.\n`;
-            } else if (msg.includes('429') || msg.includes('quota') || msg.includes('resource_exhausted')) {
-                errorMessage += `⚠️ Quota API habis atau Rate Limit tercapai.\n`;
-            }
+        // Handle error spesifik Google
+        let errorMsg = error.message || "Terjadi kesalahan tidak dikenal";
+        if (errorMsg.includes("API key not valid")) errorMsg = "API Key tidak valid. Cek kembali di Google AI Studio.";
+        if (errorMsg.includes("429")) errorMsg = "Quota terlampaui (Rate Limit). Tunggu sebentar.";
 
-            errorMessage += `Error detail: ${error.message}\n\n`;
-            errorMessage += `Periksa:\n`;
-            errorMessage += `• API key valid (${API_KEY.substring(0, 10)}...)\n`;
-            errorMessage += `• Quota API masih tersedia\n`;
-            errorMessage += `• Koneksi internet stabil\n`;
-            errorMessage += `• Dapatkan API key di https://aistudio.google.com/app/apikey`;
-            throw new Error(errorMessage);
-        }
-        throw new Error('Terjadi kesalahan yang tidak diketahui saat memanggil API');
+        throw new Error(`Gagal: ${errorMsg}`);
     }
 }
 
 /**
- * API untuk asisten AI.
+ * API untuk asisten AI (Chat Mode).
  */
 export async function askAiAssistant(userMessage: string): Promise<string> {
-    const prompt = `Kamu adalah asisten pembelajaran Bahasa Arab yang ahli dalam Nahwu (tata bahasa), Sharaf (morfologi), dan Balaghah (retorika). Jawab pertanyaan berikut dengan jelas dan informatif:\n\n${userMessage}`;
-    return await callGeminiAPI(prompt);
+    const prompt = `Kamu adalah asisten pakar Bahasa Arab (Nahwu, Sharaf, Balaghah). Jawablah pertanyaan ini dengan ringkas, jelas, dan menggunakan referensi kaidah bahasa yang benar:\n\nPertanyaan: "${userMessage}"`;
+    return await callGeminiSDK(prompt, false);
 }
 
 /**
@@ -98,47 +87,70 @@ export async function askAiAssistant(userMessage: string): Promise<string> {
  */
 async function getFallbackTranslation(arabicText: string): Promise<string> {
     try {
-        const simplePrompt = `Terjemahkan teks Arab berikut ke Bahasa Indonesia secara literal dan akurat:\n\n\"${arabicText}\"\n\nBerikan hanya terjemahan tanpa penjelasan tambahan.`;
-        const translation = await callGeminiAPI(simplePrompt);
-        return translation.trim();
+        const prompt = `Terjemahkan ke Bahasa Indonesia: "${arabicText}"`;
+        return await callGeminiSDK(prompt, false);
     } catch (err) {
-        console.warn('Fallback translation gagal:', err);
-        return `[Terjemahan tidak tersedia untuk: ${arabicText}]`;
+        return `[Terjemahan gagal: ${arabicText}]`;
     }
 }
 
 /**
- * Analisis teks Arab dengan output JSON terstruktur.
+ * Analisis teks Arab dengan JSON Mode (ANTI GAGAL PARSING).
  */
 export async function analyzeArabicText(arabicText: string): Promise<AnalysisResult> {
-    const prompt = `Kamu adalah ahli bahasa Arab yang sangat mahir dalam analisis gramatikal (I'rab), morfologi (Sharaf), dan retorika (Balaghah).\n\nAnalisis teks Arab berikut secara mendalam:\n\"${arabicText}\"\n\nBerikan hasil dalam format JSON yang VALID dengan struktur berikut:\n{\n  \"originalText\": \"${arabicText}\",\n  \"vocalizedText\": \"teks dengan harakat lengkap\",\n  \"translation\": \"terjemahan bahasa Indonesia yang akurat dan lengkap\",\n  \"irab\": [\n    {\n      \"word\": \"kata dalam Arab (tanpa harakat/gundul)\",\n      \"vocalized_word\": \"kata yang sama dengan harakat lengkap\",\n      \"word_translation\": \"terjemahan kata ini dalam bahasa Indonesia\",\n      \"analysis_details\": {\n        \"i_rab\": \"analisis I'rab lengkap dalam istilah Arab\",\n        \"i_rab_translation\": \"terjemahan penjelasan i_rab ke bahasa Indonesia\",\n        \"sharaf\": \"analisis morfologi lengkap dalam istilah Arab\",\n        \"sharaf_translation\": \"terjemahan penjelasan sharaf ke bahasa Indonesia\",\n        \"root_word\": \"akar kata (3 huruf)\",\n        \"balaghah\": \"analisis retorika jika ada (opsional)\"\n      }\n    }\n  ]\n}\n\nPENTING:\n- Pastikan JSON valid dan dapat diparse\n- Sertakan harakat lengkap pada vocalizedText\n- Sertakan vocalized_word untuk setiap entry di irab\n- Sertakan terjemahan bahasa Indonesia yang jelas untuk seluruh kalimat\n- Sertakan word_translation, i_rab_translation, dan sharaf_translation\n- Analisis I'rab dan Sharaf harus detail dan akurat dalam bahasa Arab\n- Jangan menambahkan penjelasan di luar JSON\n- HANYA return JSON, tanpa markdown code block atau teks tambahan`;
+    // Prompt disederhanakan karena kita menggunakan JSON Mode di config model
+    const prompt = `
+    Analisis teks Arab berikut: "${arabicText}"
+    
+    Tugas:
+    1. Berikan harakat lengkap (vocalizedText).
+    2. Terjemahkan ke Indonesia.
+    3. Pecah per kata (irab) dan analisis Nahwu (I'rab) serta Sharaf (Morfologi).
+    
+    Output WAJIB mengikuti struktur JSON ini:
+    {
+        "originalText": "string",
+        "vocalizedText": "string",
+        "translation": "string",
+        "irab": [
+            {
+                "word": "string (kata gundul)",
+                "vocalized_word": "string (kata berharakat)",
+                "word_translation": "string",
+                "analysis_details": {
+                    "i_rab": "string (analisis kedudukan kata/nahwu)",
+                    "i_rab_translation": "string (penjelasan irab bahasa indonesia)",
+                    "sharaf": "string (wazan/bentuk kata)",
+                    "sharaf_translation": "string (penjelasan sharaf bahasa indonesia)",
+                    "root_word": "string (akar kata)",
+                    "balaghah": "string (opsional)"
+                }
+            }
+        ]
+    }
+    `;
 
-    const responseText = await callGeminiAPI(prompt);
-    let cleaned = responseText.trim();
-    if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/```\n?/g, '');
-    }
-    const result = JSON.parse(cleaned) as AnalysisResult;
+    try {
+        // Panggil dengan mode JSON = true
+        const jsonString = await callGeminiSDK(prompt, true);
+        const result = JSON.parse(jsonString) as AnalysisResult;
 
-    if (!result.originalText) result.originalText = arabicText;
-    if (!result.vocalizedText) result.vocalizedText = arabicText;
-    if (!result.translation || result.translation.trim() === '') {
-        console.warn('Translation kosong, menggunakan fallback...');
-        result.translation = await getFallbackTranslation(arabicText);
+        // Validasi data minimal
+        if (!result.vocalizedText) result.vocalizedText = arabicText;
+        if (!result.irab) result.irab = [];
+
+        return result;
+    } catch (error) {
+        console.error("Gagal parsing analisis:", error);
+        throw new Error("Gagal menganalisis struktur teks Arab. Coba kalimat yang lebih pendek.");
     }
-    if (!Array.isArray(result.irab)) {
-        throw new Error('Format hasil analisis tidak valid: field irab harus array');
-    }
-    return result;
 }
 
 /**
- * Konversi teks Indonesia ke Arab gundul (tanpa harakat).
+ * Konversi teks Indonesia ke Arab gundul.
  */
 export async function convertToArabGundul(indonesianText: string): Promise<string> {
-    const prompt = `Kamu adalah penerjemah Bahasa Indonesia ke Bahasa Arab yang ahli.\n\nKonversi kalimat Bahasa Indonesia berikut ke dalam teks Arab GUNDUL (tanpa harakat):\n\"${indonesianText}\"\n\nPENTING:\n- Hanya return teks Arab gundul, tanpa penjelasan\n- Jangan menambahkan harakat\n- Pastikan tata bahasa Arab yang benar\n- Jangan menambahkan tanda baca selain yang diperlukan\n\nContoh:\nInput: \"ilmu itu adalah cahaya\"\nOutput: العلم هو النور\n\nSekarang konversi: \"${indonesianText}\"`;
-    const arabicText = await callGeminiAPI(prompt);
-    return arabicText.trim();
+    const prompt = `Ubah kalimat Indonesia ini ke Arab Gundul (tanpa harakat) yang benar secara gramatikal: "${indonesianText}". Hanya output teks Arabnya saja.`;
+    const res = await callGeminiSDK(prompt, false);
+    return res.trim();
 }
