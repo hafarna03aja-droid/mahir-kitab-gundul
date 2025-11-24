@@ -1,10 +1,9 @@
-// File ini berisi integrasi dengan AI API melalui Maiarouter
-// Untuk menggunakan API, Anda perlu mendapatkan API key dari Maiarouter
+// File ini berisi integrasi dengan Google Gemini API
+// Untuk menggunakan API, Anda perlu mendapatkan API key dari Google AI Studio
 
 import type { AnalysisResult } from '../types';
 
 const ENV_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const API_URL = import.meta.env.VITE_MAIAROUTER_URL || 'https://api.maiarouter.ai/v1/chat/completions';
 
 export const getApiKey = (): string => {
     return localStorage.getItem('gemini_api_key') || ENV_API_KEY;
@@ -17,24 +16,28 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di menu Pengaturan (ikon gerigi di pojok kanan atas) atau tambahkan VITE_GEMINI_API_KEY ke file .env Anda.');
     }
 
-    console.log('🔄 Mengirim request ke Maiarouter...');
-    console.log('📍 Endpoint:', API_URL);
+    // Gunakan Gemini API endpoint langsung
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`;
+
+    console.log('🔄 Mengirim request ke Google Gemini API...');
+    console.log('📍 Endpoint:', API_URL.replace(API_KEY, 'API_KEY'));
     console.log('🔑 API Key:', API_KEY.substring(0, 10) + '...');
-    
+
+    // Format request body untuk Gemini API
     const requestBody = {
-        model: 'maia/gemini-2.0-flash-exp', // Model Gemini melalui Maiarouter
-        messages: [
+        contents: [
             {
-                role: 'system',
-                content: 'Kamu adalah asisten pembelajaran Bahasa Arab yang ahli.'
-            },
-            {
-                role: 'user',
-                content: prompt
+                parts: [
+                    {
+                        text: `Kamu adalah asisten pembelajaran Bahasa Arab yang ahli.\n\n${prompt}`
+                    }
+                ]
             }
         ],
-        temperature: 0.7,
-        max_tokens: 2048,
+        generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+        }
     };
 
     console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
@@ -43,7 +46,6 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${API_KEY}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(requestBody),
@@ -54,34 +56,32 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`❌ API Error Response:`, errorText);
-            
-            // Tampilkan error detail, jangan langsung ke demo
+
             throw new Error(
-                `Gagal menghubungi Maiarouter API\n\n` +
+                `Gagal menghubungi Google Gemini API\n\n` +
                 `Status: ${response.status} ${response.statusText}\n` +
                 `Detail: ${errorText}\n\n` +
                 `Periksa:\n` +
                 `• API key valid (${API_KEY.substring(0, 10)}...)\n` +
-                `• URL endpoint benar (${API_URL})\n` +
-                `• Quota API masih tersedia`
+                `• Quota API masih tersedia\n` +
+                `• Dapatkan API key di https://aistudio.google.com/app/apikey`
             );
         }
 
         const data = await response.json();
         console.log('✅ Response data:', data);
-        
-        // Format respons OpenAI-style
-        if (data.choices && data.choices[0]?.message?.content) {
-            console.log('✅ Berhasil mendapat response dari Maiarouter!');
-            return data.choices[0].message.content;
+
+        // Format respons Gemini API
+        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+            console.log('✅ Berhasil mendapat response dari Google Gemini API!');
+            return data.candidates[0].content.parts[0].text;
         } else {
             console.error('❌ Format respons tidak sesuai:', data);
             throw new Error('Format respons tidak valid dari API: ' + JSON.stringify(data));
         }
     } catch (error) {
-        console.error('❌ Error calling Maiarouter API:', error);
-        
-        // Re-throw error agar user tahu masalahnya
+        console.error('❌ Error calling Google Gemini API:', error);
+
         if (error instanceof Error) {
             throw error;
         }
@@ -91,7 +91,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
 
 export async function askAiAssistant(userMessage: string): Promise<string> {
     const prompt = `Kamu adalah asisten pembelajaran Bahasa Arab yang ahli dalam Nahwu (tata bahasa), Sharaf (morfologi), dan Balaghah (retorika). Jawab pertanyaan berikut dengan jelas dan informatif:\n\n${userMessage}`;
-    
+
     // LANGSUNG PANGGIL API - TIDAK ADA FALLBACK DEMO
     return await callGeminiAPI(prompt);
 }
@@ -153,7 +153,7 @@ PENTING:
 
     try {
         const responseText = await callGeminiAPI(prompt);
-        
+
         // Bersihkan response dari markdown code blocks jika ada
         let cleanedResponse = responseText.trim();
         if (cleanedResponse.startsWith('```json')) {
@@ -161,33 +161,33 @@ PENTING:
         } else if (cleanedResponse.startsWith('```')) {
             cleanedResponse = cleanedResponse.replace(/```\n?/g, '');
         }
-        
+
         // Parse JSON
         const result = JSON.parse(cleanedResponse) as AnalysisResult;
-        
+
         // Validasi struktur hasil dan perbaiki jika perlu
         if (!result.originalText) {
             result.originalText = arabicText;
         }
-        
+
         if (!result.vocalizedText) {
             result.vocalizedText = arabicText;
         }
-        
+
         // Jika translation kosong atau tidak ada, panggil fallback
         if (!result.translation || result.translation.trim() === '') {
             console.warn('Translation kosong, menggunakan fallback...');
             result.translation = await getFallbackTranslation(arabicText);
         }
-        
+
         if (!Array.isArray(result.irab)) {
             throw new Error('Format hasil analisis tidak valid: field irab harus array');
         }
-        
+
         return result;
     } catch (error) {
         console.error('Error analyzing Arabic text:', error);
-        
+
         // LANGSUNG THROW ERROR - TIDAK ADA FALLBACK DEMO
         if (error instanceof Error) {
             throw error;
