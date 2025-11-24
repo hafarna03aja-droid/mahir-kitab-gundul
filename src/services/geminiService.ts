@@ -24,12 +24,12 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di menu Pengaturan (ikon gerigi di pojok kanan atas) atau tambahkan VITE_GEMINI_API_KEY ke file .env Anda.');
     }
 
-    console.log('🔄 Mengirim request ke Google Gemini API (v1beta) dengan model gemini-pro...');
+    console.log('🔄 Mengirim request ke Google Gemini API (v1beta) dengan model gemini-1.5-flash...');
     console.log('🔑 API Key:', API_KEY.substring(0, 10) + '...');
 
     try {
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -40,8 +40,14 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         );
 
         if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errText}`);
+            let errorMsg = `HTTP ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error?.message || JSON.stringify(errorData);
+            } catch {
+                errorMsg = await response.text();
+            }
+            throw new Error(errorMsg);
         }
 
         const data = await response.json();
@@ -56,12 +62,22 @@ async function callGeminiAPI(prompt: string): Promise<string> {
     } catch (error) {
         console.error('❌ Error calling Google Gemini API:', error);
         if (error instanceof Error) {
+            const msg = error.message.toLowerCase();
             let errorMessage = `Gagal menghubungi Google Gemini API\n\n`;
-            errorMessage += `Error: ${error.message}\n\n`;
+
+            if (msg.includes('api key') || msg.includes('400') || msg.includes('invalid_argument')) {
+                errorMessage += `⚠️ API Key tidak valid. Mohon periksa kembali API Key Anda.\n`;
+            } else if (msg.includes('404') || msg.includes('not found')) {
+                errorMessage += `⚠️ Model tidak ditemukan atau endpoint salah.\n`;
+            } else if (msg.includes('429') || msg.includes('quota') || msg.includes('resource_exhausted')) {
+                errorMessage += `⚠️ Quota API habis atau Rate Limit tercapai.\n`;
+            }
+
+            errorMessage += `Error detail: ${error.message}\n\n`;
             errorMessage += `Periksa:\n`;
             errorMessage += `• API key valid (${API_KEY.substring(0, 10)}...)\n`;
             errorMessage += `• Quota API masih tersedia\n`;
-            errorMessage += `• API key sudah diaktifkan untuk Generative Language API\n`;
+            errorMessage += `• Koneksi internet stabil\n`;
             errorMessage += `• Dapatkan API key di https://aistudio.google.com/app/apikey`;
             throw new Error(errorMessage);
         }
