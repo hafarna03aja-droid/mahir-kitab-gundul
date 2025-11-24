@@ -1,6 +1,7 @@
 // File ini berisi integrasi dengan Google Gemini API
 // Untuk menggunakan API, Anda perlu mendapatkan API key dari Google AI Studio
 
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AnalysisResult } from '../types';
 
 const ENV_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
@@ -16,61 +17,41 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di menu Pengaturan (ikon gerigi di pojok kanan atas) atau tambahkan VITE_GEMINI_API_KEY ke file .env Anda.');
     }
 
-    // Gunakan Gemini API endpoint v1beta (mendukung model terbaru)
-    const MODEL_NAME = 'gemini-1.5-flash'; // Model Gemini 1.5 Flash
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
-
     console.log('🔄 Mengirim request ke Google Gemini API...');
-    console.log('📍 Model:', MODEL_NAME);
-    console.log('🔑 API Key:', API_KEY.substring(0, 10) + '...');
-
-    // Format request body untuk Gemini API
-    const requestBody = {
-        contents: [
-            {
-                parts: [
-                    {
-                        text: prompt
-                    }
-                ]
-            }
-        ],
-        generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-        }
-    };
-
-    console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
+    console.log(' API Key:', API_KEY.substring(0, 10) + '...');
 
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody),
+        // Inisialisasi Google Generative AI SDK
+        const genAI = new GoogleGenerativeAI(API_KEY);
+
+        // Pilih model Gemini 1.5 Flash
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 2048,
+            }
         });
 
-        console.log('📨 Response status:', response.status, response.statusText);
+        console.log('� Model: gemini-1.5-flash');
+        console.log('📦 Prompt length:', prompt.length);
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`❌ API Error Response:`, errorText);
+        // Panggil API menggunakan SDK
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
+        console.log('✅ Berhasil mendapat response dari Google Gemini API!');
+        console.log('📝 Response length:', text.length);
+
+        return text;
+    } catch (error) {
+        console.error('❌ Error calling Google Gemini API:', error);
+
+        if (error instanceof Error) {
+            // Perbaiki pesan error agar lebih informatif
             let errorMessage = `Gagal menghubungi Google Gemini API\n\n`;
-            errorMessage += `Status: ${response.status} ${response.statusText}\n`;
-
-            // Parse error detail jika ada
-            try {
-                const errorData = JSON.parse(errorText);
-                if (errorData.error?.message) {
-                    errorMessage += `Error: ${errorData.error.message}\n\n`;
-                }
-            } catch {
-                errorMessage += `Detail: ${errorText}\n\n`;
-            }
-
+            errorMessage += `Error: ${error.message}\n\n`;
             errorMessage += `Periksa:\n`;
             errorMessage += `• API key valid (${API_KEY.substring(0, 10)}...)\n`;
             errorMessage += `• Quota API masih tersedia\n`;
@@ -78,24 +59,6 @@ async function callGeminiAPI(prompt: string): Promise<string> {
             errorMessage += `• Dapatkan API key di https://aistudio.google.com/app/apikey`;
 
             throw new Error(errorMessage);
-        }
-
-        const data = await response.json();
-        console.log('✅ Response data:', data);
-
-        // Format respons Gemini API
-        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-            console.log('✅ Berhasil mendapat response dari Google Gemini API!');
-            return data.candidates[0].content.parts[0].text;
-        } else {
-            console.error('❌ Format respons tidak sesuai:', data);
-            throw new Error('Format respons tidak valid dari API: ' + JSON.stringify(data));
-        }
-    } catch (error) {
-        console.error('❌ Error calling Google Gemini API:', error);
-
-        if (error instanceof Error) {
-            throw error;
         }
         throw new Error('Terjadi kesalahan yang tidak diketahui saat memanggil API');
     }
