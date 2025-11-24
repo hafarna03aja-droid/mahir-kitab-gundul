@@ -16,11 +16,12 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di menu Pengaturan (ikon gerigi di pojok kanan atas) atau tambahkan VITE_GEMINI_API_KEY ke file .env Anda.');
     }
 
-    // Gunakan Gemini API endpoint langsung
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`;
+    // Gunakan Gemini API endpoint v1 (stabil)
+    const MODEL_NAME = 'gemini-1.5-flash-latest'; // Gunakan model yang stabil
+    const API_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
     console.log('🔄 Mengirim request ke Google Gemini API...');
-    console.log('📍 Endpoint:', API_URL.replace(API_KEY, 'API_KEY'));
+    console.log('📍 Model:', MODEL_NAME);
     console.log('🔑 API Key:', API_KEY.substring(0, 10) + '...');
 
     // Format request body untuk Gemini API
@@ -29,7 +30,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
             {
                 parts: [
                     {
-                        text: `Kamu adalah asisten pembelajaran Bahasa Arab yang ahli.\n\n${prompt}`
+                        text: prompt
                     }
                 ]
             }
@@ -57,15 +58,26 @@ async function callGeminiAPI(prompt: string): Promise<string> {
             const errorText = await response.text();
             console.error(`❌ API Error Response:`, errorText);
 
-            throw new Error(
-                `Gagal menghubungi Google Gemini API\n\n` +
-                `Status: ${response.status} ${response.statusText}\n` +
-                `Detail: ${errorText}\n\n` +
-                `Periksa:\n` +
-                `• API key valid (${API_KEY.substring(0, 10)}...)\n` +
-                `• Quota API masih tersedia\n` +
-                `• Dapatkan API key di https://aistudio.google.com/app/apikey`
-            );
+            let errorMessage = `Gagal menghubungi Google Gemini API\n\n`;
+            errorMessage += `Status: ${response.status} ${response.statusText}\n`;
+
+            // Parse error detail jika ada
+            try {
+                const errorData = JSON.parse(errorText);
+                if (errorData.error?.message) {
+                    errorMessage += `Error: ${errorData.error.message}\n\n`;
+                }
+            } catch {
+                errorMessage += `Detail: ${errorText}\n\n`;
+            }
+
+            errorMessage += `Periksa:\n`;
+            errorMessage += `• API key valid (${API_KEY.substring(0, 10)}...)\n`;
+            errorMessage += `• Quota API masih tersedia\n`;
+            errorMessage += `• API key sudah diaktifkan untuk Generative Language API\n`;
+            errorMessage += `• Dapatkan API key di https://aistudio.google.com/app/apikey`;
+
+            throw new Error(errorMessage);
         }
 
         const data = await response.json();
