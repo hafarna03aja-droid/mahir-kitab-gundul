@@ -17,7 +17,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
     }
 
     // Gunakan Gemini API endpoint v1 (stabil)
-    const MODEL_NAME = 'gemini-1.5-flash-latest'; // Gunakan model yang stabil
+    const MODEL_NAME = 'gemini-1.5-flash'; // Model yang valid untuk API v1
     const API_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
     console.log('🔄 Mengirim request ke Google Gemini API...');
