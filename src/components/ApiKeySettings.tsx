@@ -46,7 +46,7 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
@@ -78,13 +78,41 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                                 placeholder="Masukkan API Key Anda (AIza...)"
                                 className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
                             />
-                            <button
-                                type="button"
-                                onClick={() => setShowKey(!showKey)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                            >
-                                {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                {apiKey && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setApiKey('')}
+                                        className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                        title="Hapus"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            const text = await navigator.clipboard.readText();
+                                            if (text) setApiKey(text);
+                                        } catch (err) {
+                                            console.error('Failed to read clipboard:', err);
+                                            alert('Gagal membaca clipboard. Pastikan Anda memberikan izin.');
+                                        }
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-amber-500 transition-colors"
+                                    title="Tempel dari Clipboard"
+                                >
+                                    <span className="text-xs font-bold border border-current rounded px-1">Paste</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowKey(!showKey)}
+                                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                >
+                                    {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                             API Key akan disimpan di browser Anda (localStorage) dan digunakan untuk mengakses layanan AI.
