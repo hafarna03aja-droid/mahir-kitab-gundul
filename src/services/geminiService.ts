@@ -3,12 +3,18 @@
 
 import type { AnalysisResult } from '../types';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const ENV_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const API_URL = import.meta.env.VITE_MAIAROUTER_URL || 'https://api.maiarouter.ai/v1/chat/completions';
 
+export const getApiKey = (): string => {
+    return localStorage.getItem('gemini_api_key') || ENV_API_KEY;
+};
+
 async function callGeminiAPI(prompt: string): Promise<string> {
+    const API_KEY = getApiKey();
+
     if (!API_KEY) {
-        throw new Error('API Key belum dikonfigurasi. Silakan tambahkan VITE_GEMINI_API_KEY ke file .env Anda.\n\nUntuk mendapatkan API key:\n1. Dapatkan dari dashboard Maiarouter Anda\n2. Tambahkan ke file .env: VITE_GEMINI_API_KEY=your_api_key_here');
+        throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di menu Pengaturan (ikon gerigi di pojok kanan atas) atau tambahkan VITE_GEMINI_API_KEY ke file .env Anda.');
     }
 
     console.log('🔄 Mengirim request ke Maiarouter...');

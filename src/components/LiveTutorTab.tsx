@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, Square, Volume2, VolumeX } from 'lucide-react';
+import { getApiKey } from '../services/geminiService';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -23,7 +24,7 @@ const LiveTutorTab: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-    
+
     const recognitionRef = useRef<any>(null);
     const synthRef = useRef<SpeechSynthesis | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -65,17 +66,17 @@ const LiveTutorTab: React.FC = () => {
             recognitionRef.current.onresult = async (event: any) => {
                 const transcript = event.results[0][0].transcript;
                 console.log('Recognized:', transcript);
-                
+
                 const userMessage: Message = {
                     role: 'user',
                     text: transcript,
                     timestamp: Date.now()
                 };
-                
+
                 setMessages(prev => [...prev, userMessage]);
                 setIsProcessing(true);
                 setStatusMessage('🤔 Ustadz Cerdas sedang berpikir...');
-                
+
                 // Get AI response
                 await getAIResponse(transcript);
             };
@@ -101,11 +102,11 @@ const LiveTutorTab: React.FC = () => {
     const getAIResponse = async (userText: string) => {
         try {
             // Use Maiarouter API
-            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            const apiKey = getApiKey();
             const apiUrl = import.meta.env.VITE_MAIAROUTER_URL || 'https://api.maiarouter.ai/v1/chat/completions';
 
             if (!apiKey) {
-                setStatusMessage('❌ API Key tidak ditemukan di .env');
+                setStatusMessage('❌ API Key tidak ditemukan. Atur di Pengaturan.');
                 setIsProcessing(false);
                 return;
             }
@@ -126,7 +127,7 @@ const LiveTutorTab: React.FC = () => {
                     messages: [
                         {
                             role: 'system',
-                            content: sessionStarted.current 
+                            content: sessionStarted.current
                                 ? `Anda adalah 'Ustadz Cerdas', guru Bahasa Arab Indonesia yang mengajarkan percakapan Arab Saudi. 
 
 ATURAN PENTING:
@@ -180,7 +181,7 @@ Sapa pengguna dengan format:
 
             setMessages(prev => [...prev, aiMessage]);
             sessionStarted.current = true;
-            
+
             // Speak the response
             speakText(aiText);
 
@@ -213,11 +214,11 @@ Sapa pengguna dengan format:
 
         const loadVoicesAndSpeak = () => {
             const voices = synthRef.current!.getVoices();
-            
+
             let selectedVoice;
             if (lang === 'ar-SA') {
                 // Priority for Arabic Saudi voices
-                selectedVoice = 
+                selectedVoice =
                     voices.find(v => v.lang === 'ar-SA') ||
                     voices.find(v => v.name.includes('Saudi')) ||
                     voices.find(v => v.name.includes('Majed')) ||
@@ -227,13 +228,13 @@ Sapa pengguna dengan format:
                     voices.find(v => v.lang === 'ar');
             } else {
                 // Priority for Indonesian voices
-                selectedVoice = 
+                selectedVoice =
                     voices.find(v => v.lang === 'id-ID') ||
                     voices.find(v => v.name.includes('Indonesian')) ||
                     voices.find(v => v.name.includes('Damayanti')) ||
                     voices.find(v => v.lang.startsWith('id-'));
             }
-            
+
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
                 console.log('✅ Using voice:', selectedVoice.name, '(' + selectedVoice.lang + ')');
@@ -293,9 +294,9 @@ Sapa pengguna dengan format:
         const loadVoicesAndSpeak = () => {
             const voices = synthRef.current!.getVoices();
             console.log('🎤 Available voices:', voices.length);
-            
+
             // Priority order for Indonesian voices
-            let indonesianVoice = 
+            let indonesianVoice =
                 // 1. Indonesian voices (id-ID)
                 voices.find(v => v.lang === 'id-ID') ||
                 voices.find(v => v.name.includes('Indonesian')) ||
@@ -306,7 +307,7 @@ Sapa pengguna dengan format:
                 // 3. Malay as fallback (similar language)
                 voices.find(v => v.lang === 'ms-MY') ||
                 voices.find(v => v.name.includes('Malay'));
-            
+
             if (indonesianVoice) {
                 utterance.voice = indonesianVoice;
                 console.log('✅ Using Indonesian voice:', indonesianVoice.name, '(' + indonesianVoice.lang + ')');
@@ -369,7 +370,7 @@ Sapa pengguna dengan format:
         setMessages([]);
         sessionStarted.current = false;
         setStatusMessage('🎉 Sesi dimulai! Menghubungkan dengan Ustadz Cerdas...');
-        
+
         // Load voices
         if (synthRef.current) {
             if (synthRef.current.getVoices().length === 0) {
@@ -391,7 +392,7 @@ Sapa pengguna dengan format:
         if (synthRef.current) {
             synthRef.current.cancel();
         }
-        
+
         setIsSessionActive(false);
         setIsListening(false);
         setIsSpeaking(false);
@@ -415,9 +416,8 @@ Sapa pengguna dengan format:
                 <h2 className="text-xl font-bold text-amber-400">AI Audio Live: Ustadz Cerdas</h2>
                 <p className="text-slate-400 text-sm mt-1">Berlatih percakapan Bahasa Arab dengan AI (Speech Recognition + Text-to-Speech)</p>
                 <div className="mt-3 flex items-center justify-center gap-2 text-slate-300">
-                    <div className={`w-3 h-3 rounded-full transition-colors ${
-                        isSessionActive ? 'bg-green-500 animate-pulse' : 'bg-slate-500'
-                    }`}></div>
+                    <div className={`w-3 h-3 rounded-full transition-colors ${isSessionActive ? 'bg-green-500 animate-pulse' : 'bg-slate-500'
+                        }`}></div>
                     <span className="font-medium text-sm">{statusMessage}</span>
                 </div>
             </div>
@@ -431,12 +431,12 @@ Sapa pengguna dengan format:
                         <p className="text-sm mt-2">Anda akan berbicara dengan Ustadz Cerdas</p>
                     </div>
                 )}
-                
+
                 {messages.map((msg, index) => {
                     // Parse [ARAB] and [INDO] tags for assistant messages
                     const arabicMatch = msg.text.match(/\[ARAB\]\s*(.+?)(?:\s*\[INDO\]|$)/s);
                     const indonesianMatch = msg.text.match(/\[INDO\]\s*(.+?)$/s);
-                    
+
                     const arabicText = arabicMatch ? arabicMatch[1].trim() : null;
                     const indonesianText = indonesianMatch ? indonesianMatch[1].trim() : null;
                     const isFormatted = arabicText || indonesianText;
@@ -446,19 +446,17 @@ Sapa pengguna dengan format:
                     const userAudioId = `user-${index}`;
 
                     return (
-                        <div key={index} className={`flex items-start gap-3 ${
-                            msg.role === 'user' ? 'justify-end' : 'justify-start'
-                        }`}>
+                        <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'
+                            }`}>
                             {msg.role === 'assistant' && (
                                 <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
                                     <span className="font-bold text-amber-400 text-xs">UC</span>
                                 </div>
                             )}
-                            <div className={`max-w-2xl rounded-lg px-4 py-3 ${
-                                msg.role === 'user' 
-                                    ? 'bg-sky-600 text-white' 
+                            <div className={`max-w-2xl rounded-lg px-4 py-3 ${msg.role === 'user'
+                                    ? 'bg-sky-600 text-white'
                                     : 'bg-slate-700 text-slate-200'
-                            }`}>
+                                }`}>
                                 {msg.role === 'assistant' && isFormatted ? (
                                     <>
                                         {arabicText && (
@@ -523,9 +521,9 @@ Sapa pengguna dengan format:
                                     </>
                                 )}
                                 <p className="text-xs opacity-60 mt-2">
-                                    {new Date(msg.timestamp).toLocaleTimeString('id-ID', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
+                                    {new Date(msg.timestamp).toLocaleTimeString('id-ID', {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
                                     })}
                                 </p>
                             </div>
@@ -548,8 +546,8 @@ Sapa pengguna dengan format:
                         onClick={handleToggleSession}
                         disabled={isProcessing}
                         className={`px-8 py-4 rounded-full font-bold text-lg flex items-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
-                            ${isSessionActive 
-                                ? 'bg-red-600 text-white hover:bg-red-700' 
+                            ${isSessionActive
+                                ? 'bg-red-600 text-white hover:bg-red-700'
                                 : 'bg-amber-500 text-white hover:bg-amber-600'
                             }`}
                     >
@@ -572,8 +570,8 @@ Sapa pengguna dengan format:
                             onClick={startListening}
                             disabled={isListening || isProcessing || isSpeaking}
                             className={`p-5 rounded-full font-bold transition-all duration-300 transform hover:scale-110 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
-                                ${isListening 
-                                    ? 'bg-red-500 text-white animate-pulse' 
+                                ${isListening
+                                    ? 'bg-red-500 text-white animate-pulse'
                                     : 'bg-green-600 text-white hover:bg-green-700'
                                 }`}
                             title={isListening ? 'Mendengarkan...' : 'Klik untuk berbicara'}
@@ -582,13 +580,13 @@ Sapa pengguna dengan format:
                         </button>
                     )}
                 </div>
-                
+
                 {isSessionActive && (
                     <p className="text-center text-slate-400 text-sm mt-3">
-                        {isListening ? '🎤 Sedang mendengarkan...' : 
-                         isSpeaking ? '🔊 Ustadz sedang berbicara...' :
-                         isProcessing ? '⏳ Memproses...' :
-                         '💡 Klik tombol mikrofon hijau untuk berbicara'}
+                        {isListening ? '🎤 Sedang mendengarkan...' :
+                            isSpeaking ? '🔊 Ustadz sedang berbicara...' :
+                                isProcessing ? '⏳ Memproses...' :
+                                    '💡 Klik tombol mikrofon hijau untuk berbicara'}
                     </p>
                 )}
             </div>
