@@ -16,9 +16,9 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di menu Pengaturan (ikon gerigi di pojok kanan atas) atau tambahkan VITE_GEMINI_API_KEY ke file .env Anda.');
     }
 
-    // Gunakan Gemini API endpoint v1 (stabil)
-    const MODEL_NAME = 'gemini-1.5-flash'; // Model yang valid untuk API v1
-    const API_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+    // Gunakan Gemini API endpoint v1beta (mendukung model terbaru)
+    const MODEL_NAME = 'gemini-1.5-flash'; // Model Gemini 1.5 Flash
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
     console.log('🔄 Mengirim request ke Google Gemini API...');
     console.log('📍 Model:', MODEL_NAME);
