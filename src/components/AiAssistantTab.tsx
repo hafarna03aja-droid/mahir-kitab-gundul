@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { askAiAssistant } from '../services/geminiService';
+import { askAiAssistant } from '../services/aiService';
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from './icons/TabIcons';
 
 // Komponen kecil untuk merender Markdown dengan gaya
@@ -34,7 +34,7 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
                 </li>
             );
         }
-        
+
         // Regular text with inline formatting
         const segments = line.split(/(\*\*.*?\*\*|`.*?`)/g).filter(Boolean);
         return <p key={lineIndex}>{segments.map(renderSegment)}</p>;
@@ -97,7 +97,7 @@ const AiAssistantTab: React.FC = () => {
                 ))}
                 {isLoading && (
                     <div className="flex items-end gap-3 justify-start">
-                         <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
                             <ChatBubbleLeftRightIcon className="w-6 h-6 text-amber-600" />
                         </div>
                         <div className="max-w-xl rounded-lg px-5 py-3 bg-slate-100 text-slate-700">
@@ -109,7 +109,7 @@ const AiAssistantTab: React.FC = () => {
                         </div>
                     </div>
                 )}
-                 <div ref={chatEndRef} />
+                <div ref={chatEndRef} />
             </div>
             <div className="p-4 bg-slate-50 border-t border-slate-200">
                 <form onSubmit={handleSendMessage} className="flex items-center gap-3">

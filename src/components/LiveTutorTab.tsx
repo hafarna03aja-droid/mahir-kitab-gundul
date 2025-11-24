@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, Square, Volume2, VolumeX } from 'lucide-react';
-import { getApiKey } from '../services/geminiService';
+import { askAiAssistant } from '../services/aiService';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -101,34 +101,13 @@ const LiveTutorTab: React.FC = () => {
 
     const getAIResponse = async (userText: string) => {
         try {
-            // Use Maiarouter API
-            const apiKey = getApiKey();
-            const apiUrl = import.meta.env.VITE_MAIAROUTER_URL || 'https://api.maiarouter.ai/v1/chat/completions';
-
-            if (!apiKey) {
-                setStatusMessage('❌ API Key tidak ditemukan. Atur di Pengaturan.');
-                setIsProcessing(false);
-                return;
-            }
-
             const conversationHistory = messages.map(m => ({
                 role: m.role === 'user' ? 'user' : 'assistant',
                 content: m.text
             }));
 
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: 'maia/gemini-2.0-flash-exp',
-                    messages: [
-                        {
-                            role: 'system',
-                            content: sessionStarted.current
-                                ? `Anda adalah 'Ustadz Cerdas', guru Bahasa Arab Indonesia yang mengajarkan percakapan Arab Saudi. 
+            const systemPrompt = sessionStarted.current
+                ? `Anda adalah 'Ustadz Cerdas', guru Bahasa Arab Indonesia yang mengajarkan percakapan Arab Saudi. 
 
 ATURAN PENTING:
 1. Respons HARUS dalam format 2 bagian:
@@ -149,29 +128,20 @@ ATURAN PENTING:
 Contoh respons yang baik:
 [ARAB] أهلا وسهلا! كيف حالك اليوم؟
 [INDO] Halo dan selamat datang! Bagaimana kabarmu hari ini? Ini adalah sapaan umum dalam percakapan Arab Saudi.`
-                                : `Anda adalah 'Ustadz Cerdas', guru Bahasa Arab Indonesia. 
+                : `Anda adalah 'Ustadz Cerdas', guru Bahasa Arab Indonesia. 
 
 Sapa pengguna dengan format:
 [ARAB] السلام عليكم! أهلا وسهلا. أنا أستاذ ذكي. كيف حالك؟
-[INDO] Assalamualaikum! Selamat datang. Saya Ustadz Cerdas, guru Bahasa Arab Anda. Mari kita mulai belajar percakapan Arab Saudi. Silakan jawab sapaan saya dalam Bahasa Arab!`
-                        },
-                        ...conversationHistory,
-                        {
-                            role: 'user',
-                            content: userText
-                        }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 200
-                })
+[INDO] Assalamualaikum! Selamat datang. Saya Ustadz Cerdas, guru Bahasa Arab Anda. Mari kita mulai belajar percakapan Arab Saudi. Silakan jawab sapaan saya dalam Bahasa Arab!`;
+
+            // Construct the full prompt for the AI service
+            let fullPrompt = `${systemPrompt}\n\nRiwayat Percakapan:\n`;
+            conversationHistory.forEach(msg => {
+                fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
             });
+            fullPrompt += `\nUser: ${userText}\nAssistant:`;
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const aiText = data.choices[0]?.message?.content || 'Maaf, saya tidak bisa merespons saat ini.';
+            const aiText = await askAiAssistant(fullPrompt);
 
             const aiMessage: Message = {
                 role: 'assistant',
@@ -454,8 +424,8 @@ Sapa pengguna dengan format:
                                 </div>
                             )}
                             <div className={`max-w-2xl rounded-lg px-4 py-3 ${msg.role === 'user'
-                                    ? 'bg-sky-600 text-white'
-                                    : 'bg-slate-700 text-slate-200'
+                                ? 'bg-sky-600 text-white'
+                                : 'bg-slate-700 text-slate-200'
                                 }`}>
                                 {msg.role === 'assistant' && isFormatted ? (
                                     <>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { analyzeArabicText, convertToArabGundul } from '../services/geminiService';
+import { analyzeArabicText, convertToArabGundul } from '../services/aiService';
 import { CATEGORIZED_EXAMPLES } from '../constants';
 import type { AnalysisResult } from '../types';
 import AnalysisResultDisplay from './AnalysisResultDisplay';
@@ -67,7 +67,7 @@ const AnalysisTab: React.FC = () => {
             setIsLoading(false);
         }
     };
-    
+
     const handleConvert = async () => {
         if (!indonesianInput.trim()) {
             setConversionError('Silakan masukkan teks Indonesia untuk dikonversi.');
@@ -99,7 +99,7 @@ const AnalysisTab: React.FC = () => {
                         Masukkan teks Arab (dengan atau tanpa harakat) di bawah ini untuk mendapatkan analisis gramatikal (I'rab) yang mendalam, teks yang sudah divokalisasi, dan terjemahannya.
                     </p>
                 </div>
-                
+
                 <div className="mt-6">
                     <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Pilih Contoh Teks dari Kategori:</label>
                     <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-700 pb-3 mb-3">
@@ -107,11 +107,10 @@ const AnalysisTab: React.FC = () => {
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-offset-slate-800 ${
-                                    selectedCategory === category
+                                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-offset-slate-800 ${selectedCategory === category
                                         ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
                                         : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600'
-                                }`}
+                                    }`}
                             >
                                 {category}
                             </button>
@@ -179,7 +178,7 @@ const AnalysisTab: React.FC = () => {
                         {isLoading ? 'Menganalisis...' : 'Analisis Teks'}
                     </button>
                 </div>
-                
+
                 {error && (
                     <div className="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
                         <p><span className="font-bold">Error:</span> {error}</p>
@@ -199,7 +198,7 @@ const AnalysisTab: React.FC = () => {
                         <ul className="space-y-2 max-h-96 overflow-y-auto">
                             {history.map((item, index) => (
                                 <li key={index}>
-                                    <button 
+                                    <button
                                         onClick={() => handleHistoryClick(item)}
                                         className="w-full text-right p-2 font-arabic text-md text-slate-700 rounded-md hover:bg-amber-50 transition-colors truncate"
                                     >
@@ -208,7 +207,7 @@ const AnalysisTab: React.FC = () => {
                                 </li>
                             ))}
                         </ul>
-                        <button 
+                        <button
                             onClick={() => setHistory([])}
                             className="w-full mt-4 px-4 py-2 text-sm text-red-700 bg-red-100 hover:bg-red-200 rounded-md transition-colors"
                         >

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Key, Trash2, Eye, EyeOff } from 'lucide-react';
+import { X, Save, Key, Trash2, Eye, EyeOff, Bot, Cpu } from 'lucide-react';
+import { getActiveProvider, setActiveProvider, type AiProvider } from '../services/aiService';
 
 interface ApiKeySettingsProps {
     isOpen: boolean;
@@ -8,37 +9,43 @@ interface ApiKeySettingsProps {
 
 const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
     const [apiKey, setApiKey] = useState('');
+    const [openRouterKey, setOpenRouterKey] = useState('');
+    const [provider, setProvider] = useState<AiProvider>('gemini');
     const [showKey, setShowKey] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             const savedKey = localStorage.getItem('gemini_api_key');
-            if (savedKey) {
-                setApiKey(savedKey);
-                setIsSaved(true);
-            } else {
-                setApiKey('');
-                setIsSaved(false);
-            }
+            const savedOpenRouterKey = localStorage.getItem('openrouter_api_key');
+            const savedProvider = getActiveProvider();
+
+            setApiKey(savedKey || '');
+            setOpenRouterKey(savedOpenRouterKey || '');
+            setProvider(savedProvider);
+
+            setIsSaved(!!savedKey || !!savedOpenRouterKey);
         }
     }, [isOpen]);
 
     const handleSave = () => {
-        if (apiKey.trim()) {
-            localStorage.setItem('gemini_api_key', apiKey.trim());
-            setIsSaved(true);
-            onClose();
-            alert('API Key berhasil disimpan!');
-            window.location.reload();
-        }
+        if (apiKey.trim()) localStorage.setItem('gemini_api_key', apiKey.trim());
+        if (openRouterKey.trim()) localStorage.setItem('openrouter_api_key', openRouterKey.trim());
+
+        setActiveProvider(provider);
+        setIsSaved(true);
+        onClose();
+        alert('Pengaturan berhasil disimpan!');
+        window.location.reload();
     };
 
     const handleClear = () => {
         localStorage.removeItem('gemini_api_key');
+        localStorage.removeItem('openrouter_api_key');
         setApiKey('');
+        setOpenRouterKey('');
         setIsSaved(false);
-        alert('API Key berhasil dihapus dari penyimpanan lokal.');
+        alert('Semua API Key berhasil dihapus.');
         window.location.reload();
     };
 
@@ -65,67 +72,110 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
 
                 {/* Body */}
                 <div className="p-4 space-y-3">
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
-                            Gemini API Key
-                        </label>
+                    <div className="space-y-4">
+                        {/* Provider Selection */}
+                        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                            <button
+                                onClick={() => setProvider('gemini')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${provider === 'gemini'
+                                        ? 'bg-white dark:bg-slate-600 text-amber-600 dark:text-amber-400 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                    }`}
+                            >
+                                <Bot className="w-4 h-4" />
+                                Google Gemini
+                            </button>
+                            <button
+                                onClick={() => setProvider('openrouter')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${provider === 'openrouter'
+                                        ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                    }`}
+                            >
+                                <Cpu className="w-4 h-4" />
+                                OpenRouter (Llama 3)
+                            </button>
+                        </div>
 
-                        {/* Input field dengan border yang jelas */}
-                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border-2 border-amber-200 dark:border-amber-800">
-                            <p className="text-xs text-slate-600 dark:text-slate-400 mb-1.5 font-medium">
-                                👇 Paste API Key di sini:
-                            </p>
-                            <div className="relative">
-                                <input
-                                    type={showKey ? "text" : "password"}
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="AIza..."
-                                    className="w-full px-3 py-2 pr-28 rounded-lg border-2 border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-sm"
-                                />
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                    {apiKey && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setApiKey('')}
-                                            className="p-1 text-slate-400 hover:text-red-500 transition-colors"
-                                            title="Hapus"
-                                        >
-                                            <X className="w-3.5 h-3.5" />
-                                        </button>
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            try {
-                                                const text = await navigator.clipboard.readText();
-                                                if (text) setApiKey(text);
-                                            } catch (err) {
-                                                console.error('Failed to read clipboard:', err);
-                                                alert('Gagal membaca clipboard. Pastikan Anda memberikan izin.');
-                                            }
-                                        }}
-                                        className="px-2 py-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 border border-amber-400 dark:border-amber-600 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
-                                        title="Tempel dari Clipboard"
-                                    >
-                                        Paste
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowKey(!showKey)}
-                                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                                    >
-                                        {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                    </button>
+                        {provider === 'gemini' ? (
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
+                                    Gemini API Key
+                                </label>
+                                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border-2 border-amber-200 dark:border-amber-800">
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-1.5 font-medium">
+                                        👇 Paste Gemini Key di sini:
+                                    </p>
+                                    <div className="relative">
+                                        <input
+                                            type={showKey ? "text" : "password"}
+                                            value={apiKey}
+                                            onChange={(e) => setApiKey(e.target.value)}
+                                            placeholder="AIza..."
+                                            className="w-full px-3 py-2 pr-28 rounded-lg border-2 border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-sm"
+                                        />
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                            {apiKey && (
+                                                <button type="button" onClick={() => setApiKey('')} className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowKey(!showKey)}
+                                                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                            >
+                                                {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-2.5 rounded-lg border border-blue-100 dark:border-blue-800/50">
+                                    <p className="text-xs text-blue-700 dark:text-blue-400">
+                                        💡 Dapatkan API key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-blue-900 dark:hover:text-blue-200">Google AI Studio</a>
+                                    </p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-2.5 rounded-lg border border-blue-100 dark:border-blue-800/50">
-                        <p className="text-xs text-blue-700 dark:text-blue-400">
-                            💡 Dapatkan API key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-blue-900 dark:hover:text-blue-200">Google AI Studio</a>
-                        </p>
+                        ) : (
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
+                                    OpenRouter API Key
+                                </label>
+                                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border-2 border-indigo-200 dark:border-indigo-800">
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-1.5 font-medium">
+                                        👇 Paste OpenRouter Key di sini:
+                                    </p>
+                                    <div className="relative">
+                                        <input
+                                            type={showKey ? "text" : "password"}
+                                            value={openRouterKey}
+                                            onChange={(e) => setOpenRouterKey(e.target.value)}
+                                            placeholder="sk-or-..."
+                                            className="w-full px-3 py-2 pr-28 rounded-lg border-2 border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+                                        />
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                            {openRouterKey && (
+                                                <button type="button" onClick={() => setOpenRouterKey('')} className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowKey(!showKey)}
+                                                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                            >
+                                                {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-800/50">
+                                    <p className="text-xs text-indigo-700 dark:text-indigo-400">
+                                        💡 Dapatkan API key di <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-indigo-900 dark:hover:text-indigo-200">OpenRouter.ai</a>
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -151,7 +201,7 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                         </button>
                         <button
                             onClick={handleSave}
-                            disabled={!apiKey.trim()}
+                            disabled={!apiKey.trim() && !openRouterKey.trim()}
                             className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20"
                         >
                             <Save className="w-3.5 h-3.5" />

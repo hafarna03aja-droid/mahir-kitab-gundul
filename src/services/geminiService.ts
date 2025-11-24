@@ -82,17 +82,7 @@ export async function askAiAssistant(userMessage: string): Promise<string> {
     return await callGeminiSDK(prompt, false);
 }
 
-/**
- * Fallback sederhana untuk terjemahan.
- */
-async function getFallbackTranslation(arabicText: string): Promise<string> {
-    try {
-        const prompt = `Terjemahkan ke Bahasa Indonesia: "${arabicText}"`;
-        return await callGeminiSDK(prompt, false);
-    } catch (err) {
-        return `[Terjemahan gagal: ${arabicText}]`;
-    }
-}
+
 
 /**
  * Analisis teks Arab dengan JSON Mode (ANTI GAGAL PARSING).
