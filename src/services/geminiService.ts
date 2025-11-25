@@ -32,10 +32,7 @@ const getGeminiModel = (jsonMode: boolean = false): GenerativeModel => {
     return genAI.getGenerativeModel({
         model: "gemini-1.5-flash", // LEBIH CEPAT & STABIL DIBANDING GEMINI-PRO
         // System Instruction: Ini KUNCI agar AI paham dia adalah ahli bahasa Arab
-        systemInstruction: `Anda adalah pakar bahasa Arab (Nahwu dan Shorof) yang mendalam. 
-        Tugas Anda adalah menganalisis teks Arab yang diberikan pengguna dengan akurat dan detail.
-        Berikan analisis yang komprehensif mencakup I'rab (kedudukan kata), Sharaf (morfologi), 
-        akar kata, dan penjelasan yang mudah dipahami dalam Bahasa Indonesia.`,
+        systemInstruction: "Anda adalah ahli bahasa dan sastra Arab. Tugas Anda adalah menghasilkan teks bahasa Arab yang benar secara tata bahasa (Nahwu dan Sharaf), menggunakan harakat lengkap jika diminta, dan bergaya bahasa formal (Fusha).",
         generationConfig: {
             // Jika jsonMode true, paksa output jadi JSON valid
             responseMimeType: jsonMode ? "application/json" : "text/plain",
@@ -74,6 +71,9 @@ async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise
         let errorMsg = error.message || "Terjadi kesalahan tidak dikenal";
         if (errorMsg.includes("API key not valid")) errorMsg = "API Key tidak valid. Cek kembali di Google AI Studio.";
         if (errorMsg.includes("429")) errorMsg = "Quota terlampaui (Rate Limit). Tunggu sebentar.";
+        if (errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found")) {
+            errorMsg += "\n\n--- SARAN ---\nJika error 404 muncul, coba ganti nama model di kode Anda menjadi salah satu di bawah ini:\n1. gemini-pro\n2. gemini-1.5-pro\n3. gemini-1.0-pro";
+        }
 
         throw new Error(`Gagal: ${errorMsg}`);
     }
