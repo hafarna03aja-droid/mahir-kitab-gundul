@@ -15,6 +15,8 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
     const [provider, setProvider] = useState<AiProvider>('gemini');
     const [showKey, setShowKey] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const modalBodyRef = React.useRef<HTMLDivElement>(null);
+    const topLabelRef = React.useRef<HTMLLabelElement>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -31,6 +33,22 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
             setProvider(savedProvider);
 
             setIsSaved(!!savedKey || !!savedOpenRouterKey || !!savedMaiaKey || !!savedOpenaiKey);
+
+            // Scroll to top when modal opens - with delays to override browser auto-scroll
+            setTimeout(() => {
+                if (topLabelRef.current) {
+                    topLabelRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
+                } else if (modalBodyRef.current) {
+                    modalBodyRef.current.scrollTop = 0;
+                }
+            }, 300);
+
+            // Second scroll attempt to ensure we stay at top
+            setTimeout(() => {
+                if (modalBodyRef.current) {
+                    modalBodyRef.current.scrollTop = 0;
+                }
+            }, 350);
         }
     }, [isOpen]);
 
@@ -83,10 +101,10 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Body */}
-                <div className="p-6 space-y-5 overflow-y-auto">
+                <div ref={modalBodyRef} className="p-6 space-y-5 overflow-y-auto">
                     {/* Provider Selection - Prominent */}
                     <div className="space-y-3">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block uppercase tracking-wide">
+                        <label ref={topLabelRef} className="text-sm font-bold text-slate-700 dark:text-slate-300 block uppercase tracking-wide">
                             🤖 Pilih AI Provider
                         </label>
                         <div className="grid grid-cols-2 gap-3">
@@ -100,7 +118,7 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                                 <div className="flex flex-col items-center gap-2">
                                     <Bot className={`w-6 h-6 ${provider === 'gemini' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
                                     <span className={`text-xs font-bold ${provider === 'gemini' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-600 dark:text-slate-400'}`}>
-                                        Google Gemini
+                                        Google AI Studio
                                     </span>
                                 </div>
                                 {provider === 'gemini' && (
@@ -166,7 +184,7 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                         {provider === 'gemini' && (
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
-                                    🔑 Gemini API Key
+                                    🔑 Google AI Studio API Key
                                 </label>
                                 <div className="bg-amber-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800">
                                     <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">
