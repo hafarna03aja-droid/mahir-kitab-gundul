@@ -93,32 +93,26 @@ export async function askAiAssistant(userMessage: string): Promise<string> {
  * Analisis teks Arab dengan JSON Mode (ANTI GAGAL PARSING).
  */
 export async function analyzeArabicText(arabicText: string): Promise<AnalysisResult> {
-    // Prompt disederhanakan karena kita menggunakan JSON Mode di config model
     const prompt = `
-    Analisis teks Arab berikut: "${arabicText}"
+    Analisis struktur gramatikal (I'rab) kalimat Arab berikut: "${arabicText}".
     
-    Tugas:
-    1. Berikan harakat lengkap (vocalizedText).
-    2. Terjemahkan ke Indonesia.
-    3. Pecah per kata (irab) dan analisis Nahwu (I'rab) serta Sharaf (Morfologi).
-    
-    Output WAJIB mengikuti struktur JSON ini:
+    Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
     {
-        "originalText": "string",
-        "vocalizedText": "string",
-        "translation": "string",
+        "originalText": "${arabicText}",
+        "vocalizedText": "teks arab dengan harakat lengkap",
+        "translation": "terjemahan bahasa indonesia",
         "irab": [
             {
-                "word": "string (kata gundul)",
-                "vocalized_word": "string (kata berharakat)",
-                "word_translation": "string",
+                "word": "kata asli (gundul)",
+                "vocalized_word": "kata berharakat",
+                "word_translation": "arti kata",
                 "analysis_details": {
-                    "i_rab": "string (analisis kedudukan kata/nahwu)",
-                    "i_rab_translation": "string (penjelasan irab bahasa indonesia)",
-                    "sharaf": "string (wazan/bentuk kata)",
-                    "sharaf_translation": "string (penjelasan sharaf bahasa indonesia)",
-                    "root_word": "string (akar kata)",
-                    "balaghah": "string (opsional)"
+                    "i_rab": "kedudukan nahwu (misal: Mubtada, Khabar, Fa'il)",
+                    "i_rab_translation": "penjelasan irab dalam bahasa indonesia",
+                    "sharaf": "bentuk morfologi (misal: Isim Fa'il, Fi'il Madhi)",
+                    "sharaf_translation": "penjelasan sharaf",
+                    "root_word": "akar kata (3 huruf)",
+                    "balaghah": "aspek balaghah (opsional)"
                 }
             }
         ]
@@ -130,14 +124,20 @@ export async function analyzeArabicText(arabicText: string): Promise<AnalysisRes
         const jsonString = await callGeminiSDK(prompt, true);
         const result = JSON.parse(jsonString) as AnalysisResult;
 
-        // Validasi data minimal
+        // Validasi data minimal agar tidak crash
         if (!result.vocalizedText) result.vocalizedText = arabicText;
         if (!result.irab) result.irab = [];
 
         return result;
     } catch (error) {
         console.error("Gagal parsing analisis:", error);
-        throw new Error("Gagal menganalisis struktur teks Arab. Coba kalimat yang lebih pendek.");
+        // Fallback jika gagal total
+        return {
+            originalText: arabicText,
+            vocalizedText: arabicText,
+            translation: "Gagal menganalisis teks. Silakan coba lagi.",
+            irab: []
+        };
     }
 }
 
