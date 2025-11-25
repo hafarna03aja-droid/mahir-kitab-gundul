@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Key, Trash2, Eye, EyeOff, Bot, Cpu } from 'lucide-react';
+import { X, Save, Key, Trash2, Eye, EyeOff, Bot, Cpu, Router, Sparkles } from 'lucide-react';
 import { getActiveProvider, setActiveProvider, type AiProvider } from '../services/aiService';
 
 interface ApiKeySettingsProps {
@@ -10,6 +10,8 @@ interface ApiKeySettingsProps {
 const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
     const [apiKey, setApiKey] = useState('');
     const [openRouterKey, setOpenRouterKey] = useState('');
+    const [maiaKey, setMaiaKey] = useState('');
+    const [openaiKey, setOpenaiKey] = useState('');
     const [provider, setProvider] = useState<AiProvider>('gemini');
     const [showKey, setShowKey] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
@@ -18,19 +20,25 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
         if (isOpen) {
             const savedKey = localStorage.getItem('gemini_api_key');
             const savedOpenRouterKey = localStorage.getItem('openrouter_api_key');
+            const savedMaiaKey = localStorage.getItem('maia_api_key');
+            const savedOpenaiKey = localStorage.getItem('openai_api_key');
             const savedProvider = getActiveProvider();
 
             setApiKey(savedKey || '');
             setOpenRouterKey(savedOpenRouterKey || '');
+            setMaiaKey(savedMaiaKey || '');
+            setOpenaiKey(savedOpenaiKey || '');
             setProvider(savedProvider);
 
-            setIsSaved(!!savedKey || !!savedOpenRouterKey);
+            setIsSaved(!!savedKey || !!savedOpenRouterKey || !!savedMaiaKey || !!savedOpenaiKey);
         }
     }, [isOpen]);
 
     const handleSave = () => {
         if (apiKey.trim()) localStorage.setItem('gemini_api_key', apiKey.trim());
         if (openRouterKey.trim()) localStorage.setItem('openrouter_api_key', openRouterKey.trim());
+        if (maiaKey.trim()) localStorage.setItem('maia_api_key', maiaKey.trim());
+        if (openaiKey.trim()) localStorage.setItem('openai_api_key', openaiKey.trim());
 
         setActiveProvider(provider);
         setIsSaved(true);
@@ -42,8 +50,12 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
     const handleClear = () => {
         localStorage.removeItem('gemini_api_key');
         localStorage.removeItem('openrouter_api_key');
+        localStorage.removeItem('maia_api_key');
+        localStorage.removeItem('openai_api_key');
         setApiKey('');
         setOpenRouterKey('');
+        setMaiaKey('');
+        setOpenaiKey('');
         setIsSaved(false);
         alert('Semua API Key berhasil dihapus.');
         window.location.reload();
@@ -80,38 +92,70 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => setProvider('gemini')}
-                                className={`relative p-4 rounded-xl border-2 transition-all ${provider === 'gemini'
+                                className={`relative p-3 rounded-xl border-2 transition-all ${provider === 'gemini'
                                     ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 shadow-lg shadow-amber-500/20'
                                     : 'border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700'
                                     }`}
                             >
                                 <div className="flex flex-col items-center gap-2">
-                                    <Bot className={`w-8 h-8 ${provider === 'gemini' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
-                                    <span className={`text-sm font-bold ${provider === 'gemini' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-600 dark:text-slate-400'}`}>
+                                    <Bot className={`w-6 h-6 ${provider === 'gemini' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
+                                    <span className={`text-xs font-bold ${provider === 'gemini' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-600 dark:text-slate-400'}`}>
                                         Google Gemini
                                     </span>
-                                    <span className="text-xs text-slate-500 dark:text-slate-500">gemini-1.5-flash</span>
                                 </div>
                                 {provider === 'gemini' && (
-                                    <div className="absolute top-2 right-2 w-3 h-3 bg-amber-500 rounded-full animate-pulse"></div>
+                                    <div className="absolute top-2 right-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
                                 )}
                             </button>
                             <button
                                 onClick={() => setProvider('openrouter')}
-                                className={`relative p-4 rounded-xl border-2 transition-all ${provider === 'openrouter'
+                                className={`relative p-3 rounded-xl border-2 transition-all ${provider === 'openrouter'
                                     ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 shadow-lg shadow-indigo-500/20'
                                     : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
                                     }`}
                             >
                                 <div className="flex flex-col items-center gap-2">
-                                    <Cpu className={`w-8 h-8 ${provider === 'openrouter' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
-                                    <span className={`text-sm font-bold ${provider === 'openrouter' ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400'}`}>
+                                    <Cpu className={`w-6 h-6 ${provider === 'openrouter' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                                    <span className={`text-xs font-bold ${provider === 'openrouter' ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400'}`}>
                                         OpenRouter
                                     </span>
-                                    <span className="text-xs text-slate-500 dark:text-slate-500">Llama 3.3 70B</span>
                                 </div>
                                 {provider === 'openrouter' && (
-                                    <div className="absolute top-2 right-2 w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
+                                    <div className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setProvider('maia')}
+                                className={`relative p-3 rounded-xl border-2 transition-all ${provider === 'maia'
+                                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg shadow-emerald-500/20'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700'
+                                    }`}
+                            >
+                                <div className="flex flex-col items-center gap-2">
+                                    <Router className={`w-6 h-6 ${provider === 'maia' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+                                    <span className={`text-xs font-bold ${provider === 'maia' ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400'}`}>
+                                        Maia Router
+                                    </span>
+                                </div>
+                                {provider === 'maia' && (
+                                    <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setProvider('openai')}
+                                className={`relative p-3 rounded-xl border-2 transition-all ${provider === 'openai'
+                                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 shadow-lg shadow-teal-500/20'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700'
+                                    }`}
+                            >
+                                <div className="flex flex-col items-center gap-2">
+                                    <Sparkles className={`w-6 h-6 ${provider === 'openai' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400'}`} />
+                                    <span className={`text-xs font-bold ${provider === 'openai' ? 'text-teal-700 dark:text-teal-300' : 'text-slate-600 dark:text-slate-400'}`}>
+                                        OpenAI
+                                    </span>
+                                </div>
+                                {provider === 'openai' && (
+                                    <div className="absolute top-2 right-2 w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
                                 )}
                             </button>
                         </div>
@@ -119,7 +163,7 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
 
                     {/* API Key Input */}
                     <div className="space-y-3">
-                        {provider === 'gemini' ? (
+                        {provider === 'gemini' && (
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                                     🔑 Gemini API Key
@@ -158,7 +202,9 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                                     </p>
                                 </div>
                             </div>
-                        ) : (
+                        )}
+
+                        {provider === 'openrouter' && (
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                                     🔑 OpenRouter API Key
@@ -198,6 +244,88 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
                         )}
+
+                        {provider === 'maia' && (
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
+                                    🔑 Maia Router API Key
+                                </label>
+                                <div className="bg-emerald-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-emerald-200 dark:border-emerald-800">
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">
+                                        👇 Paste API Key di sini:
+                                    </p>
+                                    <div className="relative">
+                                        <input
+                                            type={showKey ? "text" : "password"}
+                                            value={maiaKey}
+                                            onChange={(e) => setMaiaKey(e.target.value)}
+                                            placeholder="maia-..."
+                                            className="w-full px-4 py-3 pr-24 rounded-lg border-2 border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-sm font-mono"
+                                        />
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                            {maiaKey && (
+                                                <button type="button" onClick={() => setMaiaKey('')} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowKey(!showKey)}
+                                                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                            >
+                                                {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
+                                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                                        💡 Gunakan API Key dari Maia Router
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {provider === 'openai' && (
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
+                                    🔑 OpenAI API Key
+                                </label>
+                                <div className="bg-teal-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-teal-200 dark:border-teal-800">
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">
+                                        👇 Paste API Key di sini:
+                                    </p>
+                                    <div className="relative">
+                                        <input
+                                            type={showKey ? "text" : "password"}
+                                            value={openaiKey}
+                                            onChange={(e) => setOpenaiKey(e.target.value)}
+                                            placeholder="sk-..."
+                                            className="w-full px-4 py-3 pr-24 rounded-lg border-2 border-teal-300 dark:border-teal-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-sm font-mono"
+                                        />
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                            {openaiKey && (
+                                                <button type="button" onClick={() => setOpenaiKey('')} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowKey(!showKey)}
+                                                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                            >
+                                                {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-teal-50 dark:bg-teal-900/20 p-3 rounded-lg border border-teal-200 dark:border-teal-800/50">
+                                    <p className="text-xs text-teal-700 dark:text-teal-400">
+                                        💡 Dapatkan API key di <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-teal-900 dark:hover:text-teal-200">OpenAI Platform</a>
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -223,7 +351,7 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                         </button>
                         <button
                             onClick={handleSave}
-                            disabled={!apiKey.trim() && !openRouterKey.trim()}
+                            disabled={!apiKey.trim() && !openRouterKey.trim() && !maiaKey.trim() && !openaiKey.trim()}
                             className="px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/30"
                         >
                             <Save className="w-4 h-4" />
