@@ -31,6 +31,11 @@ const getGeminiModel = (jsonMode: boolean = false): GenerativeModel => {
 
     return genAI.getGenerativeModel({
         model: "gemini-1.5-flash", // LEBIH CEPAT & STABIL DIBANDING GEMINI-PRO
+        // System Instruction: Ini KUNCI agar AI paham dia adalah ahli bahasa Arab
+        systemInstruction: `Anda adalah pakar bahasa Arab (Nahwu dan Shorof) yang mendalam. 
+        Tugas Anda adalah menganalisis teks Arab yang diberikan pengguna dengan akurat dan detail.
+        Berikan analisis yang komprehensif mencakup I'rab (kedudukan kata), Sharaf (morfologi), 
+        akar kata, dan penjelasan yang mudah dipahami dalam Bahasa Indonesia.`,
         generationConfig: {
             // Jika jsonMode true, paksa output jadi JSON valid
             responseMimeType: jsonMode ? "application/json" : "text/plain",

@@ -5,11 +5,11 @@ import type { AnalysisResult } from '../types';
 export type AiProvider = 'gemini' | 'openrouter';
 
 export const getActiveProvider = (): AiProvider => {
-    return (localStorage.getItem('ai_provider') as AiProvider) || 'gemini';
+    return (localStorage.getItem('active_provider') as AiProvider) || 'gemini';
 };
 
 export const setActiveProvider = (provider: AiProvider) => {
-    localStorage.setItem('ai_provider', provider);
+    localStorage.setItem('active_provider', provider);
 };
 
 export async function analyzeArabicText(text: string): Promise<AnalysisResult> {
