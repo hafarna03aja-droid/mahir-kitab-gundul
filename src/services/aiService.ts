@@ -7,7 +7,11 @@ import type { AnalysisResult } from '../types';
 export type AiProvider = 'gemini' | 'openrouter' | 'maia' | 'openai';
 
 export const getActiveProvider = (): AiProvider => {
-    return (localStorage.getItem('active_provider') as AiProvider) || 'gemini';
+    const saved = localStorage.getItem('active_provider');
+    if (saved === 'gemini' || saved === 'openrouter' || saved === 'maia' || saved === 'openai') {
+        return saved;
+    }
+    return 'gemini';
 };
 
 export const setActiveProvider = (provider: AiProvider) => {

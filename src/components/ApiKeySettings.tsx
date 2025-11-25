@@ -107,7 +107,7 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                         <label ref={topLabelRef} className="text-sm font-bold text-slate-700 dark:text-slate-300 block uppercase tracking-wide">
                             🤖 Pilih AI Provider
                         </label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3">
                             <button
                                 onClick={() => setProvider('gemini')}
                                 className={`relative p-3 rounded-xl border-2 transition-all ${provider === 'gemini'
