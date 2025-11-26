@@ -197,8 +197,8 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                                             onChange={(e) => setApiKey(e.target.value)}
                                             placeholder="AIza..."
                                             className={`w-full px-4 py-3 pr-24 rounded-lg border-2 ${apiKey && !apiKey.startsWith('AIza')
-                                                    ? 'border-red-400 dark:border-red-600'
-                                                    : 'border-amber-300 dark:border-amber-700'
+                                                ? 'border-red-400 dark:border-red-600'
+                                                : 'border-amber-300 dark:border-amber-700'
                                                 } bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-sm font-mono`}
                                         />
                                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
