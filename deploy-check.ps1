@@ -20,7 +20,8 @@ Write-Host "1. Checking Git..." -ForegroundColor Green
 if (Test-CommandExists git) {
     $gitVersion = git --version
     Write-Host "   ✓ $gitVersion" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ✗ Git not found. Install from https://git-scm.com" -ForegroundColor Red
     exit 1
 }
@@ -30,7 +31,8 @@ Write-Host "2. Checking Node.js..." -ForegroundColor Green
 if (Test-CommandExists node) {
     $nodeVersion = node --version
     Write-Host "   ✓ Node $nodeVersion" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ✗ Node.js not found. Install from https://nodejs.org" -ForegroundColor Red
     exit 1
 }
@@ -39,7 +41,8 @@ if (Test-CommandExists node) {
 Write-Host "3. Checking Git repository..." -ForegroundColor Green
 if (Test-Path ".git") {
     Write-Host "   ✓ Git repository exists" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ℹ Initializing Git repository..." -ForegroundColor Yellow
     git init
     Write-Host "   ✓ Git initialized" -ForegroundColor Green
@@ -49,13 +52,15 @@ if (Test-Path ".git") {
 Write-Host "4. Checking environment file..." -ForegroundColor Green
 if (Test-Path ".env") {
     Write-Host "   ✓ .env file exists" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ⚠ .env file not found" -ForegroundColor Yellow
     Write-Host "   Creating from .env.example..." -ForegroundColor Yellow
     if (Test-Path ".env.example") {
         Copy-Item ".env.example" ".env"
         Write-Host "   ✓ .env created. Please edit with your API keys!" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "   ✗ .env.example not found" -ForegroundColor Red
     }
 }
@@ -66,7 +71,9 @@ Write-Host "   Building project..." -ForegroundColor Yellow
 $buildResult = npm run build 2>&1
 if ($LASTEXITCODE -eq 0) {
     Write-Host "   ✓ Build successful" -ForegroundColor Green
-} else {
+}
+else {
+    $buildResult | ForEach-Object { Write-Host $_ }
     Write-Host "   ✗ Build failed. Check errors above." -ForegroundColor Red
     exit 1
 }
@@ -77,7 +84,8 @@ $status = git status --short
 if ($status) {
     Write-Host "   Files to commit:" -ForegroundColor Yellow
     git status --short
-} else {
+}
+else {
     Write-Host "   ✓ No changes to commit" -ForegroundColor Green
 }
 
@@ -95,11 +103,16 @@ Write-Host "   git commit -m 'Initial commit'" -ForegroundColor Cyan
 Write-Host "   git remote add origin https://github.com/YOUR_USERNAME/mahir-arab-gundul.git" -ForegroundColor Cyan
 Write-Host "   git push -u origin main" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "4. Deploy to Vercel:" -ForegroundColor White
+Write-Host "4. Deploy to Vercel OR Netlify:" -ForegroundColor White
+Write-Host "   [Vercel]" -ForegroundColor Yellow
 Write-Host "   - Visit https://vercel.com" -ForegroundColor Cyan
 Write-Host "   - Import your GitHub repository" -ForegroundColor Cyan
 Write-Host "   - Add environment variables" -ForegroundColor Cyan
-Write-Host "   - Click Deploy!" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "   [Netlify]" -ForegroundColor Yellow
+Write-Host "   - Visit https://netlify.com" -ForegroundColor Cyan
+Write-Host "   - Import your GitHub repository" -ForegroundColor Cyan
+Write-Host "   - Build settings are auto-configured via netlify.toml" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "✨ Good luck with your deployment! ✨" -ForegroundColor Green
 Write-Host ""
