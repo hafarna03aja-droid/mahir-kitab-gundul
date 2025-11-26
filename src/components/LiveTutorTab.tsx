@@ -65,7 +65,7 @@ const LiveTutorTab: React.FC = () => {
 
             recognitionRef.current.onresult = async (event: any) => {
                 const transcript = event.results[0][0].transcript;
-                console.log('Recognized:', transcript);
+
 
                 const userMessage: Message = {
                     role: 'user',
@@ -174,7 +174,7 @@ Sapa pengguna dengan format:
         }
 
         setPlayingAudioId(audioId);
-        console.log(`📢 Playing ${lang}:`, text);
+
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = lang;
@@ -207,7 +207,7 @@ Sapa pengguna dengan format:
 
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
-                console.log('✅ Using voice:', selectedVoice.name, '(' + selectedVoice.lang + ')');
+
             }
 
             utterance.onend = () => {
@@ -249,7 +249,7 @@ Sapa pengguna dengan format:
         const indonesianMatch = text.match(/\[INDO\]\s*(.+?)$/s);
         const indonesianText = indonesianMatch ? indonesianMatch[1].trim() : text;
 
-        console.log('📢 Speaking Indonesian tutor:', indonesianText);
+
 
         setIsSpeaking(true);
         setStatusMessage('🔊 Ustadz Cerdas sedang menjelaskan dalam Bahasa Indonesia...');
@@ -263,7 +263,7 @@ Sapa pengguna dengan format:
         // Load voices and select best Indonesian voice
         const loadVoicesAndSpeak = () => {
             const voices = synthRef.current!.getVoices();
-            console.log('🎤 Available voices:', voices.length);
+
 
             // Priority order for Indonesian voices
             let indonesianVoice =
@@ -280,17 +280,17 @@ Sapa pengguna dengan format:
 
             if (indonesianVoice) {
                 utterance.voice = indonesianVoice;
-                console.log('✅ Using Indonesian voice:', indonesianVoice.name, '(' + indonesianVoice.lang + ')');
+
             } else {
                 console.warn('⚠️ No Indonesian voice found, using default (voice may sound unnatural)');
             }
 
             utterance.onstart = () => {
-                console.log('🔊 Started speaking Indonesian explanation');
+
             };
 
             utterance.onend = () => {
-                console.log('✅ Finished speaking Indonesian');
+
                 setIsSpeaking(false);
                 setIsProcessing(false);
                 setStatusMessage('✅ Giliran Anda! Klik mikrofon untuk berbicara dalam Bahasa Arab.');
@@ -345,7 +345,7 @@ Sapa pengguna dengan format:
         if (synthRef.current) {
             if (synthRef.current.getVoices().length === 0) {
                 synthRef.current.addEventListener('voiceschanged', () => {
-                    console.log('Voices loaded:', synthRef.current?.getVoices().length);
+
                 }, { once: true });
             }
         }

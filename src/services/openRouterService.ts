@@ -29,7 +29,7 @@ const MODEL_ID = "meta-llama/llama-3.3-70b-instruct:free";
 async function callOpenRouter(prompt: string, jsonMode: boolean = false): Promise<string> {
     try {
         const openai = getOpenAIClient();
-        console.log(`🔄 Mengirim request ke OpenRouter (${MODEL_ID})...`);
+
 
         const completion = await openai.chat.completions.create({
             model: MODEL_ID,
@@ -42,7 +42,7 @@ async function callOpenRouter(prompt: string, jsonMode: boolean = false): Promis
         const text = completion.choices[0].message.content;
         if (!text) throw new Error("Response kosong dari OpenRouter.");
 
-        console.log('✅ Berhasil dari OpenRouter!');
+
         return text;
     } catch (error: any) {
         console.error('❌ Error calling OpenRouter:', error);

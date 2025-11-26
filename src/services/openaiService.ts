@@ -24,7 +24,7 @@ const MODEL_ID = "gpt-4o-mini";
 async function callOpenAI(prompt: string, jsonMode: boolean = false): Promise<string> {
     try {
         const client = getOpenAIClient();
-        console.log(`🔄 Mengirim request ke OpenAI (${MODEL_ID})...`);
+
 
         const completion = await client.chat.completions.create({
             model: MODEL_ID,
@@ -37,7 +37,7 @@ async function callOpenAI(prompt: string, jsonMode: boolean = false): Promise<st
         const text = completion.choices[0].message.content;
         if (!text) throw new Error("Response kosong dari OpenAI.");
 
-        console.log('✅ Berhasil dari OpenAI!');
+
         return text;
     } catch (error: any) {
         console.error('❌ Error calling OpenAI:', error);

@@ -29,7 +29,7 @@ const MODEL_ID = "maia/gemini-2.5-flash";
 async function callMaiaRouter(prompt: string, jsonMode: boolean = false): Promise<string> {
     try {
         const client = getMaiaClient();
-        console.log(`🔄 Mengirim request ke Maia Router (${MODEL_ID})...`);
+
 
         const completion = await client.chat.completions.create({
             model: MODEL_ID,
@@ -42,7 +42,7 @@ async function callMaiaRouter(prompt: string, jsonMode: boolean = false): Promis
         const text = completion.choices[0].message.content;
         if (!text) throw new Error("Response kosong dari Maia Router.");
 
-        console.log('✅ Berhasil dari Maia Router!');
+
         return text;
     } catch (error: any) {
         console.error('❌ Error calling Maia Router:', error);

@@ -104,7 +104,7 @@ async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise
         for (let attempt = 1; attempt <= 3; attempt++) {
             try {
                 const model = getGeminiModel(modelName, jsonMode);
-                console.log(`🔄 Mengirim request ke ${modelName} (attempt ${attempt})...`);
+
 
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
@@ -112,7 +112,7 @@ async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise
 
                 if (!text) throw new Error("Response kosong dari Gemini.");
 
-                console.log(`✅ Berhasil dengan ${modelName}!`);
+
                 return text;
 
             } catch (error: any) {
@@ -134,21 +134,21 @@ async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise
 
                 // Jika model not found, coba model berikutnya
                 if (isNotFound) {
-                    console.log(`⚠️ Model ${modelName} tidak tersedia, mencoba model berikutnya...`);
+
                     break; // Break dari retry loop, lanjut ke model berikutnya
                 }
 
                 // Jika rate limit atau server error, retry dengan exponential backoff
                 if ((isRateLimit || isServerError) && attempt < 3) {
                     const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-                    console.log(`⏳ Rate limit/Server error. Menunggu ${waitTime / 1000}s sebelum retry...`);
+
                     await sleep(waitTime);
                     continue; // Retry dengan model yang sama
                 }
 
                 // Jika sudah attempt terakhir untuk model ini, coba model berikutnya
                 if (attempt === 3) {
-                    console.log(`⚠️ Gagal setelah 3 attempts dengan ${modelName}, mencoba model berikutnya...`);
+
                     break;
                 }
             }
