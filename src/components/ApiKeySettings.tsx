@@ -196,13 +196,23 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                                             value={apiKey}
                                             onChange={(e) => setApiKey(e.target.value)}
                                             placeholder="AIza..."
-                                            className="w-full px-4 py-3 pr-24 rounded-lg border-2 border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-sm font-mono"
+                                            className={`w-full px-4 py-3 pr-24 rounded-lg border-2 ${apiKey && !apiKey.startsWith('AIza')
+                                                    ? 'border-red-400 dark:border-red-600'
+                                                    : 'border-amber-300 dark:border-amber-700'
+                                                } bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-sm font-mono`}
                                         />
                                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                                             {apiKey && (
-                                                <button type="button" onClick={() => setApiKey('')} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors">
-                                                    <X className="w-4 h-4" />
-                                                </button>
+                                                <>
+                                                    {apiKey.startsWith('AIza') && apiKey.length >= 30 ? (
+                                                        <span className="text-green-500 text-xs mr-1">✓</span>
+                                                    ) : (
+                                                        <span className="text-red-500 text-xs mr-1">✗</span>
+                                                    )}
+                                                    <button type="button" onClick={() => setApiKey('')} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </>
                                             )}
                                             <button
                                                 type="button"
@@ -213,11 +223,26 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose }) => {
                                             </button>
                                         </div>
                                     </div>
+                                    {apiKey && !apiKey.startsWith('AIza') && (
+                                        <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                                            ⚠️ API Key Gemini biasanya dimulai dengan "AIza"
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800/50">
-                                    <p className="text-xs text-blue-700 dark:text-blue-400">
+                                    <p className="text-xs text-blue-700 dark:text-blue-400 mb-2">
                                         💡 Dapatkan API key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-blue-900 dark:hover:text-blue-200">Google AI Studio</a>
                                     </p>
+                                    <details className="text-xs text-blue-600 dark:text-blue-400">
+                                        <summary className="cursor-pointer font-semibold hover:text-blue-800 dark:hover:text-blue-200">
+                                            ℹ️ Perbedaan Free vs Paid Tier
+                                        </summary>
+                                        <div className="mt-2 space-y-1 pl-4">
+                                            <p>• <strong>Free Tier:</strong> 15 req/menit, 1500 req/hari</p>
+                                            <p>• <strong>Paid Tier:</strong> Rate limit lebih tinggi, akses model premium</p>
+                                            <p>• Kedua tier menggunakan format API key yang sama</p>
+                                        </div>
+                                    </details>
                                 </div>
                             </div>
                         )}

@@ -9,6 +9,37 @@ import type { AnalysisResult } from '../types';
 
 const ENV_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
+// Model prioritas: coba dari yang paling stabil/cepat ke yang paling canggih
+const MODEL_PRIORITY = [
+    "gemini-1.5-flash",    // Paling cepat, cocok untuk free tier
+    "gemini-1.5-pro",      // Lebih canggih, butuh paid tier atau quota lebih
+    "gemini-pro",          // Fallback untuk kompatibilitas
+];
+
+/**
+ * Validasi format API key Gemini
+ */
+const validateApiKey = (apiKey: string): { valid: boolean; message?: string } => {
+    if (!apiKey || apiKey.trim() === '') {
+        return { valid: false, message: 'API Key kosong' };
+    }
+
+    // Gemini API key biasanya dimulai dengan "AIza"
+    if (!apiKey.startsWith('AIza')) {
+        return {
+            valid: false,
+            message: 'Format API Key tidak valid. API Key Gemini biasanya dimulai dengan "AIza"'
+        };
+    }
+
+    // Panjang minimal API key
+    if (apiKey.length < 30) {
+        return { valid: false, message: 'API Key terlalu pendek' };
+    }
+
+    return { valid: true };
+};
+
 /**
  * Mengambil API key dari localStorage atau .env.
  */
@@ -18,19 +49,25 @@ export const getApiKey = (): string => {
 
 /**
  * Inisialisasi Model Gemini dengan konfigurasi "Anti Gagal".
- * Menggunakan gemini-1.5-flash yang lebih cepat dan mendukung JSON Mode native.
+ * Support model fallback untuk kompatibilitas maksimal.
  */
-const getGeminiModel = (jsonMode: boolean = false): GenerativeModel => {
+const getGeminiModel = (modelName: string, jsonMode: boolean = false): GenerativeModel => {
     const API_KEY = getApiKey();
 
     if (!API_KEY) {
         throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di pengaturan.');
     }
 
+    // Validasi API key
+    const validation = validateApiKey(API_KEY);
+    if (!validation.valid) {
+        throw new Error(`API Key tidak valid: ${validation.message}`);
+    }
+
     const genAI = new GoogleGenerativeAI(API_KEY);
 
     return genAI.getGenerativeModel({
-        model: "gemini-1.5-flash", // LEBIH CEPAT & STABIL DIBANDING GEMINI-PRO
+        model: modelName,
         // System Instruction: Ini KUNCI agar AI paham dia adalah ahli bahasa Arab
         systemInstruction: "Anda adalah ahli bahasa dan sastra Arab. Tugas Anda adalah menghasilkan teks bahasa Arab yang benar secara tata bahasa (Nahwu dan Sharaf), menggunakan harakat lengkap jika diminta, dan bergaya bahasa formal (Fusha).",
         generationConfig: {
@@ -49,34 +86,99 @@ const getGeminiModel = (jsonMode: boolean = false): GenerativeModel => {
 };
 
 /**
- * Wrapper umum untuk memanggil Gemini
+ * Sleep utility untuk retry dengan exponential backoff
+ */
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Wrapper umum untuk memanggil Gemini dengan model fallback dan retry logic
  */
 async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise<string> {
-    try {
-        const model = getGeminiModel(jsonMode);
-        console.log('🔄 Mengirim request ke Gemini 1.5 Flash...');
+    let lastError: any = null;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+    // Coba setiap model dalam priority list
+    for (let modelIndex = 0; modelIndex < MODEL_PRIORITY.length; modelIndex++) {
+        const modelName = MODEL_PRIORITY[modelIndex];
 
-        if (!text) throw new Error("Response kosong dari Gemini.");
+        // Retry logic untuk setiap model (max 3 attempts)
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                const model = getGeminiModel(modelName, jsonMode);
+                console.log(`🔄 Mengirim request ke ${modelName} (attempt ${attempt})...`);
 
-        console.log('✅ Berhasil!');
-        return text;
-    } catch (error: any) {
-        console.error('❌ Error calling Gemini SDK:', error);
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = response.text();
 
-        // Handle error spesifik Google
-        let errorMsg = error.message || "Terjadi kesalahan tidak dikenal";
-        if (errorMsg.includes("API key not valid")) errorMsg = "API Key tidak valid. Cek kembali di Google AI Studio.";
-        if (errorMsg.includes("429")) errorMsg = "Quota terlampaui (Rate Limit). Tunggu sebentar.";
-        if (errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found")) {
-            errorMsg += "\n\n--- SARAN ---\nJika error 404 muncul, coba ganti nama model di kode Anda menjadi salah satu di bawah ini:\n1. gemini-pro\n2. gemini-1.5-pro\n3. gemini-1.0-pro";
+                if (!text) throw new Error("Response kosong dari Gemini.");
+
+                console.log(`✅ Berhasil dengan ${modelName}!`);
+                return text;
+
+            } catch (error: any) {
+                lastError = error;
+                const errorMsg = error.message || "";
+
+                console.error(`❌ Error dengan ${modelName} (attempt ${attempt}):`, errorMsg);
+
+                // Deteksi jenis error
+                const isRateLimit = errorMsg.includes("429") || errorMsg.includes("RATE_LIMIT") || errorMsg.includes("RESOURCE_EXHAUSTED");
+                const isNotFound = errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found");
+                const isInvalidKey = errorMsg.includes("API key not valid") || errorMsg.includes("PERMISSION_DENIED");
+                const isServerError = errorMsg.includes("503") || errorMsg.includes("500");
+
+                // Jika API key invalid, langsung throw tanpa retry
+                if (isInvalidKey) {
+                    throw new Error("❌ API Key tidak valid atau tidak memiliki akses. Periksa kembali API Key Anda di Google AI Studio (https://aistudio.google.com/app/apikey)");
+                }
+
+                // Jika model not found, coba model berikutnya
+                if (isNotFound) {
+                    console.log(`⚠️ Model ${modelName} tidak tersedia, mencoba model berikutnya...`);
+                    break; // Break dari retry loop, lanjut ke model berikutnya
+                }
+
+                // Jika rate limit atau server error, retry dengan exponential backoff
+                if ((isRateLimit || isServerError) && attempt < 3) {
+                    const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+                    console.log(`⏳ Rate limit/Server error. Menunggu ${waitTime / 1000}s sebelum retry...`);
+                    await sleep(waitTime);
+                    continue; // Retry dengan model yang sama
+                }
+
+                // Jika sudah attempt terakhir untuk model ini, coba model berikutnya
+                if (attempt === 3) {
+                    console.log(`⚠️ Gagal setelah 3 attempts dengan ${modelName}, mencoba model berikutnya...`);
+                    break;
+                }
+            }
         }
-
-        throw new Error(`Gagal: ${errorMsg}`);
     }
+
+    // Jika semua model gagal, throw error dengan pesan yang informatif
+    const errorMsg = lastError?.message || "Terjadi kesalahan tidak dikenal";
+
+    let userFriendlyMsg = "❌ Gagal menghubungi Gemini API setelah mencoba semua model.\n\n";
+
+    if (errorMsg.includes("API key not valid") || errorMsg.includes("PERMISSION_DENIED")) {
+        userFriendlyMsg += "🔑 **Masalah API Key:**\n";
+        userFriendlyMsg += "- Pastikan API Key valid dan aktif\n";
+        userFriendlyMsg += "- Dapatkan API Key di: https://aistudio.google.com/app/apikey\n";
+        userFriendlyMsg += "- Untuk free tier, pastikan quota harian belum habis";
+    } else if (errorMsg.includes("429") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
+        userFriendlyMsg += "⏱️ **Quota/Rate Limit Terlampaui:**\n";
+        userFriendlyMsg += "- Free tier: 15 requests/menit, 1500 requests/hari\n";
+        userFriendlyMsg += "- Tunggu beberapa menit atau upgrade ke paid tier\n";
+        userFriendlyMsg += "- Info: https://ai.google.dev/pricing";
+    } else if (errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found")) {
+        userFriendlyMsg += "🔍 **Model Tidak Ditemukan:**\n";
+        userFriendlyMsg += "- Kemungkinan API Key Anda tidak memiliki akses ke model Gemini\n";
+        userFriendlyMsg += "- Coba buat API Key baru di Google AI Studio";
+    } else {
+        userFriendlyMsg += `📋 **Detail Error:** ${errorMsg}`;
+    }
+
+    throw new Error(userFriendlyMsg);
 }
 
 /**
@@ -86,8 +188,6 @@ export async function askAiAssistant(userMessage: string): Promise<string> {
     const prompt = `Kamu adalah asisten pakar Bahasa Arab (Nahwu, Sharaf, Balaghah). Jawablah pertanyaan ini dengan ringkas, jelas, dan menggunakan referensi kaidah bahasa yang benar:\n\nPertanyaan: "${userMessage}"`;
     return await callGeminiSDK(prompt, false);
 }
-
-
 
 /**
  * Analisis teks Arab dengan JSON Mode (ANTI GAGAL PARSING).
