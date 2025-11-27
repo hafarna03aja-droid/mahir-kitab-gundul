@@ -51,6 +51,8 @@ git push -u origin main
    | `VITE_GEMINI_API_KEY` | (API Key Anda) |
    | `VITE_MAIAROUTER_URL` | `https://api.maiarouter.ai/v1/chat/completions` |
    | `VITE_GOOGLE_GEMINI_API_KEY` | (Optional, jika pakai Google AI Studio) |
+   | `VITE_SUPABASE_URL` | `https://viywfnjhpnunwhakhnrj.supabase.co` |
+   | `VITE_SUPABASE_ANON_KEY` | (Supabase Anon Key Anda) |
 
 5. **Deploy**
    - Klik **"Deploy mahir-arab-gundul"**

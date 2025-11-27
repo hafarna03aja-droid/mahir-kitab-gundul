@@ -1,5 +1,4 @@
 import React from 'react';
-import { supabase } from '../supabaseClient';
 
 interface PreviewModeWrapperProps {
     children: React.ReactNode;
