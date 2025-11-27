@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 
-export default function Login() {
+interface LoginProps {
+    onPreviewMode?: () => void;
+}
+
+export default function Login({ onPreviewMode }: LoginProps) {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -81,6 +85,30 @@ export default function Login() {
                     {isSignUp ? 'Login' : 'Sign Up'}
                 </button>
             </p>
+
+            {/* Preview Mode Button */}
+            {onPreviewMode && (
+                <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid #ddd' }}>
+                    <button
+                        onClick={onPreviewMode}
+                        style={{
+                            padding: '10px 20px',
+                            borderRadius: '5px',
+                            border: '2px solid #10b981',
+                            backgroundColor: 'white',
+                            color: '#10b981',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '14px'
+                        }}
+                    >
+                        👁️ Preview Mode (Tanpa Login)
+                    </button>
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                        Lihat aplikasi tanpa perlu login
+                    </p>
+                </div>
+            )}
         </div>
     );
 }
