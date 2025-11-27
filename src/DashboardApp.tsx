@@ -23,7 +23,7 @@ export default function DashboardApp({ session }: DashboardAppProps) {
             setLoading(true);
             const { user } = session;
 
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('profiles')
                 .select('status')
                 .eq('id', user.id)

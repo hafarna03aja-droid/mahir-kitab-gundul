@@ -58,6 +58,8 @@ git push -u origin main
    VITE_GEMINI_API_KEY=your_maiarouter_key
    VITE_MAIAROUTER_URL=https://api.maiarouter.ai/v1/chat/completions
    VITE_GOOGLE_GEMINI_API_KEY=your_google_key (optional)
+   VITE_SUPABASE_URL=https://viywfnjhpnunwhakhnrj.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
 5. **Deploy**
