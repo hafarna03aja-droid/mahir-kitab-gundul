@@ -1,0 +1,86 @@
+import { useState } from 'react';
+import { supabase } from '../supabaseClient';
+
+export default function Login() {
+    const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [message, setMessage] = useState('');
+
+    const handleAuth = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage('');
+
+        try {
+            if (isSignUp) {
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                });
+                if (error) throw error;
+                setMessage('Sign up successful! Please check your email for confirmation link.');
+            } else {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (error) throw error;
+            }
+        } catch (error: any) {
+            setMessage(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
+            <h1>{isSignUp ? 'Sign Up' : 'Login'}</h1>
+            <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <input
+                    type="email"
+                    placeholder="Your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+                />
+                <input
+                    type="password"
+                    placeholder="Your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+                />
+                <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                        padding: '10px',
+                        borderRadius: '5px',
+                        border: 'none',
+                        backgroundColor: '#2563eb',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Login')}
+                </button>
+            </form>
+            {message && <p style={{ color: 'red', marginTop: '10px' }}>{message}</p>}
+            <p style={{ marginTop: '20px' }}>
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <button
+                    onClick={() => setIsSignUp(!isSignUp)}
+                    style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                    {isSignUp ? 'Login' : 'Sign Up'}
+                </button>
+            </p>
+        </div>
+    );
+}

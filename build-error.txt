@@ -1,0 +1,5 @@
+﻿
+> mahir-arab-gundul@1.0.0 build
+> tsc && vite build
+
+src/DashboardApp.tsx(26,27): error TS6133: 'error' is declared but its value is never read.

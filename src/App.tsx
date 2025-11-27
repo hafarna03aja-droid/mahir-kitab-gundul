@@ -1,43 +1,37 @@
-import React, { useState } from 'react';
-import Header from './components/Header';
-import Tabs from './components/Tabs';
-import AnalysisTab from './components/AnalysisTab';
-import AiAssistantTab from './components/AiAssistantTab';
-import LiveTutorTab from './components/LiveTutorTab';
-import KitabTab from './components/KitabTab';
-import Footer from './components/Footer';
-import type { TabId } from './types';
+import React, { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
+import { Session } from '@supabase/supabase-js';
+import Login from './components/Login';
+import DashboardApp from './DashboardApp';
 
 const App: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<TabId>('analisis');
+    const [session, setSession] = useState<Session | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    const renderContent = () => {
-        switch (activeTab) {
-            case 'analisis':
-                return <AnalysisTab />;
-            case 'kitab':
-                return <KitabTab />;
-            case 'asisten':
-                return <AiAssistantTab />;
-            case 'tutor':
-                return <LiveTutorTab />;
-            default:
-                return <AnalysisTab />;
-        }
-    };
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setLoading(false);
+        });
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-200 flex flex-col transition-colors duration-300">
-            <Header />
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-                <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
-                <div className="mt-8">
-                    {renderContent()}
-                </div>
-            </main>
-            <Footer />
-        </div>
-    );
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    if (loading) {
+        return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
+    }
+
+    if (!session) {
+        return <Login />;
+    }
+
+    return <DashboardApp session={session} />;
 };
 
 export default App;
