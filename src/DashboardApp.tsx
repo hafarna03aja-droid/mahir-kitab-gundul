@@ -84,14 +84,11 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                 </div>
                 {/* ----------------------------------------- */}
 
-                {/* Tombol ke Mayar */}
-                {/* GANTI LINK DI BAWAH DENGAN LINK MAYAR ANDA SENDIRI */}
-                <a
-                    href="https://24learningcentre.myr.id/pl/mahir-arab-gundul"
-                    target="_blank"
-                    rel="noreferrer"
+                {/* Tombol Disabled - Menunggu Verifikasi Payment Gateway */}
+                <button
+                    disabled
                     style={{
-                        backgroundColor: '#2563eb', // Warna Biru
+                        backgroundColor: '#9ca3af', // Warna Abu-abu (disabled)
                         color: 'white',
                         padding: '15px 30px',
                         textDecoration: 'none',
@@ -99,11 +96,17 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                         fontWeight: 'bold',
                         fontSize: '16px',
                         display: 'inline-block',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                        cursor: 'not-allowed',
+                        border: 'none',
+                        opacity: 0.7
                     }}
                 >
-                    💳 Bayar & Aktifkan Sekarang
-                </a>
+                    🔒 Pendaftaran Segera Dibuka
+                </button>
+                <p style={{ fontSize: '14px', color: '#666', marginTop: '15px', fontStyle: 'italic' }}>
+                    Kami sedang mempersiapkan sistem pembayaran baru. Mohon tunggu pengumuman lebih lanjut.
+                </p>
 
                 <br /><br />
 
