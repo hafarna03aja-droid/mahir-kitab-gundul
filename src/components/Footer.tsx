@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
     return (
@@ -8,6 +9,11 @@ const Footer: React.FC = () => {
                     <p className="text-slate-600 dark:text-slate-400 text-sm">
                         © 2025 Mahir Arab Gundul. Platform pembelajaran Bahasa Arab didukung oleh 24 Learning Centre.
                     </p>
+                    <div className="flex justify-center space-x-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                        <Link to="/terms" className="hover:text-blue-600 hover:underline">Syarat & Ketentuan</Link>
+                        <span>|</span>
+                        <Link to="/privacy" className="hover:text-blue-600 hover:underline">Kebijakan Privasi</Link>
+                    </div>
                     <p className="text-slate-500 dark:text-slate-500 text-xs mt-2 italic">
                         "Barangsiapa menempuh jalan untuk mencari ilmu, maka Allah akan memudahkan baginya jalan menuju surga"
                     </p>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 interface LoginProps {
@@ -109,6 +110,12 @@ export default function Login({ onPreviewMode }: LoginProps) {
                     </p>
                 </div>
             )}
+
+            <div style={{ marginTop: '30px', fontSize: '12px', color: '#666' }}>
+                <Link to="/terms" style={{ color: '#666', textDecoration: 'none', marginRight: '10px' }}>Syarat & Ketentuan</Link>
+                |
+                <Link to="/privacy" style={{ color: '#666', textDecoration: 'none', marginLeft: '10px' }}>Kebijakan Privasi</Link>
+            </div>
         </div>
     );
 }
