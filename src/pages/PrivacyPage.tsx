@@ -69,7 +69,7 @@ const PrivacyPage: React.FC = () => {
 
                         <section className="pt-6 border-t mt-8">
                             <p className="text-sm text-gray-500">
-                                Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi kami di: <a href="mailto:admin@mahirarab.com" className="text-blue-600 hover:underline">admin@mahirarab.com</a>
+                                Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi kami di: <a href="mailto:admin@mahirarab.web.id" className="text-blue-600 hover:underline">admin@mahirarab.web.id</a>
                             </p>
                         </section>
                     </div>
