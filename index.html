@@ -184,10 +184,6 @@
       payButton.disabled = true;
       payButton.textContent = 'Memproses...';
 
-      console.log('🔄 Requesting Snap Token...');
-      console.log('📧 Email:', email);
-      console.log('💰 Amount: Rp 49.000');
-
       // Request Snap Token from your backend
       fetch('https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-payment', {
         method: 'POST',
@@ -201,49 +197,37 @@
         })
       })
         .then(response => {
-          console.log('📡 Response status:', response.status);
           return response.json().then(data => ({ status: response.status, data }));
         })
         .then(({ status, data }) => {
-          console.log('📦 Response data:', data);
-          
           if (status !== 200) {
-            console.error('❌ Backend Error:', data);
             throw new Error(data.error || 'Failed to create transaction');
           }
           
           if (data.snap_token) {
-            console.log('✅ Snap Token received:', data.snap_token);
-            console.log('🔑 Client Key:', 'SB-Mid-client-W4qSN0B-zyY2x_dN');
-            
             // Open Midtrans Snap popup
             window.snap.pay(data.snap_token, {
               onSuccess: function (result) {
-                console.log('✅ Payment success:', result);
                 alert('Pembayaran berhasil! Silakan login dengan email Anda.');
+                window.location.href = '/app/';
               },
               onPending: function (result) {
-                console.log('⏳ Payment pending:', result);
-                alert('Menunggu pembayaran...');
+                alert('Menunggu pembayaran. Cek email Anda untuk status pembayaran.');
               },
               onError: function (result) {
-                console.error('❌ Payment error:', result);
-                alert('Pembayaran gagal! Cek console untuk detail.');
+                alert('Pembayaran gagal. Silakan coba lagi.');
               },
               onClose: function () {
-                console.log('❎ Payment popup closed');
                 payButton.disabled = false;
                 payButton.textContent = '💳 Bayar dengan Midtrans';
               }
             });
           } else {
-            console.error('❌ No snap_token in response:', data);
-            throw new Error('No snap token received from backend');
+            throw new Error('Gagal mendapatkan token pembayaran');
           }
         })
         .catch(error => {
-          console.error('❌ Error details:', error);
-          alert('Error: ' + error.message + '\n\nCek console (F12) untuk detail lengkap.');
+          alert('Terjadi kesalahan: ' + error.message);
           payButton.disabled = false;
           payButton.textContent = '💳 Bayar dengan Midtrans';
         });

@@ -119,8 +119,6 @@ async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise
                 lastError = error;
                 const errorMsg = error.message || "";
 
-                console.error(`❌ Error dengan ${modelName} (attempt ${attempt}):`, errorMsg);
-
                 // Deteksi jenis error
                 const isRateLimit = errorMsg.includes("429") || errorMsg.includes("RATE_LIMIT") || errorMsg.includes("RESOURCE_EXHAUSTED");
                 const isNotFound = errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found");
@@ -230,7 +228,6 @@ export async function analyzeArabicText(arabicText: string): Promise<AnalysisRes
 
         return result;
     } catch (error) {
-        console.error("Gagal parsing analisis:", error);
         // Fallback jika gagal total
         return {
             originalText: arabicText,

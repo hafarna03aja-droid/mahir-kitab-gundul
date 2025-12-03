@@ -32,7 +32,8 @@ const AnalysisTab: React.FC = () => {
                 setHistory(JSON.parse(storedHistory));
             }
         } catch (e) {
-            console.error("Failed to parse history from localStorage", e);
+            // Ignore corrupted data
+            localStorage.removeItem('analysisHistory');
         }
     }, []);
 

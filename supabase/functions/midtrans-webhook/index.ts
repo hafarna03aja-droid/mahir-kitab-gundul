@@ -26,8 +26,6 @@ Deno.serve(async (req: Request) => {
     try {
         const payload = await req.json()
 
-        console.log('Midtrans Webhook received:', payload)
-
         const {
             order_id,
             transaction_status,
@@ -38,7 +36,6 @@ Deno.serve(async (req: Request) => {
         const email = customer_details?.email
 
         if (!email) {
-            console.error('No email in webhook payload')
             return new Response(
                 JSON.stringify({ error: 'Email is required' }),
                 { 
@@ -58,7 +55,6 @@ Deno.serve(async (req: Request) => {
         ) && fraud_status === 'accept'
 
         if (!isSuccess) {
-            console.log(`Payment not successful. Status: ${transaction_status}, Fraud: ${fraud_status}`)
             return new Response(
                 JSON.stringify({ message: 'Payment not successful yet' }),
                 { 
@@ -82,7 +78,7 @@ Deno.serve(async (req: Request) => {
             .select()
 
         if (error) {
-            console.error('Supabase update error:', error)
+            console.error('Failed to update user:', email, error.message)
             return new Response(
                 JSON.stringify({ error: 'Failed to update user status', details: error }),
                 { 
@@ -108,8 +104,6 @@ Deno.serve(async (req: Request) => {
                 }
             )
         }
-
-        console.log(`Successfully upgraded user ${email} to premium`)
 
         return new Response(
             JSON.stringify({

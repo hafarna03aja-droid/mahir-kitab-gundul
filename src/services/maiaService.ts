@@ -45,8 +45,7 @@ async function callMaiaRouter(prompt: string, jsonMode: boolean = false): Promis
 
         return text;
     } catch (error: any) {
-        console.error('❌ Error calling Maia Router:', error);
-        throw new Error(`Gagal Maia Router: ${error.message || error}`);
+        throw new Error(`Gagal Maia Router: ${error.message || 'Terjadi kesalahan'}`);
     }
 }
 
@@ -96,7 +95,6 @@ export async function analyzeArabicTextMaia(arabicText: string): Promise<Analysi
 
         return result;
     } catch (error) {
-        console.error("Gagal parsing analisis Maia Router:", error);
         throw new Error("Gagal menganalisis struktur teks Arab via Maia Router.");
     }
 }

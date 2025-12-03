@@ -14,10 +14,6 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
-console.log('🔧 Midtrans Config:')
-console.log('📍 API URL:', MIDTRANS_API_URL)
-console.log('🔑 Server Key:', MIDTRANS_SERVER_KEY ? '✅ Set (length: ' + MIDTRANS_SERVER_KEY.length + ')' : '❌ Missing')
-
 Deno.serve(async (req: Request) => {
     // Handle CORS Preflight Request
     if (req.method === 'OPTIONS') {
@@ -29,16 +25,25 @@ Deno.serve(async (req: Request) => {
 
     try {
         const { email, amount, item_name } = await req.json()
-        
-        console.log('📨 Incoming request:')
-        console.log('   Email:', email)
-        console.log('   Amount:', amount)
-        console.log('   Item:', item_name)
 
+        // Validate email and amount
         if (!email || !amount) {
-            console.error('❌ Validation failed: Missing email or amount')
             return new Response(
                 JSON.stringify({ error: 'Email and amount are required' }),
+                { 
+                    status: 400, 
+                    headers: { 
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
+                    } 
+                }
+            )
+        }
+
+        // Validate email format
+        if (!email.includes('@') || email.length < 5) {
+            return new Response(
+                JSON.stringify({ error: 'Invalid email format' }),
                 { 
                     status: 400, 
                     headers: { 
@@ -60,7 +65,7 @@ Deno.serve(async (req: Request) => {
             },
             customer_details: {
                 email: email,
-                first_name: email.split('@')[0]
+                first_name: email.split('@')[0] || 'User'
             },
             item_details: [
                 {
@@ -77,12 +82,6 @@ Deno.serve(async (req: Request) => {
 
         // Call Midtrans API
         const authHeader = 'Basic ' + btoa(MIDTRANS_SERVER_KEY + ':')
-        
-        console.log('🔐 Authorization:')
-        console.log('   Server Key:', MIDTRANS_SERVER_KEY.substring(0, 20) + '...')
-        console.log('   Auth Header:', authHeader.substring(0, 30) + '...')
-        console.log('📡 Calling Midtrans API:', MIDTRANS_API_URL)
-        console.log('📦 Transaction Data:', JSON.stringify(transactionData, null, 2))
 
         const response = await fetch(MIDTRANS_API_URL, {
             method: 'POST',
@@ -95,13 +94,9 @@ Deno.serve(async (req: Request) => {
         })
 
         const data = await response.json()
-        console.log('📨 Midtrans Response Status:', response.status)
-        console.log('📦 Midtrans Response Data:', JSON.stringify(data, null, 2))
 
         if (!response.ok) {
-            console.error('❌ Midtrans API Error:')
-            console.error('   Status:', response.status)
-            console.error('   Response:', JSON.stringify(data, null, 2))
+            console.error('Midtrans API Error:', response.status, data)
             return new Response(
                 JSON.stringify({ 
                     error: 'Failed to create transaction', 
@@ -119,9 +114,6 @@ Deno.serve(async (req: Request) => {
             )
         }
 
-        console.log('✅ Success! Snap Token:', data.token)
-        console.log('🆔 Order ID:', orderId)
-        
         return new Response(
             JSON.stringify({
                 snap_token: data.token,
@@ -138,14 +130,10 @@ Deno.serve(async (req: Request) => {
         )
 
     } catch (error: any) {
-        console.error('❌ Exception caught:')
-        console.error('   Message:', error.message)
-        console.error('   Stack:', error.stack)
+        console.error('Payment function error:', error.message)
         return new Response(
             JSON.stringify({ 
-                error: error.message,
-                type: 'exception',
-                stack: error.stack
+                error: error.message || 'Internal server error'
             }),
             {
                 status: 500,

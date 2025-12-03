@@ -40,8 +40,7 @@ async function callOpenAI(prompt: string, jsonMode: boolean = false): Promise<st
 
         return text;
     } catch (error: any) {
-        console.error('❌ Error calling OpenAI:', error);
-        throw new Error(`Gagal OpenAI: ${error.message || error}`);
+        throw new Error(`Gagal OpenAI: ${error.message || 'Terjadi kesalahan'}`);
     }
 }
 

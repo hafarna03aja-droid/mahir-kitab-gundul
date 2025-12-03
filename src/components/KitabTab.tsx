@@ -40,9 +40,14 @@ const KitabTab: React.FC = () => {
 
     // Load bookmarks from localStorage
     React.useEffect(() => {
-        const saved = localStorage.getItem('kitab-bookmarks');
-        if (saved) {
-            setBookmarks(JSON.parse(saved));
+        try {
+            const saved = localStorage.getItem('kitab-bookmarks');
+            if (saved) {
+                setBookmarks(JSON.parse(saved));
+            }
+        } catch (error) {
+            // Ignore corrupted data
+            localStorage.removeItem('kitab-bookmarks');
         }
     }, []);
 
