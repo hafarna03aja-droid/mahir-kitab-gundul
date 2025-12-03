@@ -23,8 +23,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:cloudflare": "tsc && vite build && xcopy /E /I /Y functions dist\\functions",
     "preview": "vite preview",
-    "deploy:check": "powershell -ExecutionPolicy Bypass -File ./deploy-check.ps1"
+    "deploy:check": "powershell -ExecutionPolicy Bypass -File ./deploy-check.ps1",
+    "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy dist --project-name mahir-arab-gundul"
   },
   "dependencies": {
     "@google/genai": "^1.29.1",
