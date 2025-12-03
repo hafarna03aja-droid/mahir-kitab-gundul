@@ -18,11 +18,17 @@ export default defineConfig({
       },
     },
   ],
+  base: '/',
   build: {
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),      // Landing Page
         app: resolve(__dirname, 'app/index.html'),   // Aplikasi Member
+      },
+      output: {
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
       },
     },
   },

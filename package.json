@@ -23,7 +23,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:cloudflare": "tsc && vite build && xcopy /E /I /Y functions dist\\functions",
+    "build:cloudflare": "tsc && vite build && copy _worker.js dist\\_worker.js",
     "preview": "vite preview",
     "deploy:check": "powershell -ExecutionPolicy Bypass -File ./deploy-check.ps1",
     "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy dist --project-name mahir-arab-gundul"
