@@ -63,9 +63,14 @@ Script ini:
 Set di Cloudflare Dashboard → Pages → Settings → Environment variables:
 
 ```
-VITE_GEMINI_API_KEY=sk-RTfzBVMp744fN-WAdlQacg
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
 VITE_MAIAROUTER_URL=https://api.maiarouter.ai/v1/chat/completions
-VITE_MIDTRANS_SERVER_KEY=SB-Mid-server-fi_B0_URjnBG6KUealyg1VO1
+VITE_MIDTRANS_CLIENT_KEY=your_midtrans_client_key_here
+```
+
+**Supabase Secrets** (set via `npx supabase secrets set`):
+```
+MIDTRANS_SERVER_KEY=your_midtrans_server_key_here
 ```
 
 ### wrangler.toml

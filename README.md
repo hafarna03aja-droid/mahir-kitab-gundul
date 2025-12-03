@@ -41,13 +41,15 @@ Platform pembelajaran Bahasa Arab berbasis AI dengan fitur analisis gramatikal l
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/mahir-arab-gundul.git
-cd mahir-arab-gundul
+git clone https://github.com/hafarna03aja-droid/mahir-kitab-gundul.git
+cd mahir-kitab-gundul
 
 # Install dependencies
 npm install
 
-# Setup environment (.env)
+# Setup environment variables
+cp .env.example .env
+# Edit .env dan isi dengan API keys Anda (lihat SECURITY.md)
 cp .env.example .env
 
 # Start development
@@ -56,25 +58,29 @@ npm run dev
 
 ## 🔑 Environment Variables
 
+Lihat `.env.example` untuk list lengkap. **Penting**: Jangan commit file `.env` ke Git!
+
 ```env
-VITE_GEMINI_API_KEY=your_maiarouter_api_key
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
 VITE_MAIAROUTER_URL=https://api.maiarouter.ai/v1/chat/completions
-VITE_GOOGLE_GEMINI_API_KEY=your_google_gemini_api_key
+VITE_MIDTRANS_CLIENT_KEY=your_midtrans_client_key_here
 ```
 
-**API Keys:**
-- Maiarouter: [Dashboard](https://maiarouter.ai)
+**Dapatkan API Keys:**
 - Google Gemini: [AI Studio](https://aistudio.google.com/apikey)
+- Maiarouter: [Dashboard](https://maiarouter.ai)
+- Midtrans: [Dashboard](https://dashboard.midtrans.com)
 
-## 🌐 Deploy to Vercel
+**⚠️ Security**: Lihat [SECURITY.md](./SECURITY.md) untuk best practices.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/mahir-arab-gundul)
+## 🌐 Deploy to Cloudflare Pages
 
-1. Click button above atau:
-   ```bash
-   npm install -g vercel
-   vercel
-   ```
+Deployment utama menggunakan Cloudflare Pages. Lihat [DEPLOYMENT_CLOUDFLARE.md](./DEPLOYMENT_CLOUDFLARE.md) untuk panduan lengkap.
+
+```bash
+# Build dan deploy
+npm run deploy:cloudflare
+```
 
 2. Add Environment Variables di Vercel Dashboard
 

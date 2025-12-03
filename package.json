@@ -22,8 +22,8 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build:cloudflare": "tsc && vite build && copy _worker.js dist\\_worker.js",
+    "build": "tsc && vite build && node scripts/inject-env.js",
+    "build:cloudflare": "tsc && vite build && node scripts/inject-env.js && copy _worker.js dist\\_worker.js",
     "preview": "vite preview",
     "deploy:check": "powershell -ExecutionPolicy Bypass -File ./deploy-check.ps1",
     "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy dist --project-name mahir-arab-gundul"
