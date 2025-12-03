@@ -1,6 +1,8 @@
 // Midtrans Payment - Generate Snap Token
 // This Edge Function creates a Midtrans transaction and returns the Snap token
 
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+
 // SANDBOX Configuration
 const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY') || 'SB-Mid-server-fi_B0_URjnBG6KUealyg1VO1'
 const MIDTRANS_API_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions"
