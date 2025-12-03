@@ -51,7 +51,7 @@ const Home: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <Router>
+        <Router basename="/app">
             <Routes>
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
