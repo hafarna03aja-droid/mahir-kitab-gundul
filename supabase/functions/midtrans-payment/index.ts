@@ -1,25 +1,27 @@
 // Midtrans Payment - Generate Snap Token
 // This Edge Function creates a Midtrans transaction and returns the Snap token
 
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-
 // SANDBOX Configuration
 const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY') || 'SB-Mid-server-fi_B0_URjnBG6KUealyg1VO1'
 const MIDTRANS_API_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions"
+
+// CORS Headers
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+}
 
 console.log('🔧 Midtrans Config:')
 console.log('📍 API URL:', MIDTRANS_API_URL)
 console.log('🔑 Server Key:', MIDTRANS_SERVER_KEY ? '✅ Set (length: ' + MIDTRANS_SERVER_KEY.length + ')' : '❌ Missing')
 
 Deno.serve(async (req: Request) => {
-    // Handle CORS
+    // Handle CORS Preflight Request
     if (req.method === 'OPTIONS') {
         return new Response('ok', {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            }
+            status: 200,
+            headers: corsHeaders
         })
     }
 
@@ -38,8 +40,8 @@ Deno.serve(async (req: Request) => {
                 { 
                     status: 400, 
                     headers: { 
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
                     } 
                 }
             )
@@ -108,8 +110,8 @@ Deno.serve(async (req: Request) => {
                 {
                     status: response.status,
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
                     }
                 }
             )
@@ -125,9 +127,10 @@ Deno.serve(async (req: Request) => {
                 redirect_url: data.redirect_url
             }),
             {
+                status: 200,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    ...corsHeaders,
+                    'Content-Type': 'application/json'
                 }
             }
         )
@@ -145,8 +148,8 @@ Deno.serve(async (req: Request) => {
             {
                 status: 500,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    ...corsHeaders,
+                    'Content-Type': 'application/json'
                 }
             }
         )

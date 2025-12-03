@@ -7,7 +7,22 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
+// CORS Headers
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+}
+
 Deno.serve(async (req: Request) => {
+    // Handle CORS Preflight Request
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', {
+            status: 200,
+            headers: corsHeaders
+        })
+    }
+
     try {
         const payload = await req.json()
 
@@ -26,7 +41,13 @@ Deno.serve(async (req: Request) => {
             console.error('No email in webhook payload')
             return new Response(
                 JSON.stringify({ error: 'Email is required' }),
-                { status: 400 }
+                { 
+                    status: 400,
+                    headers: {
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
+                    }
+                }
             )
         }
 
@@ -40,7 +61,13 @@ Deno.serve(async (req: Request) => {
             console.log(`Payment not successful. Status: ${transaction_status}, Fraud: ${fraud_status}`)
             return new Response(
                 JSON.stringify({ message: 'Payment not successful yet' }),
-                { status: 200 }
+                { 
+                    status: 200,
+                    headers: {
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
+                    }
+                }
             )
         }
 
@@ -58,7 +85,13 @@ Deno.serve(async (req: Request) => {
             console.error('Supabase update error:', error)
             return new Response(
                 JSON.stringify({ error: 'Failed to update user status', details: error }),
-                { status: 500 }
+                { 
+                    status: 500,
+                    headers: {
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
+                    }
+                }
             )
         }
 
@@ -66,7 +99,13 @@ Deno.serve(async (req: Request) => {
             console.warn(`No user found with email: ${email}`)
             return new Response(
                 JSON.stringify({ warning: 'User not found, but payment recorded' }),
-                { status: 200 }
+                { 
+                    status: 200,
+                    headers: {
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
+                    }
+                }
             )
         }
 
@@ -78,14 +117,26 @@ Deno.serve(async (req: Request) => {
                 message: 'User upgraded to premium',
                 email: email
             }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
+            { 
+                status: 200, 
+                headers: { 
+                    ...corsHeaders,
+                    'Content-Type': 'application/json' 
+                } 
+            }
         )
 
     } catch (error: any) {
         console.error('Webhook processing error:', error)
         return new Response(
             JSON.stringify({ error: error.message }),
-            { status: 500 }
+            { 
+                status: 500,
+                headers: {
+                    ...corsHeaders,
+                    'Content-Type': 'application/json'
+                }
+            }
         )
     }
 })
