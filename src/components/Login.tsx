@@ -112,9 +112,9 @@ export default function Login({ onPreviewMode }: LoginProps) {
             )}
 
             <div style={{ marginTop: '30px', fontSize: '12px', color: '#666' }}>
-                <Link to="/terms" style={{ color: '#666', textDecoration: 'none', marginRight: '10px' }}>Syarat & Ketentuan</Link>
+                <Link to="terms" style={{ color: '#666', textDecoration: 'none', marginRight: '10px' }}>Syarat & Ketentuan</Link>
                 |
-                <Link to="/privacy" style={{ color: '#666', textDecoration: 'none', marginLeft: '10px' }}>Kebijakan Privasi</Link>
+                <Link to="privacy" style={{ color: '#666', textDecoration: 'none', marginLeft: '10px' }}>Kebijakan Privasi</Link>
             </div>
         </div>
     );
