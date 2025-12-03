@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -20,8 +21,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: 'index.html',
-        app: 'app/index.html',
+        main: resolve(__dirname, 'index.html'),      // Landing Page
+        app: resolve(__dirname, 'app/index.html'),   // Aplikasi Member
       },
     },
   },
