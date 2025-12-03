@@ -15,15 +15,18 @@ try {
     
     // Get environment variables
     const MIDTRANS_CLIENT_KEY = process.env.VITE_MIDTRANS_CLIENT_KEY || 'PLACEHOLDER';
+    const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'PLACEHOLDER';
     
-    // Replace placeholder with actual values
+    // Replace placeholders with actual values
     html = html.replace('MIDTRANS_CLIENT_KEY_PLACEHOLDER', MIDTRANS_CLIENT_KEY);
+    html = html.replace('SUPABASE_ANON_KEY_PLACEHOLDER', SUPABASE_ANON_KEY);
     
     // Write back to file
     writeFileSync(htmlPath, html, 'utf-8');
     
     console.log('✅ Environment variables injected successfully');
     console.log('   MIDTRANS_CLIENT_KEY:', MIDTRANS_CLIENT_KEY.substring(0, 15) + '...');
+    console.log('   SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY.substring(0, 15) + '...');
 } catch (error) {
     console.error('❌ Error injecting environment variables:', error.message);
     process.exit(1);

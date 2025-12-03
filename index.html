@@ -185,10 +185,13 @@
       payButton.textContent = 'Memproses...';
 
       // Request Snap Token from your backend
+      const supabaseAnonKey = 'SUPABASE_ANON_KEY_PLACEHOLDER';
       fetch('https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'apikey': supabaseAnonKey
         },
         body: JSON.stringify({
           email: email,

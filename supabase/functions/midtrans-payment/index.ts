@@ -30,6 +30,9 @@ Deno.serve(async (req: Request) => {
     try {
         const { email, amount, item_name } = await req.json()
 
+        console.log('Request received:', { email, amount, item_name })
+        console.log('Server Key available:', !!MIDTRANS_SERVER_KEY)
+
         // Validate email and amount
         if (!email || !amount) {
             return new Response(
@@ -86,6 +89,7 @@ Deno.serve(async (req: Request) => {
 
         // Call Midtrans API
         const authHeader = 'Basic ' + btoa(MIDTRANS_SERVER_KEY + ':')
+        console.log('Auth header created, Server Key prefix:', MIDTRANS_SERVER_KEY.substring(0, 10))
 
         const response = await fetch(MIDTRANS_API_URL, {
             method: 'POST',
@@ -100,13 +104,21 @@ Deno.serve(async (req: Request) => {
         const data = await response.json()
 
         if (!response.ok) {
-            console.error('Midtrans API Error:', response.status, data)
+            console.error('Midtrans API Error:', {
+                status: response.status,
+                statusText: response.statusText,
+                data: data
+            })
             return new Response(
                 JSON.stringify({ 
                     error: 'Failed to create transaction', 
                     details: data,
                     status: response.status,
-                    message: data.error_messages || data.message || 'Unknown error'
+                    message: data.error_messages || data.message || 'Unknown error',
+                    debug: {
+                        api_url: MIDTRANS_API_URL,
+                        has_server_key: !!MIDTRANS_SERVER_KEY
+                    }
                 }),
                 {
                     status: response.status,
