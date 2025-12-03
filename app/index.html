@@ -12,36 +12,6 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Scheherazade+New:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    <script>
-        if (window.netlifyIdentity) {
-            window.netlifyIdentity.on("init", user => {
-                // Whitelist public routes that don't require login
-                const publicRoutes = ['/app/terms', '/app/privacy'];
-                const currentPath = window.location.pathname;
-                const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
-
-                if (!user && !isPublicRoute) {
-                    // Jika user belum login dan bukan halaman publik, tendang ke landing page
-                    window.location.href = "/";
-                } else {
-                    // Jika user sudah login atau halaman publik, tampilkan konten
-                    document.body.style.display = "block";
-                }
-            });
-
-            // Jika user logout, reload halaman (biar terkunci lagi)
-            window.netlifyIdentity.on("logout", () => {
-                window.location.href = "/";
-            });
-        }
-    </script>
-    <style>
-        /* Sembunyikan body sampai status login terkonfirmasi */
-        body {
-            display: none;
-        }
-    </style>
 </head>
 
 <body>

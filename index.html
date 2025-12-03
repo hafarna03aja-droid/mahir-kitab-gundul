@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mahir Arab - Platform Pembelajaran Bahasa Arab</title>
-  <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <!-- Midtrans Snap.js (Sandbox) -->
   <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js"
     data-client-key="SB-Mid-client-W4qSN0B-zyY2x_dN"></script>
@@ -156,7 +155,7 @@
         <button class="btn btn-primary" id="pay-button" onclick="payWithMidtrans()">💳 Bayar dengan Midtrans</button>
         <a href="https://wa.me/6287844528626?text=Halo+admin+saya+tertarik+membeli+aplikasi+Mahir+Arab"
           class="btn btn-whatsapp" target="_blank">💬 Beli via WhatsApp</a>
-        <button class="btn btn-secondary" onclick="netlifyIdentity.open()">Login Member</button>
+        <a href="/app/" class="btn btn-secondary">🔐 Login Member</a>
       </div>
     </div>
 
@@ -172,21 +171,6 @@
   </div>
 
   <script>
-    // Netlify Identity
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on("init", user => {
-        if (user) {
-          console.log('User already logged in, redirecting...');
-          window.location.href = "/app/";
-        }
-      });
-
-      window.netlifyIdentity.on("login", user => {
-        console.log('Login successful, redirecting...');
-        window.location.href = "/app/";
-      });
-    }
-
     // Midtrans Snap Payment
     function payWithMidtrans() {
       const payButton = document.getElementById('pay-button');

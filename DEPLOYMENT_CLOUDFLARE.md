@@ -38,16 +38,16 @@ build: {
 }
 ```
 
-#### 2. **Cloudflare Pages Function** (`functions/_middleware.js`)
-Middleware untuk handle routing SPA di `/app/*`:
+#### 2. **Cloudflare Worker** (`_worker.js`)
+Custom Worker untuk handle routing Multi-Page App:
 - Membiarkan static assets (.js, .css, dll) pass-through
-- Redirect semua `/app/*` routes ke `app/index.html` untuk SPA
+- Redirect semua `/app` dan `/app/*` routes ke `app/index.html` untuk SPA
 - Landing page tetap di root
 
 #### 3. **Build Script** (`package.json`)
 ```json
 {
-  "build:cloudflare": "tsc && vite build && xcopy /E /I /Y functions dist\\functions",
+  "build:cloudflare": "tsc && vite build && copy _worker.js dist\\_worker.js",
   "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy dist --project-name mahir-arab-gundul"
 }
 ```
@@ -55,7 +55,7 @@ Middleware untuk handle routing SPA di `/app/*`:
 Script ini:
 1. Compile TypeScript
 2. Build dengan Vite
-3. Copy `functions/` folder ke `dist/functions/` untuk Cloudflare Functions
+3. Copy `_worker.js` ke `dist/_worker.js` untuk Cloudflare Workers
 
 ## 🔧 Konfigurasi Cloudflare
 
@@ -79,8 +79,7 @@ pages_build_output_dir = "dist"
 
 ```
 dist/
-├── functions/              # Cloudflare Pages Functions
-│   └── _middleware.js     # Routing middleware
+├── _worker.js             # Cloudflare Worker untuk routing
 ├── app/
 │   └── index.html         # Member application
 ├── assets/
@@ -91,30 +90,30 @@ dist/
 └── vite.svg
 ```
 
-## 🔐 Authentication Flow
+## 🔐 Application Structure
 
 ### Landing Page (`/`)
 - Terbuka untuk publik
 - Midtrans payment integration
-- Netlify Identity login
+- Link ke member area
 
 ### Member App (`/app/`)
-- Protected dengan Netlify Identity
-- Auto-redirect ke `/` jika belum login
-- Whitelist untuk routes publik: `/app/terms`, `/app/privacy`
+- Aplikasi React full-featured
+- Fitur: Analisis teks, Kitab digital, AI Assistant, Live Tutor
+- Routes publik: `/app/terms`, `/app/privacy`
 
 ## 🛠️ Troubleshooting
 
 ### Issue: 404 di /app/ routes
-**Solusi:** Pastikan `functions/_middleware.js` ter-deploy dengan benar
+**Solusi:** Pastikan `_worker.js` ter-deploy dengan benar
 ```powershell
 npm run build:cloudflare
-# Cek apakah dist/functions/_middleware.js ada
-ls dist/functions
+# Cek apakah dist/_worker.js ada
+ls dist/_worker.js
 ```
 
 ### Issue: Static assets tidak load
-**Solusi:** Middleware sudah allow pass-through untuk file extensions:
+**Solusi:** Worker sudah allow pass-through untuk file extensions:
 - `.js`, `.css`, `.svg`, `.png`, `.jpg`, dll.
 
 ### Issue: CORS errors
