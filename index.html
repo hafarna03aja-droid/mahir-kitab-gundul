@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mahir Arab - Platform Pembelajaran Bahasa Arab</title>
   <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <!-- Midtrans Snap.js (Sandbox) -->
+  <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js"
+    data-client-key="Mid-client-10LU0ymSujDEl4Hi"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -115,6 +118,15 @@
     .btn-secondary:hover {
       background-color: #374151;
     }
+
+    .btn-whatsapp {
+      background-color: #25D366;
+      color: white;
+    }
+
+    .btn-whatsapp:hover {
+      background-color: #128C7E;
+    }
   </style>
 </head>
 
@@ -141,8 +153,9 @@
       </div>
 
       <div class="cta-group">
+        <button class="btn btn-primary" id="pay-button" onclick="payWithMidtrans()">💳 Bayar dengan Midtrans</button>
         <a href="https://wa.me/6287844528626?text=Halo+admin+saya+tertarik+membeli+aplikasi+Mahir+Arab"
-          class="btn btn-primary" target="_blank">Beli Sekarang</a>
+          class="btn btn-whatsapp" target="_blank">💬 Beli via WhatsApp</a>
         <button class="btn btn-secondary" onclick="netlifyIdentity.open()">Login Member</button>
       </div>
     </div>
@@ -159,6 +172,7 @@
   </div>
 
   <script>
+    // Netlify Identity
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
         if (user) {
@@ -171,6 +185,59 @@
         console.log('Login successful, redirecting...');
         window.location.href = "/app/";
       });
+    }
+
+    // Midtrans Snap Payment
+    function payWithMidtrans() {
+      const payButton = document.getElementById('pay-button');
+      payButton.disabled = true;
+      payButton.textContent = 'Memproses...';
+
+      // Request Snap Token from your backend
+      fetch('https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: prompt('Masukkan email Anda (untuk aktivasi akun):') || 'test@example.com',
+          amount: 49000,
+          item_name: 'Mahir Arab - Akses Premium'
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.snap_token) {
+            // Open Midtrans Snap popup
+            window.snap.pay(data.snap_token, {
+              onSuccess: function (result) {
+                alert('Pembayaran berhasil! Silakan login dengan email Anda.');
+                console.log('Payment success:', result);
+              },
+              onPending: function (result) {
+                alert('Menunggu pembayaran...');
+                console.log('Payment pending:', result);
+              },
+              onError: function (result) {
+                alert('Pembayaran gagal!');
+                console.log('Payment error:', result);
+              },
+              onClose: function () {
+                console.log('Payment popup closed');
+                payButton.disabled = false;
+                payButton.textContent = '💳 Bayar dengan Midtrans';
+              }
+            });
+          } else {
+            throw new Error('No snap token received');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Terjadi kesalahan. Silakan coba lagi.');
+          payButton.disabled = false;
+          payButton.textContent = '💳 Bayar dengan Midtrans';
+        });
     }
   </script>
 </body>
