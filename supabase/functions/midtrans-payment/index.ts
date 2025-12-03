@@ -3,8 +3,13 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
-const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY') || ''
+// SANDBOX Configuration
+const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY') || 'SB-Mid-server-fi_B0_URjnBG6KUealyg1VO1'
 const MIDTRANS_API_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions"
+
+console.log('🔧 Midtrans Config:')
+console.log('📍 API URL:', MIDTRANS_API_URL)
+console.log('🔑 Server Key:', MIDTRANS_SERVER_KEY ? '✅ Set (length: ' + MIDTRANS_SERVER_KEY.length + ')' : '❌ Missing')
 
 Deno.serve(async (req: Request) => {
     // Handle CORS
@@ -20,11 +25,23 @@ Deno.serve(async (req: Request) => {
 
     try {
         const { email, amount, item_name } = await req.json()
+        
+        console.log('📨 Incoming request:')
+        console.log('   Email:', email)
+        console.log('   Amount:', amount)
+        console.log('   Item:', item_name)
 
         if (!email || !amount) {
+            console.error('❌ Validation failed: Missing email or amount')
             return new Response(
                 JSON.stringify({ error: 'Email and amount are required' }),
-                { status: 400, headers: { 'Content-Type': 'application/json' } }
+                { 
+                    status: 400, 
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    } 
+                }
             )
         }
 
@@ -56,6 +73,12 @@ Deno.serve(async (req: Request) => {
 
         // Call Midtrans API
         const authHeader = 'Basic ' + btoa(MIDTRANS_SERVER_KEY + ':')
+        
+        console.log('🔐 Authorization:')
+        console.log('   Server Key:', MIDTRANS_SERVER_KEY.substring(0, 20) + '...')
+        console.log('   Auth Header:', authHeader.substring(0, 30) + '...')
+        console.log('📡 Calling Midtrans API:', MIDTRANS_API_URL)
+        console.log('📦 Transaction Data:', JSON.stringify(transactionData, null, 2))
 
         const response = await fetch(MIDTRANS_API_URL, {
             method: 'POST',
@@ -68,11 +91,20 @@ Deno.serve(async (req: Request) => {
         })
 
         const data = await response.json()
+        console.log('📨 Midtrans Response Status:', response.status)
+        console.log('📦 Midtrans Response Data:', JSON.stringify(data, null, 2))
 
         if (!response.ok) {
-            console.error('Midtrans API Error:', data)
+            console.error('❌ Midtrans API Error:')
+            console.error('   Status:', response.status)
+            console.error('   Response:', JSON.stringify(data, null, 2))
             return new Response(
-                JSON.stringify({ error: 'Failed to create transaction', details: data }),
+                JSON.stringify({ 
+                    error: 'Failed to create transaction', 
+                    details: data,
+                    status: response.status,
+                    message: data.error_messages || data.message || 'Unknown error'
+                }),
                 {
                     status: response.status,
                     headers: {
@@ -83,10 +115,14 @@ Deno.serve(async (req: Request) => {
             )
         }
 
+        console.log('✅ Success! Snap Token:', data.token)
+        console.log('🆔 Order ID:', orderId)
+        
         return new Response(
             JSON.stringify({
                 snap_token: data.token,
-                order_id: orderId
+                order_id: orderId,
+                redirect_url: data.redirect_url
             }),
             {
                 headers: {
@@ -97,9 +133,15 @@ Deno.serve(async (req: Request) => {
         )
 
     } catch (error: any) {
-        console.error('Error:', error)
+        console.error('❌ Exception caught:')
+        console.error('   Message:', error.message)
+        console.error('   Stack:', error.stack)
         return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ 
+                error: error.message,
+                type: 'exception',
+                stack: error.stack
+            }),
             {
                 status: 500,
                 headers: {

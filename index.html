@@ -8,7 +8,7 @@
   <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <!-- Midtrans Snap.js (Sandbox) -->
   <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js"
-    data-client-key="Mid-client-10LU0ymSujDEl4Hi"></script>
+    data-client-key="SB-Mid-client-W4qSN0B-zyY2x_dN"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -190,8 +190,19 @@
     // Midtrans Snap Payment
     function payWithMidtrans() {
       const payButton = document.getElementById('pay-button');
+      const email = prompt('Masukkan email Anda (untuk aktivasi akun):');
+      
+      if (!email || !email.includes('@')) {
+        alert('Email tidak valid!');
+        return;
+      }
+
       payButton.disabled = true;
       payButton.textContent = 'Memproses...';
+
+      console.log('🔄 Requesting Snap Token...');
+      console.log('📧 Email:', email);
+      console.log('💰 Amount: Rp 49.000');
 
       // Request Snap Token from your backend
       fetch('https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-payment', {
@@ -200,41 +211,55 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: prompt('Masukkan email Anda (untuk aktivasi akun):') || 'test@example.com',
+          email: email,
           amount: 49000,
           item_name: 'Mahir Arab - Akses Premium'
         })
       })
-        .then(response => response.json())
-        .then(data => {
+        .then(response => {
+          console.log('📡 Response status:', response.status);
+          return response.json().then(data => ({ status: response.status, data }));
+        })
+        .then(({ status, data }) => {
+          console.log('📦 Response data:', data);
+          
+          if (status !== 200) {
+            console.error('❌ Backend Error:', data);
+            throw new Error(data.error || 'Failed to create transaction');
+          }
+          
           if (data.snap_token) {
+            console.log('✅ Snap Token received:', data.snap_token);
+            console.log('🔑 Client Key:', 'SB-Mid-client-W4qSN0B-zyY2x_dN');
+            
             // Open Midtrans Snap popup
             window.snap.pay(data.snap_token, {
               onSuccess: function (result) {
+                console.log('✅ Payment success:', result);
                 alert('Pembayaran berhasil! Silakan login dengan email Anda.');
-                console.log('Payment success:', result);
               },
               onPending: function (result) {
+                console.log('⏳ Payment pending:', result);
                 alert('Menunggu pembayaran...');
-                console.log('Payment pending:', result);
               },
               onError: function (result) {
-                alert('Pembayaran gagal!');
-                console.log('Payment error:', result);
+                console.error('❌ Payment error:', result);
+                alert('Pembayaran gagal! Cek console untuk detail.');
               },
               onClose: function () {
-                console.log('Payment popup closed');
+                console.log('❎ Payment popup closed');
                 payButton.disabled = false;
                 payButton.textContent = '💳 Bayar dengan Midtrans';
               }
             });
           } else {
-            throw new Error('No snap token received');
+            console.error('❌ No snap_token in response:', data);
+            throw new Error('No snap token received from backend');
           }
         })
         .catch(error => {
-          console.error('Error:', error);
-          alert('Terjadi kesalahan. Silakan coba lagi.');
+          console.error('❌ Error details:', error);
+          alert('Error: ' + error.message + '\n\nCek console (F12) untuk detail lengkap.');
           payButton.disabled = false;
           payButton.textContent = '💳 Bayar dengan Midtrans';
         });
