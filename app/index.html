@@ -16,11 +16,16 @@
     <script>
         if (window.netlifyIdentity) {
             window.netlifyIdentity.on("init", user => {
-                if (!user) {
-                    // Jika user belum login, tendang ke landing page
+                // Whitelist public routes that don't require login
+                const publicRoutes = ['/app/terms', '/app/privacy'];
+                const currentPath = window.location.pathname;
+                const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
+
+                if (!user && !isPublicRoute) {
+                    // Jika user belum login dan bukan halaman publik, tendang ke landing page
                     window.location.href = "/";
                 } else {
-                    // Jika user sudah login, tampilkan konten
+                    // Jika user sudah login atau halaman publik, tampilkan konten
                     document.body.style.display = "block";
                 }
             });
