@@ -70,33 +70,46 @@ Deno.serve(async (req: Request) => {
         // Initialize Supabase client
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-        // Update user status to premium
-        const { data, error } = await supabase
+        // First, try to find existing user by email
+        const { data: existingUser } = await supabase
             .from('profiles')
-            .update({ status: 'premium' })
+            .select('id, email, status')
             .eq('email', email)
-            .select()
+            .single()
 
-        if (error) {
-            console.error('Failed to update user:', email, error.message)
-            return new Response(
-                JSON.stringify({ error: 'Failed to update user status', details: error }),
-                { 
-                    status: 500,
-                    headers: {
-                        ...corsHeaders,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            )
+        let profileData
+        let profileError
+
+        if (existingUser) {
+            // Update existing user to premium
+            const result = await supabase
+                .from('profiles')
+                .update({ status: 'premium', updated_at: new Date().toISOString() })
+                .eq('email', email)
+                .select()
+            profileData = result.data
+            profileError = result.error
+        } else {
+            // Create new profile for user who paid without signup
+            const result = await supabase
+                .from('profiles')
+                .insert({
+                    email: email,
+                    status: 'premium',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+            profileData = result.data
+            profileError = result.error
         }
 
-        if (!data || data.length === 0) {
-            console.warn(`No user found with email: ${email}`)
+        if (profileError) {
+            console.error('Failed to upsert user:', email, profileError.message)
             return new Response(
-                JSON.stringify({ warning: 'User not found, but payment recorded' }),
+                JSON.stringify({ error: 'Failed to update user status', details: profileError }),
                 { 
-                    status: 200,
+                    status: 500,
                     headers: {
                         ...corsHeaders,
                         'Content-Type': 'application/json'

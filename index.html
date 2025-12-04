@@ -213,10 +213,14 @@
           }
           
           if (data.snap_token) {
+            // Save email to localStorage for auto-login
+            localStorage.setItem('payment_email', email);
+            localStorage.setItem('payment_completed', 'true');
+            
             // Open Midtrans Snap popup
             window.snap.pay(data.snap_token, {
               onSuccess: function (result) {
-                alert('Pembayaran berhasil! Silakan login dengan email Anda.');
+                alert('Pembayaran berhasil! Redirecting...');
                 window.location.href = '/app/';
               },
               onPending: function (result) {

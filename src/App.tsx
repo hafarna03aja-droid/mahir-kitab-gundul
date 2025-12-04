@@ -15,6 +15,19 @@ const Home: React.FC = () => {
     const [previewMode, setPreviewMode] = useState(false);
 
     useEffect(() => {
+        // Check if user just completed payment
+        const paymentCompleted = localStorage.getItem('payment_completed');
+        const paymentEmail = localStorage.getItem('payment_email');
+        
+        if (paymentCompleted === 'true' && paymentEmail) {
+            // Clear payment flags
+            localStorage.removeItem('payment_completed');
+            localStorage.removeItem('payment_email');
+            
+            // Store email for login
+            localStorage.setItem('user_email', paymentEmail);
+        }
+        
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setLoading(false);

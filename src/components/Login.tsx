@@ -12,6 +12,16 @@ export default function Login({ onPreviewMode }: LoginProps) {
     const [password, setPassword] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
     const [message, setMessage] = useState('');
+    
+    // Check if email is pre-filled from payment
+    useState(() => {
+        const savedEmail = localStorage.getItem('user_email');
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setMessage('Pembayaran berhasil! Silakan buat password untuk akun Anda.');
+            setIsSignUp(true);
+        }
+    });
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -20,11 +30,23 @@ export default function Login({ onPreviewMode }: LoginProps) {
 
         try {
             if (isSignUp) {
-                const { error } = await supabase.auth.signUp({
+                const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
                 });
                 if (error) throw error;
+                
+                // Create profile for new user
+                if (data.user) {
+                    await supabase
+                        .from('profiles')
+                        .insert({
+                            id: data.user.id,
+                            email: email,
+                            status: 'free'
+                        });
+                }
+                
                 setMessage('Sign up successful! Please check your email for confirmation link.');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({
