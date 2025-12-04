@@ -220,6 +220,33 @@
             // Open Midtrans Snap popup
             window.snap.pay(data.snap_token, {
               onSuccess: function (result) {
+                console.log('Payment success result:', result);
+                
+                // Manual webhook trigger sebagai backup
+                // Jika Midtrans notification tidak jalan, ini akan trigger webhook
+                fetch('https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-webhook', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    order_id: result.order_id || data.order_id,
+                    transaction_status: 'settlement',
+                    fraud_status: 'accept',
+                    customer_details: {
+                      email: email,
+                      first_name: email.split('@')[0]
+                    }
+                  })
+                })
+                .then(res => res.json())
+                .then(webhookData => {
+                  console.log('Manual webhook trigger result:', webhookData);
+                })
+                .catch(err => {
+                  console.error('Manual webhook trigger error:', err);
+                });
+                
                 alert('✅ Pembayaran berhasil!\n\nSilakan login atau daftar dengan email: ' + email);
                 window.location.href = '/app/';
               },
