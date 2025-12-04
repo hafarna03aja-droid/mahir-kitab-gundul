@@ -4,13 +4,21 @@ import type { AnalysisResult } from '../types';
 const ENV_MAIA_API_KEY = import.meta.env.VITE_MAIA_API_KEY || '';
 
 export const getMaiaApiKey = (): string => {
-    return localStorage.getItem('maia_api_key') || ENV_MAIA_API_KEY;
+    const storedKey = localStorage.getItem('maia_api_key');
+    
+    // Auto-initialize from environment variable if not set
+    if (!storedKey && ENV_MAIA_API_KEY) {
+        localStorage.setItem('maia_api_key', ENV_MAIA_API_KEY);
+        return ENV_MAIA_API_KEY;
+    }
+    
+    return storedKey || ENV_MAIA_API_KEY;
 };
 
 const getMaiaClient = () => {
     const apiKey = getMaiaApiKey();
     if (!apiKey) {
-        throw new Error('Maia Router API Key belum dikonfigurasi. Silakan atur di pengaturan.');
+        throw new Error('⚠️ API Key belum tersedia. Silakan klik ikon ⚙️ (Pengaturan) di pojok kanan atas untuk mengatur API Key.');
     }
 
     return new OpenAI({

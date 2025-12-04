@@ -44,7 +44,15 @@ const validateApiKey = (apiKey: string): { valid: boolean; message?: string } =>
  * Mengambil API key dari localStorage atau .env.
  */
 export const getApiKey = (): string => {
-    return localStorage.getItem('gemini_api_key') || ENV_API_KEY;
+    const storedKey = localStorage.getItem('gemini_api_key');
+    
+    // Auto-initialize from environment variable if not set
+    if (!storedKey && ENV_API_KEY) {
+        localStorage.setItem('gemini_api_key', ENV_API_KEY);
+        return ENV_API_KEY;
+    }
+    
+    return storedKey || ENV_API_KEY;
 };
 
 /**
@@ -55,7 +63,7 @@ const getGeminiModel = (modelName: string, jsonMode: boolean = false): Generativ
     const API_KEY = getApiKey();
 
     if (!API_KEY) {
-        throw new Error('API Key belum dikonfigurasi. Silakan atur API Key di pengaturan.');
+        throw new Error('⚠️ API Key belum tersedia. Silakan klik ikon ⚙️ (Pengaturan) di pojok kanan atas untuk mengatur API Key.');
     }
 
     // Validasi API key

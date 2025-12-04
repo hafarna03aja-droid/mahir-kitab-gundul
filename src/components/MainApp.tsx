@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Tabs from './Tabs';
 import AnalysisTab from './AnalysisTab';
@@ -10,6 +10,22 @@ import type { TabId } from '../types';
 
 const MainApp: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabId>('analisis');
+    
+    // Auto-initialize API keys from environment variables
+    useEffect(() => {
+        const maiaKey = import.meta.env.VITE_MAIA_API_KEY;
+        const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        
+        // Set Maia key if available and not already set
+        if (maiaKey && !localStorage.getItem('maia_api_key')) {
+            localStorage.setItem('maia_api_key', maiaKey);
+        }
+        
+        // Set Gemini key if available and not already set
+        if (geminiKey && !localStorage.getItem('gemini_api_key')) {
+            localStorage.setItem('gemini_api_key', geminiKey);
+        }
+    }, []);
 
     const renderContent = () => {
         switch (activeTab) {
