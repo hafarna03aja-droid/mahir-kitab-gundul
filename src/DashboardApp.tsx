@@ -14,38 +14,105 @@ interface Profile {
 export default function DashboardApp({ session }: DashboardAppProps) {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [checking, setChecking] = useState(false);
 
-    const checkStatus = async () => {
+    // Initial load - get profile silently without alerts
+    const getProfile = async () => {
         setLoading(true);
         const { user } = session;
 
         try {
-            const { data, error } = await supabase
+            // Try to find profile by user ID first
+            let { data, error } = await supabase
                 .from('profiles')
                 .select('status')
                 .eq('id', user.id)
                 .single();
 
-            if (error) throw error;
+            // If not found by ID, try by email (for payment-first users)
+            if (error || !data) {
+                const result = await supabase
+                    .from('profiles')
+                    .select('status')
+                    .eq('email', user.email)
+                    .single();
+                
+                data = result.data;
+                error = result.error;
+                
+                // If found by email, update the profile with user ID
+                if (data && user.email) {
+                    await supabase
+                        .from('profiles')
+                        .update({ id: user.id })
+                        .eq('email', user.email);
+                }
+            }
 
             if (data) {
                 setProfile(data);
-                if (data.status === 'premium') {
-                    alert('✅ Pembayaran terkonfirmasi! Akun Anda sekarang PREMIUM.');
-                } else {
-                    alert('ℹ️ Status akun masih FREE.\n\nJika Anda baru saja membayar, mohon tunggu 1-2 menit dan coba lagi.\nPastikan email pembayaran SAMA dengan email login.');
-                }
             }
         } catch (error: any) {
-            console.error('Error checking status:', error);
-            alert('Gagal memeriksa status: ' + (error.message || error.error_description || JSON.stringify(error)));
+            console.error('Error getting profile:', error);
         } finally {
             setLoading(false);
         }
     };
 
+    // Manual check - with user feedback
+    const checkStatus = async () => {
+        setChecking(true);
+        const { user } = session;
+
+        try {
+            // Try by ID first
+            let { data, error } = await supabase
+                .from('profiles')
+                .select('status')
+                .eq('id', user.id)
+                .single();
+
+            // If not found, try by email
+            if (error || !data) {
+                const result = await supabase
+                    .from('profiles')
+                    .select('status')
+                    .eq('email', user.email)
+                    .single();
+                
+                data = result.data;
+                error = result.error;
+                
+                // Update profile with user ID if found by email
+                if (data && user.email) {
+                    await supabase
+                        .from('profiles')
+                        .update({ id: user.id })
+                        .eq('email', user.email);
+                }
+            }
+
+            if (data) {
+                setProfile(data);
+                if (data.status === 'premium') {
+                    alert('✅ Pembayaran terkonfirmasi! Akun Anda sekarang PREMIUM.\n\nSilakan refresh halaman untuk melihat aplikasi.');
+                    window.location.reload();
+                } else {
+                    alert('ℹ️ Status akun masih FREE.\n\nJika Anda baru saja membayar:\n• Tunggu 1-2 menit\n• Pastikan email login SAMA dengan email saat bayar\n• Coba klik tombol ini lagi');
+                }
+            } else {
+                alert('⚠️ Profile tidak ditemukan.\n\nPastikan Anda:\n1. Sudah melakukan pembayaran\n2. Login dengan email yang SAMA saat bayar\n3. Sudah verifikasi email dari Supabase');
+            }
+        } catch (error: any) {
+            console.error('Error checking status:', error);
+            alert('❌ Gagal memeriksa status: ' + (error.message || 'Unknown error'));
+        } finally {
+            setChecking(false);
+        }
+    };
+
     useEffect(() => {
-        checkStatus();
+        getProfile();
     }, [session]);
 
     if (loading) return (
@@ -123,19 +190,20 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <button
                         onClick={checkStatus}
+                        disabled={checking}
                         style={{
-                            backgroundColor: '#10b981',
+                            backgroundColor: checking ? '#9ca3af' : '#10b981',
                             color: 'white',
                             padding: '12px 24px',
                             borderRadius: '8px',
                             fontWeight: '600',
                             border: 'none',
-                            cursor: 'pointer',
+                            cursor: checking ? 'not-allowed' : 'pointer',
                             fontSize: '1rem',
                             transition: 'background-color 0.2s'
                         }}
                     >
-                        🔄 Cek Status Pembayaran
+                        {checking ? '⏳ Memeriksa...' : '🔄 Cek Status Pembayaran'}
                     </button>
 
                     <a
