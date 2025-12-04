@@ -38,7 +38,7 @@ export default function DashboardApp({ session }: DashboardAppProps) {
             }
         } catch (error: any) {
             console.error('Error checking status:', error);
-            alert('Gagal memeriksa status. Silakan coba lagi.');
+            alert('Gagal memeriksa status: ' + (error.message || error.error_description || JSON.stringify(error)));
         } finally {
             setLoading(false);
         }
