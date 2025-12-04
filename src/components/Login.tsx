@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
@@ -14,14 +14,16 @@ export default function Login({ onPreviewMode }: LoginProps) {
     const [message, setMessage] = useState('');
     
     // Check if email is pre-filled from payment
-    useState(() => {
+    useEffect(() => {
         const savedEmail = localStorage.getItem('user_email');
         if (savedEmail) {
             setEmail(savedEmail);
-            setMessage('Pembayaran berhasil! Silakan buat password untuk akun Anda.');
+            setMessage('✅ Pembayaran berhasil! Silakan buat password untuk akun Anda.');
             setIsSignUp(true);
+            // Clear the flag after setting
+            localStorage.removeItem('user_email');
         }
-    });
+    }, []);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,15 +38,38 @@ export default function Login({ onPreviewMode }: LoginProps) {
                 });
                 if (error) throw error;
                 
-                // Create profile for new user
+                // Check if user already has premium profile from payment
+                const { data: existingProfile } = await supabase
+                    .from('profiles')
+                    .select('status')
+                    .eq('email', email)
+                    .single();
+                
+                // Create or update profile
                 if (data.user) {
-                    await supabase
-                        .from('profiles')
-                        .insert({
-                            id: data.user.id,
-                            email: email,
-                            status: 'free'
-                        });
+                    if (existingProfile) {
+                        // Update existing profile with user ID
+                        await supabase
+                            .from('profiles')
+                            .update({ id: data.user.id })
+                            .eq('email', email);
+                        
+                        if (existingProfile.status === 'premium') {
+                            setMessage('✅ Akun premium berhasil dibuat! Silakan cek email untuk konfirmasi.');
+                        } else {
+                            setMessage('Sign up successful! Please check your email for confirmation link.');
+                        }
+                    } else {
+                        // Create new profile
+                        await supabase
+                            .from('profiles')
+                            .insert({
+                                id: data.user.id,
+                                email: email,
+                                status: 'free'
+                            });
+                        setMessage('Sign up successful! Please check your email for confirmation link.');
+                    }
                 }
                 
                 setMessage('Sign up successful! Please check your email for confirmation link.');
@@ -108,6 +133,13 @@ export default function Login({ onPreviewMode }: LoginProps) {
                     {isSignUp ? 'Login' : 'Sign Up'}
                 </button>
             </p>
+            
+            {!isSignUp && (
+                <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#fef3c7', borderRadius: '8px', fontSize: '14px' }}>
+                    <strong>💡 Sudah bayar tapi belum punya akun?</strong>
+                    <p style={{ margin: '5px 0 0 0' }}>Klik "Sign Up" dan buat akun dengan email yang sama saat pembayaran.</p>
+                </div>
+            )}
 
             {/* Preview Mode Button */}
             {onPreviewMode && (
