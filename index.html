@@ -185,7 +185,7 @@
       payButton.textContent = 'Memproses...';
 
       // Request Snap Token from your backend
-      const supabaseAnonKey = 'SUPABASE_ANON_KEY_PLACEHOLDER';
+      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxMTI4MTYsImV4cCI6MjA0ODY4ODgxNn0.MFQC-C2BnxGxPAIjB6c3DLjPJbWjy_FNBBYWqF1-x4Y';
       fetch('https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-payment', {
         method: 'POST',
         headers: {
