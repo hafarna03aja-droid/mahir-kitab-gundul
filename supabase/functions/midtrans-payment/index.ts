@@ -1,9 +1,10 @@
 // Midtrans Payment - Generate Snap Token
 // This Edge Function creates a Midtrans transaction and returns the Snap token
 
+// @ts-ignore - Deno runtime types
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
-// SANDBOX Configuration
+// @ts-ignore - Deno runtime
 const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY')
 const MIDTRANS_API_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions"
 
@@ -18,6 +19,7 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
+// @ts-ignore - Deno runtime
 Deno.serve(async (req: Request) => {
     // Handle CORS Preflight Request
     if (req.method === 'OPTIONS') {

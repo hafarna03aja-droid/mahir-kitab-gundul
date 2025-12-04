@@ -203,8 +203,13 @@
           return response.json().then(data => ({ status: response.status, data }));
         })
         .then(({ status, data }) => {
+          console.log('Payment response:', { status, data });
+          
           if (status !== 200) {
-            throw new Error(data.error || 'Failed to create transaction');
+            console.error('Payment error details:', data);
+            const errorMsg = data.message || data.error || 'Failed to create transaction';
+            const debugInfo = data.debug ? `\nDebug: ${JSON.stringify(data.debug)}` : '';
+            throw new Error(errorMsg + debugInfo);
           }
           
           if (data.snap_token) {
