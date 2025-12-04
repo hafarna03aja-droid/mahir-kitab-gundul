@@ -24,7 +24,11 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
+        console.log('\n=== WEBHOOK RECEIVED ===')
+        console.log('Timestamp:', new Date().toISOString())
+        
         const payload = await req.json()
+        console.log('Payload received:', JSON.stringify(payload, null, 2))
 
         const {
             order_id,
@@ -34,8 +38,12 @@ Deno.serve(async (req: Request) => {
         } = payload
 
         const email = customer_details?.email
+        console.log('Extracted email:', email)
+        console.log('Transaction status:', transaction_status)
+        console.log('Fraud status:', fraud_status)
 
         if (!email) {
+            console.error('ERROR: Email not found in payload')
             return new Response(
                 JSON.stringify({ error: 'Email is required' }),
                 { 
@@ -54,9 +62,16 @@ Deno.serve(async (req: Request) => {
             transaction_status === 'settlement'
         ) && fraud_status === 'accept'
 
+        console.log('Is payment successful?', isSuccess)
+
         if (!isSuccess) {
+            console.log('Payment not successful yet, skipping profile update')
             return new Response(
-                JSON.stringify({ message: 'Payment not successful yet' }),
+                JSON.stringify({ 
+                    message: 'Payment not successful yet',
+                    transaction_status,
+                    fraud_status
+                }),
                 { 
                     status: 200,
                     headers: {
@@ -68,20 +83,33 @@ Deno.serve(async (req: Request) => {
         }
 
         // Initialize Supabase client
+        console.log('Initializing Supabase client...')
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
         // First, try to find existing user by email
-        const { data: existingUser } = await supabase
+        console.log('Looking for existing profile by email:', email)
+        const { data: existingUser, error: lookupError } = await supabase
             .from('profiles')
             .select('id, email, status')
             .eq('email', email)
             .single()
+
+        if (lookupError) {
+            console.log('Profile lookup error (might be normal if profile doesnt exist):', lookupError.message)
+        }
+        
+        if (existingUser) {
+            console.log('Found existing profile:', existingUser)
+        } else {
+            console.log('No existing profile found, will create new one')
+        }
 
         let profileData
         let profileError
 
         if (existingUser) {
             // Update existing user to premium
+            console.log('Updating existing profile to premium...')
             const result = await supabase
                 .from('profiles')
                 .update({ status: 'premium', updated_at: new Date().toISOString() })
@@ -89,8 +117,10 @@ Deno.serve(async (req: Request) => {
                 .select()
             profileData = result.data
             profileError = result.error
+            console.log('Update result:', { data: profileData, error: profileError })
         } else {
             // Create new profile for user who paid without signup
+            console.log('Creating new premium profile...')
             const result = await supabase
                 .from('profiles')
                 .insert({
@@ -102,10 +132,12 @@ Deno.serve(async (req: Request) => {
                 .select()
             profileData = result.data
             profileError = result.error
+            console.log('Insert result:', { data: profileData, error: profileError })
         }
 
         if (profileError) {
-            console.error('Failed to upsert user:', email, profileError.message)
+            console.error('❌ FAILED to upsert user:', email, profileError.message)
+            console.error('Full error:', JSON.stringify(profileError, null, 2))
             return new Response(
                 JSON.stringify({ error: 'Failed to update user status', details: profileError }),
                 { 
@@ -117,6 +149,10 @@ Deno.serve(async (req: Request) => {
                 }
             )
         }
+
+        console.log('✅ SUCCESS! Profile updated/created for:', email)
+        console.log('Profile data:', profileData)
+        console.log('=== WEBHOOK COMPLETED ===\n')
 
         return new Response(
             JSON.stringify({
