@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Save, Key, Trash2, Eye, EyeOff, Bot, Cpu, Router, Sparkles, Globe } from 'lucide-react';
+import { X, Save, Key, Trash2, Eye, EyeOff, Bot, Cpu, Router, Sparkles } from 'lucide-react';
 import { getAIConfig, type AIProvider } from '../services/aiService';
 
 interface ApiKeySettingsProps {
