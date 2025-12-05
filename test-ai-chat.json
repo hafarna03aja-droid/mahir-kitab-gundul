@@ -1,0 +1,9 @@
+{
+  "model": "maia/gemini-2.5-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Apa itu Mubtada dalam bahasa Arab?"
+    }
+  ]
+}

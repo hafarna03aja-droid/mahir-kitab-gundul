@@ -1,13 +1,8 @@
-// File ini menggunakan Google Generative AI SDK resmi untuk stabilitas lebih baik
-import {
-    GoogleGenerativeAI,
-    HarmCategory,
-    HarmBlockThreshold,
-    GenerativeModel
-} from "@google/generative-ai";
+// Service ini sekarang menggunakan secure backend proxy
 import type { AnalysisResult } from '../types';
 
-const ENV_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
+const AI_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-chat`;
 
 // Model prioritas: coba dari yang paling stabil/cepat ke yang paling canggih
 const MODEL_PRIORITY = [
@@ -17,174 +12,73 @@ const MODEL_PRIORITY = [
 ];
 
 /**
- * Validasi format API key Gemini
- */
-const validateApiKey = (apiKey: string): { valid: boolean; message?: string } => {
-    if (!apiKey || apiKey.trim() === '') {
-        return { valid: false, message: 'API Key kosong' };
-    }
-
-    // Gemini API key biasanya dimulai dengan "AIza"
-    if (!apiKey.startsWith('AIza')) {
-        return {
-            valid: false,
-            message: 'Format API Key tidak valid. API Key Gemini biasanya dimulai dengan "AIza"'
-        };
-    }
-
-    // Panjang minimal API key
-    if (apiKey.length < 30) {
-        return { valid: false, message: 'API Key terlalu pendek' };
-    }
-
-    return { valid: true };
-};
-
-/**
- * Mengambil API key dari localStorage atau .env.
+ * Keep for backward compatibility - API keys now handled securely in backend
  */
 export const getApiKey = (): string => {
-    const storedKey = localStorage.getItem('gemini_api_key');
-    
-    // Auto-initialize from environment variable if not set
-    if (!storedKey && ENV_API_KEY) {
-        localStorage.setItem('gemini_api_key', ENV_API_KEY);
-        return ENV_API_KEY;
-    }
-    
-    return storedKey || ENV_API_KEY;
+    // API key is now handled securely in backend
+    // This function is kept for compatibility but returns empty string
+    // Frontend no longer needs to store API keys
+    return '';
 };
 
 /**
- * Inisialisasi Model Gemini dengan konfigurasi "Anti Gagal".
- * Support model fallback untuk kompatibilitas maksimal.
- */
-const getGeminiModel = (modelName: string, jsonMode: boolean = false): GenerativeModel => {
-    const API_KEY = getApiKey();
-
-    if (!API_KEY) {
-        throw new Error('⚠️ API Key belum tersedia. Silakan klik ikon ⚙️ (Pengaturan) di pojok kanan atas untuk mengatur API Key.');
-    }
-
-    // Validasi API key
-    const validation = validateApiKey(API_KEY);
-    if (!validation.valid) {
-        throw new Error(`API Key tidak valid: ${validation.message}`);
-    }
-
-    const genAI = new GoogleGenerativeAI(API_KEY);
-
-    return genAI.getGenerativeModel({
-        model: modelName,
-        // System Instruction: Ini KUNCI agar AI paham dia adalah ahli bahasa Arab
-        systemInstruction: "Anda adalah ahli bahasa dan sastra Arab. Tugas Anda adalah menghasilkan teks bahasa Arab yang benar secara tata bahasa (Nahwu dan Sharaf), menggunakan harakat lengkap jika diminta, dan bergaya bahasa formal (Fusha).",
-        generationConfig: {
-            // Jika jsonMode true, paksa output jadi JSON valid
-            responseMimeType: jsonMode ? "application/json" : "text/plain",
-            temperature: 0.3, // Rendah agar analisis konsisten/tidak halu
-        },
-        // PENTING: Matikan safety filter agar teks Arab/Agama tidak dianggap berbahaya
-        safetySettings: [
-            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        ]
-    });
-};
-
-/**
- * Sleep utility untuk retry dengan exponential backoff
- */
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Wrapper umum untuk memanggil Gemini dengan model fallback dan retry logic
+ * Call AI via secure backend proxy (now handles API keys securely)
  */
 async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise<string> {
     let lastError: any = null;
 
-    // Coba setiap model dalam priority list
-    for (let modelIndex = 0; modelIndex < MODEL_PRIORITY.length; modelIndex++) {
-        const modelName = MODEL_PRIORITY[modelIndex];
+    // Try each model in priority list
+    for (const modelName of MODEL_PRIORITY) {
+        try {
+            const response = await fetch(AI_CHAT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: modelName,
+                    messages: [
+                        {
+                            role: "system",
+                            content: "Anda adalah ahli bahasa dan sastra Arab. Tugas Anda adalah menghasilkan teks bahasa Arab yang benar secara tata bahasa (Nahwu dan Sharaf), menggunakan harakat lengkap jika diminta, dan bergaya bahasa formal (Fusha)."
+                        },
+                        { role: "user", content: prompt }
+                    ],
+                    response_format: jsonMode ? { type: "json_object" } : undefined,
+                    temperature: 0.3
+                })
+            });
 
-        // Retry logic untuk setiap model (max 3 attempts)
-        for (let attempt = 1; attempt <= 3; attempt++) {
-            try {
-                const model = getGeminiModel(modelName, jsonMode);
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || `HTTP ${response.status}`);
+            }
 
+            const data = await response.json();
+            const text = data.choices?.[0]?.message?.content;
 
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const text = response.text();
+            if (!text) throw new Error("Response kosong dari AI service.");
 
-                if (!text) throw new Error("Response kosong dari Gemini.");
+            return text;
 
+        } catch (error: any) {
+            lastError = error;
+            const errorMsg = error.message || "";
 
-                return text;
+            // If model not found, try next model
+            if (errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found")) {
+                continue;
+            }
 
-            } catch (error: any) {
-                lastError = error;
-                const errorMsg = error.message || "";
-
-                // Deteksi jenis error
-                const isRateLimit = errorMsg.includes("429") || errorMsg.includes("RATE_LIMIT") || errorMsg.includes("RESOURCE_EXHAUSTED");
-                const isNotFound = errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found");
-                const isInvalidKey = errorMsg.includes("API key not valid") || errorMsg.includes("PERMISSION_DENIED");
-                const isServerError = errorMsg.includes("503") || errorMsg.includes("500");
-
-                // Jika API key invalid, langsung throw tanpa retry
-                if (isInvalidKey) {
-                    throw new Error("❌ API Key tidak valid atau tidak memiliki akses. Periksa kembali API Key Anda di Google AI Studio (https://aistudio.google.com/app/apikey)");
-                }
-
-                // Jika model not found, coba model berikutnya
-                if (isNotFound) {
-
-                    break; // Break dari retry loop, lanjut ke model berikutnya
-                }
-
-                // Jika rate limit atau server error, retry dengan exponential backoff
-                if ((isRateLimit || isServerError) && attempt < 3) {
-                    const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-
-                    await sleep(waitTime);
-                    continue; // Retry dengan model yang sama
-                }
-
-                // Jika sudah attempt terakhir untuk model ini, coba model berikutnya
-                if (attempt === 3) {
-
-                    break;
-                }
+            // If rate limit, throw immediately
+            if (errorMsg.includes("429") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
+                throw new Error("⏱️ Rate limit terlampaui. Tunggu beberapa menit atau coba lagi nanti.");
             }
         }
     }
 
-    // Jika semua model gagal, throw error dengan pesan yang informatif
-    const errorMsg = lastError?.message || "Terjadi kesalahan tidak dikenal";
-
-    let userFriendlyMsg = "❌ Gagal menghubungi Gemini API setelah mencoba semua model.\n\n";
-
-    if (errorMsg.includes("API key not valid") || errorMsg.includes("PERMISSION_DENIED")) {
-        userFriendlyMsg += "🔑 **Masalah API Key:**\n";
-        userFriendlyMsg += "- Pastikan API Key valid dan aktif\n";
-        userFriendlyMsg += "- Dapatkan API Key di: https://aistudio.google.com/app/apikey\n";
-        userFriendlyMsg += "- Untuk free tier, pastikan quota harian belum habis";
-    } else if (errorMsg.includes("429") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
-        userFriendlyMsg += "⏱️ **Quota/Rate Limit Terlampaui:**\n";
-        userFriendlyMsg += "- Free tier: 15 requests/menit, 1500 requests/hari\n";
-        userFriendlyMsg += "- Tunggu beberapa menit atau upgrade ke paid tier\n";
-        userFriendlyMsg += "- Info: https://ai.google.dev/pricing";
-    } else if (errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found")) {
-        userFriendlyMsg += "🔍 **Model Tidak Ditemukan:**\n";
-        userFriendlyMsg += "- Kemungkinan API Key Anda tidak memiliki akses ke model Gemini\n";
-        userFriendlyMsg += "- Coba buat API Key baru di Google AI Studio";
-    } else {
-        userFriendlyMsg += `📋 **Detail Error:** ${errorMsg}`;
-    }
-
-    throw new Error(userFriendlyMsg);
+    // If all models failed
+    throw new Error(`❌ Gagal menghubungi AI service: ${lastError?.message || 'Unknown error'}`);
 }
 
 /**

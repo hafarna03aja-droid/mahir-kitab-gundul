@@ -1,0 +1,10 @@
+{
+  "order_id": "TEST-COMPLETE-001",
+  "transaction_status": "settlement",
+  "fraud_status": "accept",
+  "customer_details": {
+    "email": "testcomplete@example.com",
+    "first_name": "Test",
+    "last_name": "Complete"
+  }
+}

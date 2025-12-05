@@ -1,0 +1,13 @@
+{
+    "imports": {
+        "std/": "https://deno.land/std@0.168.0/"
+    },
+    "compilerOptions": {
+        "lib": [
+            "deno.window"
+        ],
+        "types": [
+            "jsr:@supabase/functions-js/edge-runtime.d.ts"
+        ]
+    }
+}

@@ -1,59 +1,47 @@
-import OpenAI from 'openai';
 import type { AnalysisResult } from '../types';
 
-const ENV_MAIA_API_KEY = import.meta.env.VITE_MAIA_API_KEY || '';
-
-export const getMaiaApiKey = (): string => {
-    const storedKey = localStorage.getItem('maia_api_key');
-    
-    // Auto-initialize from environment variable if not set
-    if (!storedKey && ENV_MAIA_API_KEY) {
-        localStorage.setItem('maia_api_key', ENV_MAIA_API_KEY);
-        return ENV_MAIA_API_KEY;
-    }
-    
-    return storedKey || ENV_MAIA_API_KEY;
-};
-
-const getMaiaClient = () => {
-    const apiKey = getMaiaApiKey();
-    if (!apiKey) {
-        throw new Error('⚠️ API Key belum tersedia. Silakan klik ikon ⚙️ (Pengaturan) di pojok kanan atas untuk mengatur API Key.');
-    }
-
-    return new OpenAI({
-        baseURL: "https://api.maiarouter.ai/v1",
-        apiKey: apiKey,
-        dangerouslyAllowBrowser: true, // Required for client-side usage
-        defaultHeaders: {
-            "HTTP-Referer": window.location.origin,
-            "X-Title": "Mahir Arab Gundul",
-        },
-    });
-};
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
+const AI_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-chat`;
 
 const MODEL_ID = "maia/gemini-2.5-flash";
 
+// Keep for backward compatibility - now just returns true if backend is available
+export const getMaiaApiKey = (): string => {
+    // API key is now handled securely in backend
+    // This function is kept for compatibility but returns empty string
+    // Frontend no longer needs to store API keys
+    return '';
+};
+
 async function callMaiaRouter(prompt: string, jsonMode: boolean = false): Promise<string> {
     try {
-        const client = getMaiaClient();
-
-
-        const completion = await client.chat.completions.create({
-            model: MODEL_ID,
-            messages: [
-                { role: "user", content: prompt }
-            ],
-            response_format: jsonMode ? { type: "json_object" } : undefined,
+        const response = await fetch(AI_CHAT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: MODEL_ID,
+                messages: [
+                    { role: "user", content: prompt }
+                ],
+                response_format: jsonMode ? { type: "json_object" } : undefined,
+            })
         });
 
-        const text = completion.choices[0].message.content;
-        if (!text) throw new Error("Response kosong dari Maia Router.");
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'AI request failed');
+        }
 
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        
+        if (!text) throw new Error("Response kosong dari AI service.");
 
         return text;
     } catch (error: any) {
-        throw new Error(`Gagal Maia Router: ${error.message || 'Terjadi kesalahan'}`);
+        throw new Error(`Gagal AI Service: ${error.message || 'Terjadi kesalahan'}`);
     }
 }
 
