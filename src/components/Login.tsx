@@ -32,18 +32,32 @@ export default function Login({ onPreviewMode }: LoginProps) {
 
         try {
             if (isSignUp) {
-                const { data, error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                });
-                if (error) throw error;
-                
-                // Check if user already has premium profile from payment
+                // Check if user already has premium profile from payment BEFORE signup
                 const { data: existingProfile } = await supabase
                     .from('profiles')
-                    .select('status')
+                    .select('status, subscription_expires_at')
                     .eq('email', email)
                     .single();
+                
+                // Sign up with options
+                const signUpOptions: any = {
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            email: email,
+                        }
+                    }
+                };
+
+                // If user already paid, we can skip email confirmation
+                if (existingProfile && existingProfile.status === 'premium') {
+                    signUpOptions.options.emailRedirectTo = window.location.origin + '/app';
+                }
+
+                const { data, error } = await supabase.auth.signUp(signUpOptions);
+                
+                if (error) throw error;
                 
                 // Create or update profile
                 if (data.user) {
@@ -51,28 +65,38 @@ export default function Login({ onPreviewMode }: LoginProps) {
                         // Update existing profile with user ID
                         await supabase
                             .from('profiles')
-                            .update({ id: data.user.id })
+                            .update({ 
+                                id: data.user.id,
+                                updated_at: new Date().toISOString()
+                            })
                             .eq('email', email);
                         
                         if (existingProfile.status === 'premium') {
-                            setMessage('✅ Akun premium berhasil dibuat! Silakan cek email untuk konfirmasi.');
+                            const expiresAt = existingProfile.subscription_expires_at 
+                                ? new Date(existingProfile.subscription_expires_at).toLocaleDateString('id-ID')
+                                : 'Selamanya';
+                            
+                            setMessage(`✅ Akun Premium Berhasil Dibuat!\n\n🎉 Selamat! Akun Anda telah aktif.\n📧 Email: ${email}\n⏰ Berlaku hingga: ${expiresAt}\n\n${data.user.email_confirmed_at ? '✅ Email sudah terverifikasi.' : '📧 Silakan cek email untuk verifikasi (opsional).'}`);
                         } else {
-                            setMessage('Sign up successful! Please check your email for confirmation link.');
+                            setMessage('✅ Pendaftaran berhasil!\n\n📧 Silakan cek email Anda untuk link konfirmasi.\n\n💡 Tip: Cek folder Spam jika tidak ada di Inbox.');
                         }
                     } else {
-                        // Create new profile
+                        // Create new free profile
                         await supabase
                             .from('profiles')
                             .insert({
                                 id: data.user.id,
                                 email: email,
-                                status: 'free'
+                                status: 'free',
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
                             });
-                        setMessage('Sign up successful! Please check your email for confirmation link.');
+                        setMessage('✅ Pendaftaran berhasil!\n\n📧 Silakan cek email Anda untuk link konfirmasi.\n\n💡 Tip: Cek folder Spam jika tidak ada di Inbox.');
                     }
+                } else {
+                    // User might already exist
+                    setMessage('⚠️ Akun mungkin sudah ada.\n\nSilakan coba Login atau gunakan "Lupa Password".');
                 }
-                
-                setMessage('Sign up successful! Please check your email for confirmation link.');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({
                     email,
@@ -123,11 +147,63 @@ export default function Login({ onPreviewMode }: LoginProps) {
                     {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Login')}
                 </button>
             </form>
-            {message && <p style={{ color: 'red', marginTop: '10px' }}>{message}</p>}
+            {message && (
+                <div style={{ 
+                    marginTop: '15px', 
+                    padding: '15px', 
+                    backgroundColor: message.includes('✅') ? '#d1fae5' : message.includes('⚠️') ? '#fef3c7' : '#fee2e2',
+                    color: '#1f2937',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    textAlign: 'left',
+                    whiteSpace: 'pre-line',
+                    lineHeight: '1.6'
+                }}>
+                    {message}
+                </div>
+            )}
+            
+            {isSignUp && message.includes('📧 Silakan cek email') && (
+                <div style={{ marginTop: '15px' }}>
+                    <button
+                        onClick={async () => {
+                            setLoading(true);
+                            try {
+                                const { error } = await supabase.auth.resend({
+                                    type: 'signup',
+                                    email: email,
+                                });
+                                if (error) throw error;
+                                setMessage('✅ Email konfirmasi telah dikirim ulang!\n\nSilakan cek inbox atau folder spam Anda.');
+                            } catch (error: any) {
+                                setMessage('❌ Gagal mengirim ulang email: ' + error.message);
+                            } finally {
+                                setLoading(false);
+                            }
+                        }}
+                        disabled={loading}
+                        style={{
+                            padding: '8px 16px',
+                            borderRadius: '5px',
+                            border: '1px solid #2563eb',
+                            backgroundColor: 'white',
+                            color: '#2563eb',
+                            cursor: 'pointer',
+                            fontSize: '14px'
+                        }}
+                    >
+                        📧 Kirim Ulang Email Konfirmasi
+                    </button>
+                </div>
+            )}
+            
             <p style={{ marginTop: '20px' }}>
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
                 <button
-                    onClick={() => setIsSignUp(!isSignUp)}
+                    onClick={() => {
+                        setIsSignUp(!isSignUp);
+                        setMessage('');
+                    }}
                     style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}
                 >
                     {isSignUp ? 'Login' : 'Sign Up'}
