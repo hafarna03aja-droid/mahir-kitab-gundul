@@ -1,12 +1,16 @@
 // Midtrans Webhook Handler
 // This Edge Function processes payment notifications from Midtrans
 
+// @ts-ignore - Deno runtime types
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from '@supabase/supabase-js'
 
+// @ts-ignore - Deno runtime
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+// @ts-ignore - Deno runtime
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY')!
+// @ts-ignore - Deno runtime
+const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY')
 
 // Helper: Generate Midtrans SHA-512 signature for verification
 async function generateSignature(
@@ -30,6 +34,7 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
+// @ts-ignore - Deno runtime
 Deno.serve(async (req: Request) => {
     // Handle CORS Preflight Request
     if (req.method === 'OPTIONS') {
@@ -40,6 +45,21 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
+        // ✅ STEP 0: Validate required environment variables
+        if (!MIDTRANS_SERVER_KEY) {
+            console.error('❌ MIDTRANS_SERVER_KEY not configured!')
+            return new Response(
+                JSON.stringify({ error: 'Server configuration error' }),
+                { 
+                    status: 500,
+                    headers: {
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            )
+        }
+
         console.log('\n=== WEBHOOK RECEIVED ===')
         console.log('Timestamp:', new Date().toISOString())
         
@@ -94,10 +114,25 @@ Deno.serve(async (req: Request) => {
         console.log('Transaction status:', transaction_status)
         console.log('Fraud status:', fraud_status)
 
+        // ✅ VALIDATION: Email required and format check
         if (!email) {
             console.error('ERROR: Email not found in payload')
             return new Response(
                 JSON.stringify({ error: 'Email is required' }),
+                { 
+                    status: 400,
+                    headers: {
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            )
+        }
+
+        if (!email.includes('@') || email.length < 5) {
+            console.error('ERROR: Invalid email format:', email)
+            return new Response(
+                JSON.stringify({ error: 'Invalid email format' }),
                 { 
                     status: 400,
                     headers: {
@@ -138,15 +173,36 @@ Deno.serve(async (req: Request) => {
         console.log('Initializing Supabase client...')
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-        // ✅ STEP 1: Update/Create order record (AUDIT TRAIL)
-        console.log('Step 1: Updating order record...')
-        
-        // Check if order exists to increment webhook_attempts
+        // ✅ IDEMPOTENCY: Check if order already processed successfully
+        console.log('Checking idempotency for order:', order_id)
         const { data: existingOrder } = await supabase
             .from('orders')
-            .select('webhook_attempts')
+            .select('transaction_status, webhook_attempts')
             .eq('order_id', order_id)
             .single()
+
+        if (existingOrder && (existingOrder.transaction_status === 'settlement' || existingOrder.transaction_status === 'capture')) {
+            console.log('⚠️ Order already processed successfully, skipping duplicate webhook')
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    message: 'Order already processed (idempotent)',
+                    order_id,
+                    previous_status: existingOrder.transaction_status
+                }),
+                { 
+                    status: 200,
+                    headers: {
+                        ...corsHeaders,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            )
+        }
+
+        // ✅ STEP 1: Update/Create order record (AUDIT TRAIL)
+        console.log('Step 1: Updating order record...')
+        console.log('Webhook attempts so far:', existingOrder?.webhook_attempts || 0)
 
         const { data: orderData, error: orderError } = await supabase
             .from('orders')
@@ -199,12 +255,21 @@ Deno.serve(async (req: Request) => {
         let profileData
         let profileError
 
+        // Calculate subscription expiry date (30 days from now)
+        const subscriptionExpiryDate = new Date()
+        subscriptionExpiryDate.setDate(subscriptionExpiryDate.getDate() + 30)
+        const expiryIso = subscriptionExpiryDate.toISOString()
+        console.log('Setting subscription expiry to:', expiryIso)
+
         if (existingUser) {
-            // Update existing user to premium
+            // Update existing user to premium with expiry date
             console.log('Updating existing profile to premium...')
             const result = await supabase
                 .from('profiles')
-                .update({ status: 'premium' })
+                .update({ 
+                    status: 'premium',
+                    subscription_expires_at: expiryIso
+                })
                 .eq('email', email)
                 .select()
             profileData = result.data
@@ -217,7 +282,8 @@ Deno.serve(async (req: Request) => {
                 .from('profiles')
                 .insert({
                     email: email,
-                    status: 'premium'
+                    status: 'premium',
+                    subscription_expires_at: expiryIso
                 })
                 .select()
             profileData = result.data
