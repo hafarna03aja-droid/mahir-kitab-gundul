@@ -182,7 +182,7 @@ export class AIProviderFactory {
                     apiKey,
                     model: model || 'maia/gemini-2.5-flash',
                     provider: 'maia',
-                    baseURL: 'https://api.maia.ai/v1',
+                    baseURL: 'https://api.maiarouter.ai/v1',
                 });
 
             case 'openrouter':
