@@ -4,9 +4,16 @@
 -- Make id column nullable temporarily to allow payment-first users
 ALTER TABLE profiles ALTER COLUMN id DROP NOT NULL;
 
--- Add constraint to ensure either id exists OR email exists
-ALTER TABLE profiles ADD CONSTRAINT profiles_id_or_email_check 
-    CHECK (id IS NOT NULL OR email IS NOT NULL);
+-- Add constraint to ensure either id exists OR email exists (skip if exists)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'profiles_id_or_email_check'
+    ) THEN
+        ALTER TABLE profiles ADD CONSTRAINT profiles_id_or_email_check 
+            CHECK (id IS NOT NULL OR email IS NOT NULL);
+    END IF;
+END $$;
 
 -- Create index on email for faster lookups
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);

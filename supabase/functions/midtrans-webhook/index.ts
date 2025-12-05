@@ -112,7 +112,7 @@ Deno.serve(async (req: Request) => {
             console.log('Updating existing profile to premium...')
             const result = await supabase
                 .from('profiles')
-                .update({ status: 'premium', updated_at: new Date().toISOString() })
+                .update({ status: 'premium' })
                 .eq('email', email)
                 .select()
             profileData = result.data
@@ -125,9 +125,7 @@ Deno.serve(async (req: Request) => {
                 .from('profiles')
                 .insert({
                     email: email,
-                    status: 'premium',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
+                    status: 'premium'
                 })
                 .select()
             profileData = result.data

@@ -1,0 +1,9 @@
+{
+  "order_id": "TEST-789",
+  "transaction_status": "settlement",
+  "fraud_status": "accept",
+  "customer_details": {
+    "email": "testwebhook@example.com",
+    "first_name": "Test"
+  }
+}
