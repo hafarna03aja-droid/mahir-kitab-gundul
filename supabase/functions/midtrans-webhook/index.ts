@@ -6,6 +6,22 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY')!
+
+// Helper: Generate Midtrans SHA-512 signature for verification
+async function generateSignature(
+    orderId: string,
+    statusCode: string,
+    grossAmount: string,
+    serverKey: string
+): Promise<string> {
+    const data = `${orderId}${statusCode}${grossAmount}${serverKey}`
+    const encoder = new TextEncoder()
+    const dataBuffer = encoder.encode(data)
+    const hashBuffer = await crypto.subtle.digest('SHA-512', dataBuffer)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
 
 // CORS Headers
 const corsHeaders = {
@@ -34,8 +50,44 @@ Deno.serve(async (req: Request) => {
             order_id,
             transaction_status,
             fraud_status,
-            customer_details
+            customer_details,
+            signature_key,
+            status_code,
+            gross_amount,
+            payment_type,
+            transaction_time,
+            expiry_time
         } = payload
+
+        // ✅ SECURITY: Verify Midtrans signature
+        if (signature_key && MIDTRANS_SERVER_KEY) {
+            console.log('Verifying Midtrans signature...')
+            const expectedSignature = await generateSignature(
+                order_id,
+                status_code,
+                gross_amount,
+                MIDTRANS_SERVER_KEY
+            )
+            
+            if (signature_key !== expectedSignature) {
+                console.error('❌ INVALID SIGNATURE - Possible fraud attempt!')
+                console.error('Expected:', expectedSignature)
+                console.error('Received:', signature_key)
+                return new Response(
+                    JSON.stringify({ error: 'Invalid signature' }),
+                    { 
+                        status: 401,
+                        headers: {
+                            ...corsHeaders,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                )
+            }
+            console.log('✅ Signature verified')
+        } else {
+            console.warn('⚠️ Signature verification skipped (manual trigger or missing server key)')
+        }
 
         const email = customer_details?.email
         console.log('Extracted email:', email)
@@ -86,7 +138,47 @@ Deno.serve(async (req: Request) => {
         console.log('Initializing Supabase client...')
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-        // First, try to find existing user by email
+        // ✅ STEP 1: Update/Create order record (AUDIT TRAIL)
+        console.log('Step 1: Updating order record...')
+        
+        // Check if order exists to increment webhook_attempts
+        const { data: existingOrder } = await supabase
+            .from('orders')
+            .select('webhook_attempts')
+            .eq('order_id', order_id)
+            .single()
+
+        const { data: orderData, error: orderError } = await supabase
+            .from('orders')
+            .upsert({
+                order_id,
+                email,
+                transaction_status,
+                fraud_status,
+                payment_type,
+                gross_amount: parseFloat(gross_amount),
+                midtrans_response: payload,
+                webhook_attempts: (existingOrder?.webhook_attempts || 0) + 1,
+                updated_at: new Date().toISOString(),
+                paid_at: (transaction_status === 'settlement' || transaction_status === 'capture') 
+                    ? (transaction_time ? new Date(transaction_time).toISOString() : new Date().toISOString())
+                    : null,
+                expired_at: expiry_time ? new Date(expiry_time).toISOString() : null
+            }, {
+                onConflict: 'order_id',
+                ignoreDuplicates: false
+            })
+            .select()
+
+        if (orderError) {
+            console.error('❌ Order update error:', orderError)
+            throw orderError
+        }
+
+        console.log('✅ Order updated/created:', orderData)
+
+        // ✅ STEP 2: Update profile (only if payment successful)
+        console.log('Step 2: Checking if profile update needed...')
         console.log('Looking for existing profile by email:', email)
         const { data: existingUser, error: lookupError } = await supabase
             .from('profiles')
@@ -150,13 +242,16 @@ Deno.serve(async (req: Request) => {
 
         console.log('✅ SUCCESS! Profile updated/created for:', email)
         console.log('Profile data:', profileData)
+        console.log('Order data:', orderData)
         console.log('=== WEBHOOK COMPLETED ===\n')
 
         return new Response(
             JSON.stringify({
                 success: true,
-                message: 'User upgraded to premium',
-                email: email
+                message: 'Payment processed successfully',
+                email: email,
+                order_id: order_id,
+                transaction_status: transaction_status
             }),
             { 
                 status: 200, 

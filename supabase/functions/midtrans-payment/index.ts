@@ -3,10 +3,13 @@
 
 // @ts-ignore - Deno runtime types
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { createClient } from '@supabase/supabase-js'
 
 // @ts-ignore - Deno runtime
 const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY')
 const MIDTRANS_API_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions"
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 if (!MIDTRANS_SERVER_KEY) {
     throw new Error('MIDTRANS_SERVER_KEY environment variable is required')
@@ -130,6 +133,28 @@ Deno.serve(async (req: Request) => {
                     }
                 }
             )
+        }
+
+        // ✅ Create order record in database
+        console.log('Creating order record in database...')
+        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+        
+        const { error: orderError } = await supabase
+            .from('orders')
+            .insert({
+                order_id: orderId,
+                email: email,
+                snap_token: data.token,
+                gross_amount: amount,
+                transaction_status: 'pending',
+                created_at: new Date().toISOString()
+            })
+
+        if (orderError) {
+            console.error('Failed to create order record:', orderError)
+            // Continue anyway, webhook will create/update the order
+        } else {
+            console.log('✅ Order record created:', orderId)
         }
 
         return new Response(

@@ -1,0 +1,13 @@
+{
+  "order_id": "TEST-ORDERS-001",
+  "transaction_status": "settlement",
+  "fraud_status": "accept",
+  "status_code": "200",
+  "gross_amount": "49000",
+  "payment_type": "gopay",
+  "transaction_time": "2025-12-05 12:00:00",
+  "customer_details": {
+    "email": "orderstest@example.com",
+    "first_name": "Orders"
+  }
+}
