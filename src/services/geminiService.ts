@@ -7,7 +7,6 @@ const AI_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-chat`;
 // Model Pro memiliki rate limit yang jauh lebih ketat (2 RPM vs 15 RPM di Flash).
 const MODEL_PRIORITY = [
     "gemini-1.5-flash",    // Recommended: Cepat, Pintar, Free Tier Friendly (15 RPM)
-    "gemini-1.5-pro",      // Fallback: Lebih pintar tapi lambat
 ];
 
 /**

@@ -65,11 +65,14 @@ serve(async (req: Request) => {
         const modelName = model || "gemini-1.5-flash";
 
         // Config Generation
-        const generationConfig = {
+        const generationConfig: any = {
             temperature: temperature || 0.3,
-            // Jika frontend minta JSON mode
-            responseMimeType: response_format?.type === 'json_object' ? "application/json" : "text/plain",
         };
+
+        // Hanya set responseMimeType jika JSON (untuk text biasa biarkan undefined)
+        if (response_format?.type === 'json_object') {
+            generationConfig.responseMimeType = "application/json";
+        }
 
         const genModel = genAI.getGenerativeModel({
             model: modelName,
