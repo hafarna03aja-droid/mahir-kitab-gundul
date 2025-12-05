@@ -9,10 +9,9 @@ interface ApiKeySettingsProps {
 }
 
 const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose, buttonRef }) => {
-    const [apiKey, setApiKey] = useState('');
+    const [geminiKey, setGeminiKey] = useState('');
     const [openRouterKey, setOpenRouterKey] = useState('');
-    const [amaiKey, setAmaiKey] = useState('');
-    const [amaiBaseUrl, setAmaiBaseUrl] = useState('');
+    const [maiaKey, setMaiaKey] = useState('');
     const [openaiKey, setOpenaiKey] = useState('');
     const [provider, setProvider] = useState<AIProvider>('gemini');
 
@@ -31,17 +30,16 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose, button
             const config = getAIConfig();
 
             // Load all keys from storage
-            setApiKey(localStorage.getItem('gemini_api_key') || '');
+            setGeminiKey(localStorage.getItem('gemini_api_key') || '');
             setOpenRouterKey(localStorage.getItem('openrouter_api_key') || '');
-            setAmaiKey(localStorage.getItem('amai_api_key') || '');
-            setAmaiBaseUrl(localStorage.getItem('amai_base_url') || 'https://api.amai.io/v1/chat/completions');
+            setMaiaKey(localStorage.getItem('maia_api_key') || '');
             setOpenaiKey(localStorage.getItem('openai_api_key') || '');
 
             setProvider(config.provider);
 
             const hasAnyKey = !!localStorage.getItem('gemini_api_key') ||
                 !!localStorage.getItem('openrouter_api_key') ||
-                !!localStorage.getItem('amai_api_key') ||
+                !!localStorage.getItem('maia_api_key') ||
                 !!localStorage.getItem('openai_api_key');
 
             setIsSaved(hasAnyKey);
@@ -106,10 +104,9 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose, button
     }, [isOpen, buttonRef, onClose]);
 
     const handleSave = () => {
-        if (apiKey.trim()) localStorage.setItem('gemini_api_key', apiKey.trim());
+        if (geminiKey.trim()) localStorage.setItem('gemini_api_key', geminiKey.trim());
         if (openRouterKey.trim()) localStorage.setItem('openrouter_api_key', openRouterKey.trim());
-        if (amaiKey.trim()) localStorage.setItem('amai_api_key', amaiKey.trim());
-        if (amaiBaseUrl.trim()) localStorage.setItem('amai_base_url', amaiBaseUrl.trim());
+        if (maiaKey.trim()) localStorage.setItem('maia_api_key', maiaKey.trim());
         if (openaiKey.trim()) localStorage.setItem('openai_api_key', openaiKey.trim());
 
         localStorage.setItem('ai_provider', provider);
@@ -123,15 +120,13 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose, button
     const handleClear = () => {
         localStorage.removeItem('gemini_api_key');
         localStorage.removeItem('openrouter_api_key');
-        localStorage.removeItem('amai_api_key');
-        localStorage.removeItem('amai_base_url');
+        localStorage.removeItem('maia_api_key');
         localStorage.removeItem('openai_api_key');
         localStorage.setItem('ai_provider', 'gemini'); // Default back to Gemini
 
-        setApiKey('');
+        setGeminiKey('');
         setOpenRouterKey('');
-        setAmaiKey('');
-        setAmaiBaseUrl('');
+        setMaiaKey('');
         setOpenaiKey('');
 
         setIsSaved(false);
@@ -182,7 +177,7 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose, button
                                     { id: 'gemini', name: 'Google Gemini', icon: Bot, color: 'amber' },
                                     { id: 'openai', name: 'OpenAI', icon: Sparkles, color: 'teal' },
                                     { id: 'openrouter', name: 'OpenRouter', icon: Cpu, color: 'indigo' },
-                                    { id: 'amai', name: 'Amai', icon: Router, color: 'emerald' },
+                                    { id: 'maia', name: 'Maia Router', icon: Router, color: 'emerald' },
                                 ].map((p) => (
                                     <button
                                         key={p.id}
@@ -208,8 +203,8 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose, button
                             {provider === 'gemini' && (
                                 <APIKeyInput
                                     label="🔑 Google AI Studio API Key"
-                                    value={apiKey}
-                                    onChange={setApiKey}
+                                    value={geminiKey}
+                                    onChange={setGeminiKey}
                                     placeholder="AIza..."
                                     show={showKey}
                                     toggleShow={() => setShowKey(!showKey)}
@@ -246,36 +241,18 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose, button
                                 />
                             )}
 
-                            {/* Amai */}
-                            {provider === 'amai' && (
-                                <div className="space-y-3">
-                                    <APIKeyInput
-                                        label="🔑 Amai API Key"
-                                        value={amaiKey}
-                                        onChange={setAmaiKey}
-                                        placeholder="amai-..."
-                                        show={showKey}
-                                        toggleShow={() => setShowKey(!showKey)}
-                                        color="emerald"
-                                    />
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
-                                            🌍 Base URL (Optional)
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                value={amaiBaseUrl}
-                                                onChange={(e) => setAmaiBaseUrl(e.target.value)}
-                                                placeholder="https://api.amai.io/v1/chat/completions"
-                                                className="w-full px-4 py-3 rounded-lg border-2 border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-mono"
-                                            />
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                                <Globe className="w-4 h-4" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            {/* Maia */}
+                            {provider === 'maia' && (
+                                <APIKeyInput
+                                    label="🔑 Maia Router API Key"
+                                    value={maiaKey}
+                                    onChange={setMaiaKey}
+                                    placeholder="sk-..."
+                                    show={showKey}
+                                    toggleShow={() => setShowKey(!showKey)}
+                                    color="emerald"
+                                    hint={<>Dapatkan di <a href="https://api.maia.ai" target="_blank" rel="noreferrer" className="underline">Maia Router</a></>}
+                                />
                             )}
                         </div>
                     </div>

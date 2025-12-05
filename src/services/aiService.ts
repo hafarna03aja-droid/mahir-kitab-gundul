@@ -6,13 +6,12 @@ const AI_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-chat`;
 // Default Env Keys (Function-level secrets are preferred, but these can be fallbacks)
 const ENV_GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
-export type AIProvider = 'gemini' | 'openai' | 'openrouter' | 'amai';
+export type AIProvider = 'gemini' | 'openai' | 'openrouter' | 'maia';
 
 export interface AIConfig {
     provider: AIProvider;
     apiKey: string;
     model?: string;
-    baseUrl?: string; // For Amai or others
 }
 
 export const getAIConfig = (): AIConfig => {
@@ -20,29 +19,28 @@ export const getAIConfig = (): AIConfig => {
 
     // Retrieve key based on provider
     let apiKey = '';
-    let baseUrl = '';
     let model = '';
 
     switch (provider) {
         case 'gemini':
             apiKey = localStorage.getItem('gemini_api_key') || ENV_GEMINI_API_KEY;
+            model = 'gemini-1.5-flash';
             break;
         case 'openai':
             apiKey = localStorage.getItem('openai_api_key') || '';
-            model = 'gpt-3.5-turbo';
+            model = 'gpt-4o-mini';
             break;
         case 'openrouter':
             apiKey = localStorage.getItem('openrouter_api_key') || '';
-            model = 'google/gemini-2.0-flash-exp:free';
+            model = 'meta-llama/llama-3.3-70b-instruct:free';
             break;
-        case 'amai':
-            apiKey = localStorage.getItem('amai_api_key') || '';
-            baseUrl = localStorage.getItem('amai_base_url') || 'https://api.amai.io/v1/chat/completions';
-            model = 'amaigpt-default';
+        case 'maia':
+            apiKey = localStorage.getItem('maia_api_key') || '';
+            model = 'maia/gemini-2.5-flash';
             break;
     }
 
-    return { provider, apiKey, model, baseUrl };
+    return { provider, apiKey, model };
 };
 
 /**
@@ -91,7 +89,6 @@ async function callAIService(
         ],
         model: config.model,
         provider: config.provider,
-        apiBaseUrl: config.baseUrl, // Optional
         response_format: jsonMode ? { type: "json_object" } : undefined,
         temperature: 0.3
     };
