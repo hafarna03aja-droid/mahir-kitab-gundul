@@ -1,10 +1,6 @@
 // Setup Deno & Import Google AI SDK
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.1.3"; // Versi stabil untuk Edge
-
-// Setup Deno & Import Google AI SDK
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.1.3"; // Versi stabil untuk Edge
+import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.21.0"; // Update SDK version for responseMimeType support
 
 // Konfigurasi CORS (Agar frontend bisa akses backend ini)
 const corsHeaders = {
