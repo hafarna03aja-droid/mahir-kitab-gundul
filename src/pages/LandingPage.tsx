@@ -234,7 +234,7 @@ export default function LandingPage() {
                             },
                             {
                                 icon: Bot,
-                                title: 'Asisten AI Pribadi (24/7)',
+                                title: 'Asisten AI Pribadi 24 jam',
                                 desc: 'Chatbot pintar siap menjawab pertanyaan seperti "Jelaskan perbedaan Jumlah Ismiyyah dan Fi\'liyyah!"',
                                 gradient: 'from-purple-500 to-pink-500'
                             },
