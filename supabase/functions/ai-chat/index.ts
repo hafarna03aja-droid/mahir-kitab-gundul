@@ -61,8 +61,8 @@ serve(async (req: Request) => {
         // 4. Inisialisasi Google AI
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Default ke flash jika model tidak dikirim
-        const modelName = model || "gemini-1.5-flash";
+        // Default ke flash, dan paksa flas huntuk stabilitas (abaikan request model dari frontend jika ada yang obsolete)
+        const modelName = "gemini-1.5-flash";
 
         // Config Generation
         const generationConfig: any = {

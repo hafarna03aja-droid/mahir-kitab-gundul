@@ -2,44 +2,84 @@ import type { AnalysisResult } from '../types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
 const AI_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-chat`;
+const ENV_MAIA_API_KEY = import.meta.env.VITE_MAIA_API_KEY || '';
 
 const MODEL_ID = "maia/gemini-2.5-flash";
 
-// Keep for backward compatibility - now just returns true if backend is available
 export const getMaiaApiKey = (): string => {
-    // API key is now handled securely in backend
-    // This function is kept for compatibility but returns empty string
-    // Frontend no longer needs to store API keys
-    return '';
+    // Prioritas: User input > Environment variable
+    return localStorage.getItem('maia_api_key') || ENV_MAIA_API_KEY;
 };
 
 async function callMaiaRouter(prompt: string, jsonMode: boolean = false): Promise<string> {
     try {
-        const response = await fetch(AI_CHAT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: MODEL_ID,
-                messages: [
-                    { role: "user", content: prompt }
-                ],
-                response_format: jsonMode ? { type: "json_object" } : undefined,
-            })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'AI request failed');
-        }
-
-        const data = await response.json();
-        const text = data.choices?.[0]?.message?.content;
+        const userApiKey = localStorage.getItem('maia_api_key');
         
-        if (!text) throw new Error("Response kosong dari AI service.");
+        // Mode 1: User input API key sendiri -> Direct call ke Maia Router API
+        if (userApiKey) {
+            const response = await fetch('https://api.maia.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userApiKey}`
+                },
+                body: JSON.stringify({
+                    model: MODEL_ID,
+                    messages: [
+                        { role: "user", content: prompt }
+                    ],
+                    response_format: jsonMode ? { type: "json_object" } : undefined,
+                })
+            });
 
-        return text;
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'Maia API request failed');
+            }
+
+            const data = await response.json();
+            const text = data.choices?.[0]?.message?.content;
+            
+            if (!text) throw new Error("Response kosong dari Maia API.");
+
+            return text;
+        }
+        
+        // Mode 2: Tidak ada user key -> Gunakan backend proxy (secure)
+        else {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            
+            // Gunakan env key jika ada
+            if (ENV_MAIA_API_KEY) {
+                headers['Authorization'] = `Bearer ${ENV_MAIA_API_KEY}`;
+            }
+
+            const response = await fetch(AI_CHAT_URL, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    model: MODEL_ID,
+                    messages: [
+                        { role: "user", content: prompt }
+                    ],
+                    response_format: jsonMode ? { type: "json_object" } : undefined,
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'AI request failed');
+            }
+
+            const data = await response.json();
+            const text = data.choices?.[0]?.message?.content;
+            
+            if (!text) throw new Error("Response kosong dari AI service.");
+
+            return text;
+        }
     } catch (error: any) {
         throw new Error(`Gagal AI Service: ${error.message || 'Terjadi kesalahan'}`);
     }
