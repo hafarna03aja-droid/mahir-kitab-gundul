@@ -8,6 +8,7 @@ import MainApp from './components/MainApp';
 import PreviewModeWrapper from './components/PreviewModeWrapper';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import LandingPage from './pages/LandingPage';
 
 const Home: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
@@ -64,11 +65,15 @@ const Home: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <Router basename="/app">
+        <Router>
             <Routes>
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/" element={<Home />} />
+                {/* Landing Page - Public */}
+                <Route path="/" element={<LandingPage />} />
+                
+                {/* Member Area - Protected */}
+                <Route path="/app" element={<Home />} />
+                <Route path="/app/terms" element={<TermsPage />} />
+                <Route path="/app/privacy" element={<PrivacyPage />} />
             </Routes>
         </Router>
     );

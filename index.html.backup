@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mahir Arab - Platform Pembelajaran Bahasa Arab</title>
+  <!-- Midtrans Snap.js (Sandbox) -->
+  <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js"
+    data-client-key="SB-Mid-client-W4qSN0B-zyY2x_dN"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 40px;
+      margin-top: 20px;
+    }
+
+    h1 {
+      color: #111827;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      font-size: 1.25rem;
+      color: #4b5563;
+      margin-bottom: 2rem;
+    }
+
+    .features {
+      text-align: left;
+      margin: 30px auto;
+      max-width: 600px;
+      background: #f3f4f6;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .features h3 {
+      margin-top: 0;
+      color: #374151;
+    }
+
+    .features ul {
+      padding-left: 20px;
+    }
+
+    .features li {
+      margin-bottom: 10px;
+    }
+
+    .price-tag {
+      font-size: 3rem;
+      font-weight: 800;
+      color: #059669;
+      margin: 30px 0;
+    }
+
+    .price-label {
+      font-size: 1rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1.1rem;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: #059669;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #047857;
+    }
+
+    .btn-secondary {
+      background-color: #4b5563;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #374151;
+    }
+
+    .btn-whatsapp {
+      background-color: #25D366;
+      color: white;
+    }
+
+    .btn-whatsapp:hover {
+      background-color: #128C7E;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Mahir Arab</h1>
+      <p class="subtitle">Kuasai Bahasa Arab dengan Metode yang Terstruktur dan Menyenangkan</p>
+
+      <div class="features">
+        <h3>Apa yang akan Anda dapatkan?</h3>
+        <ul>
+          <li>📚 Akses penuh ke seluruh materi pembelajaran</li>
+          <li>🎓 Kurikulum terstruktur dari dasar hingga mahir</li>
+          <li>📝 Latihan interaktif dan kuis</li>
+          <li>💡 Dukungan komunitas pembelajar</li>
+          <li>📱 Akses mudah dari perangkat apapun</li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="price-label">Investasi Belajar</div>
+        <div class="price-tag">Rp 49.000</div>
+      </div>
+
+      <div class="cta-group">
+        <button class="btn btn-primary" id="pay-button" onclick="payWithMidtrans()">🛒 Beli Sekarang</button>
+        <a href="https://wa.me/6287844528626?text=Halo+admin+saya+tertarik+membeli+aplikasi+Mahir+Arab"
+          class="btn btn-whatsapp" target="_blank">💬 Beli via WhatsApp</a>
+        <a href="/app/" class="btn btn-secondary">🔐 Login Member</a>
+      </div>
+    </div>
+
+    <footer style="margin-top: 40px; color: #6b7280; font-size: 0.9rem;">
+      <p>Butuh bantuan? Email kami di: <a href="mailto:admin@mahirarab.web.id"
+          style="color: #4b5563; text-decoration: underline;">admin@mahirarab.web.id</a></p>
+      <p>
+        <a href="/app/terms" style="color: #6b7280; text-decoration: none;">Syarat & Ketentuan</a> |
+        <a href="/app/privacy" style="color: #6b7280; text-decoration: none;">Kebijakan Privasi</a>
+      </p>
+      <p>&copy; 2025 Mahir Arab. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Midtrans Snap Payment
+    function payWithMidtrans() {
+      const payButton = document.getElementById('pay-button');
+      const email = prompt('Masukkan email Anda (untuk aktivasi akun):');
+      
+      if (!email || !email.includes('@')) {
+        alert('Email tidak valid!');
+        return;
+      }
+
+      payButton.disabled = true;
+      payButton.textContent = 'Memproses...';
+
+      // Request Snap Token from your backend
+      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo';
+      fetch('https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'apikey': supabaseAnonKey
+        },
+        body: JSON.stringify({
+          email: email,
+          amount: 49000,
+          item_name: 'Mahir Arab - Akses Premium'
+        })
+      })
+        .then(response => {
+          return response.json().then(data => ({ status: response.status, data }));
+        })
+        .then(({ status, data }) => {
+          console.log('Payment response:', { status, data });
+          
+          if (status !== 200) {
+            console.error('Payment error details:', data);
+            const errorMsg = data.message || data.error || 'Failed to create transaction';
+            const debugInfo = data.debug ? `\nDebug: ${JSON.stringify(data.debug)}` : '';
+            throw new Error(errorMsg + debugInfo);
+          }
+          
+          if (data.snap_token) {
+            // Save email to localStorage for auto-login
+            localStorage.setItem('payment_email', email);
+            localStorage.setItem('payment_completed', 'true');
+            
+            // Open Midtrans Snap popup
+            window.snap.pay(data.snap_token, {
+              onSuccess: function (result) {
+                console.log('Payment success result:', result);
+                
+                // Manual webhook trigger sebagai backup
+                // Jika Midtrans notification tidak jalan, ini akan trigger webhook
+                fetch('https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-webhook', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    order_id: result.order_id || data.order_id,
+                    transaction_status: 'settlement',
+                    fraud_status: 'accept',
+                    customer_details: {
+                      email: email,
+                      first_name: email.split('@')[0]
+                    }
+                  })
+                })
+                .then(res => res.json())
+                .then(webhookData => {
+                  console.log('Manual webhook trigger result:', webhookData);
+                })
+                .catch(err => {
+                  console.error('Manual webhook trigger error:', err);
+                });
+                
+                alert('✅ Pembayaran berhasil!\n\nSilakan login atau daftar dengan email: ' + email);
+                window.location.href = '/app/';
+              },
+              onPending: function (result) {
+                alert('Menunggu pembayaran. Cek email Anda untuk status pembayaran.');
+              },
+              onError: function (result) {
+                alert('Pembayaran gagal. Silakan coba lagi.');
+              },
+              onClose: function () {
+                payButton.disabled = false;
+                payButton.textContent = '🛒 Beli Sekarang';
+              }
+            });
+          } else {
+            throw new Error('Gagal mendapatkan token pembayaran');
+          }
+        })
+        .catch(error => {
+          alert('Terjadi kesalahan: ' + error.message);
+          payButton.disabled = false;
+          payButton.textContent = '🛒 Beli Sekarang';
+        });
+    }
+  </script>
+</body>
+
+</html>
