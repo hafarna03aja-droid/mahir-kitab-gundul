@@ -152,7 +152,7 @@
       </div>
 
       <div class="cta-group">
-        <button class="btn btn-primary" id="pay-button" onclick="payWithMidtrans()">💳 Bayar dengan Midtrans</button>
+        <button class="btn btn-primary" id="pay-button" onclick="payWithMidtrans()">🛒 Beli Sekarang</button>
         <a href="https://wa.me/6287844528626?text=Halo+admin+saya+tertarik+membeli+aplikasi+Mahir+Arab"
           class="btn btn-whatsapp" target="_blank">💬 Beli via WhatsApp</a>
         <a href="/app/" class="btn btn-secondary">🔐 Login Member</a>
@@ -258,7 +258,7 @@
               },
               onClose: function () {
                 payButton.disabled = false;
-                payButton.textContent = '💳 Bayar dengan Midtrans';
+                payButton.textContent = '🛒 Beli Sekarang';
               }
             });
           } else {
@@ -268,7 +268,7 @@
         .catch(error => {
           alert('Terjadi kesalahan: ' + error.message);
           payButton.disabled = false;
-          payButton.textContent = '💳 Bayar dengan Midtrans';
+          payButton.textContent = '🛒 Beli Sekarang';
         });
     }
   </script>
