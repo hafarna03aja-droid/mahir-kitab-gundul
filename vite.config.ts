@@ -29,7 +29,20 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
+        manualChunks: {
+          // Split AI SDKs into separate chunks
+          'ai-gemini': ['@google/generative-ai', '@google/genai'],
+          'ai-openai': ['openai'],
+          // Split React and Router
+          'react-vendor': ['react', 'react-dom'],
+          'react-router': ['react-router-dom'],
+          // Split Supabase
+          'supabase': ['@supabase/supabase-js'],
+          // Split UI library
+          'lucide': ['lucide-react'],
+        },
       },
     },
+    chunkSizeWarningLimit: 600, // Suppress warning for now
   },
 })
