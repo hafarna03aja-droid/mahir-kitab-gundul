@@ -8,7 +8,9 @@ import { createClient } from '@supabase/supabase-js'
 // @ts-ignore - Deno runtime
 const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY')
 const MIDTRANS_API_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions"
+// @ts-ignore - Deno runtime
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+// @ts-ignore - Deno runtime
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 if (!MIDTRANS_SERVER_KEY) {

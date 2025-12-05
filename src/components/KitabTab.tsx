@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BookOpen, Search, ChevronRight, Book, FileText } from 'lucide-react';
 
 interface Kitab {

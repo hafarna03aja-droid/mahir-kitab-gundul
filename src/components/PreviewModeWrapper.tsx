@@ -1,7 +1,7 @@
-import React from 'react';
+
 
 interface PreviewModeWrapperProps {
-    children: React.ReactNode;
+    children: any;
 }
 
 export default function PreviewModeWrapper({ children }: PreviewModeWrapperProps) {

@@ -1,8 +1,10 @@
 // AI Chat Proxy Handler
 // This Edge Function securely proxies AI requests to protect API keys
 
+// @ts-ignore - Deno runtime types
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
+// @ts-ignore - Deno runtime
 const MAIA_API_KEY = Deno.env.get('MAIA_API_KEY')
 const MAIA_API_URL = 'https://api.maiarouter.ai/v1/chat/completions'
 
@@ -13,6 +15,7 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
+// @ts-ignore - Deno runtime
 Deno.serve(async (req: Request) => {
     // Handle CORS Preflight Request
     if (req.method === 'OPTIONS') {

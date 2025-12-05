@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Mic, Square, Volume2, VolumeX } from 'lucide-react';
 import { askAiAssistant } from '../services/aiService';
 

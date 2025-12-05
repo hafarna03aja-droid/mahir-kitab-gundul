@@ -1,4 +1,3 @@
-import React from 'react';
 import { Search, BookOpen, MessageCircle, Mic } from 'lucide-react';
 import type { TabId } from '../types';
 
@@ -7,7 +6,7 @@ interface TabsProps {
     setActiveTab: (tab: TabId) => void;
 }
 
-const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
+export default function Tabs({ activeTab, setActiveTab }: TabsProps) {
     const tabs = [
         { id: 'analisis' as TabId, label: 'Analisis Teks', icon: Search },
         { id: 'kitab' as TabId, label: 'Kitab Digital', icon: BookOpen },

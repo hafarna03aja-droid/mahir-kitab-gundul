@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { askAiAssistant } from '../services/aiService';
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from './icons/TabIcons';
 

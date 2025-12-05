@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useRef } from 'react';
 import { BookOpen, Settings } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import ApiKeySettings from './ApiKeySettings';

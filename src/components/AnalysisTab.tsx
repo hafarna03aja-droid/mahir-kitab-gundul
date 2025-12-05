@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { analyzeArabicText, convertToArabGundul } from '../services/aiService';
 import { CATEGORIZED_EXAMPLES } from '../constants';
 import type { AnalysisResult } from '../types';

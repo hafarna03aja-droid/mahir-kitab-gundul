@@ -1,8 +1,7 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
-const PrivacyPage: React.FC = () => {
+export default function PrivacyPage() {
     const navigate = useNavigate();
 
     return (
