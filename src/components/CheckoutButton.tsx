@@ -51,7 +51,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 body: JSON.stringify({
                     email: email,
                     amount: 49000,
-                    item_name: 'Mahir Arab PRO - Lifetime Access'
+                    item_name: 'Mahir Arab Gundul - Lifetime Access'
                 })
             });
 

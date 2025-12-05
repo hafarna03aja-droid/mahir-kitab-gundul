@@ -22,7 +22,7 @@ export default function LandingPage() {
                             <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg">
                                 <BookOpen className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xl font-bold text-slate-900">Mahir Arab AI</span>
+                            <span className="text-xl font-bold text-slate-900">Mahir Arab Gundul</span>
                         </div>
 
                         {/* Desktop Menu */}
@@ -156,7 +156,7 @@ export default function LandingPage() {
                                     </div>
                                     <div>
                                         <p className="text-white font-bold">AI Assistant</p>
-                                        <p className="text-emerald-100 text-xs">Online 24/7</p>
+                                        <p className="text-emerald-100 text-xs">Online 24 jam</p>
                                     </div>
                                 </div>
 
@@ -192,7 +192,7 @@ export default function LandingPage() {
                         <div className="order-1 lg:order-2">
                             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
                                 Memperkenalkan:{' '}
-                                <span className="text-emerald-600">MAHIR ARAB AI</span>
+                                <span className="text-emerald-600">MAHIR ARAB GUNDUL</span>
                             </h2>
 
                             <p className="text-2xl font-semibold text-slate-700 mb-4">
@@ -396,7 +396,7 @@ export default function LandingPage() {
 
                     <div className="grid md:grid-cols-3 gap-8 mb-8">
                         <div>
-                            <h4 className="font-bold text-lg mb-4">Mahir Arab AI</h4>
+                            <h4 className="font-bold text-lg mb-4">Mahir Arab Gundul</h4>
                             <p className="text-slate-400 text-sm leading-relaxed">
                                 Platform pembelajaran Bahasa Arab berbasis AI untuk literatur Islam klasik.
                             </p>
@@ -431,7 +431,7 @@ export default function LandingPage() {
 
                     <div className="text-center pt-8 border-t border-slate-700">
                         <p className="text-slate-400 text-sm">
-                            © 2025 Mahir Arab AI • Dibuat dengan ❤️ untuk Umat
+                            © 2025 Mahir Arab Gundul • Dibuat dengan ❤️ untuk Umat
                         </p>
                         <p className="text-slate-500 text-xs mt-2">
                             Powered by 24 Learning Centre
