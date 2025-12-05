@@ -15,47 +15,61 @@ export default function DashboardApp({ session }: DashboardAppProps) {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [checking, setChecking] = useState(false);
+    const [autoCheckCount, setAutoCheckCount] = useState(0);
 
     // Initial load - get profile silently without alerts
-    const getProfile = async () => {
-        setLoading(true);
+    const getProfile = async (silent: boolean = true) => {
+        if (!silent) setLoading(true);
         const { user } = session;
 
         try {
-            // Try to find profile by user ID first
+            console.log('Checking profile for user:', user.email);
+            
+            // PRIORITAS: Cek by email dulu (untuk payment-first users)
             let { data, error } = await supabase
                 .from('profiles')
                 .select('status')
-                .eq('id', user.id)
+                .eq('email', user.email)
                 .single();
 
-            // If not found by ID, try by email (for payment-first users)
+            console.log('Profile by email result:', { data, error: error?.message });
+
+            // Jika tidak ketemu by email, coba by user ID
             if (error || !data) {
+                console.log('Trying by user ID...');
                 const result = await supabase
                     .from('profiles')
                     .select('status')
-                    .eq('email', user.email)
+                    .eq('id', user.id)
                     .single();
                 
                 data = result.data;
                 error = result.error;
-                
-                // If found by email, update the profile with user ID
-                if (data && user.email) {
-                    await supabase
-                        .from('profiles')
-                        .update({ id: user.id })
-                        .eq('email', user.email);
-                }
+                console.log('Profile by ID result:', { data, error: error?.message });
             }
 
-            if (data) {
+            // Jika ketemu profile, update dengan user ID (untuk link profile payment dengan account)
+            if (data && user.email) {
+                console.log('Found profile, updating with user ID...');
+                await supabase
+                    .from('profiles')
+                    .update({ id: user.id, updated_at: new Date().toISOString() })
+                    .eq('email', user.email);
+                
                 setProfile(data);
+                console.log('Profile status:', data.status);
+                
+                // Jika premium, stop auto-check
+                if (data.status === 'premium') {
+                    setAutoCheckCount(999); // Stop auto-check
+                }
+            } else {
+                console.log('No profile found for email:', user.email);
             }
         } catch (error: any) {
             console.error('Error getting profile:', error);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 
@@ -65,38 +79,47 @@ export default function DashboardApp({ session }: DashboardAppProps) {
         const { user } = session;
 
         try {
-            // Try by ID first
+            console.log('Manual check status for:', user.email);
+            
+            // PRIORITAS: Cek by email dulu
             let { data, error } = await supabase
                 .from('profiles')
-                .select('status')
-                .eq('id', user.id)
+                .select('status, email, created_at')
+                .eq('email', user.email)
                 .single();
 
-            // If not found, try by email
+            console.log('Check status result (by email):', { data, error: error?.message });
+
+            // Fallback: coba by user ID
             if (error || !data) {
+                console.log('Trying by user ID...');
                 const result = await supabase
                     .from('profiles')
-                    .select('status')
-                    .eq('email', user.email)
+                    .select('status, email, created_at')
+                    .eq('id', user.id)
                     .single();
                 
                 data = result.data;
                 error = result.error;
-                
-                // Update profile with user ID if found by email
-                if (data && user.email) {
-                    await supabase
-                        .from('profiles')
-                        .update({ id: user.id })
-                        .eq('email', user.email);
-                }
+                console.log('Check status result (by ID):', { data, error: error?.message });
             }
 
             if (data) {
+                // Update profile dengan user ID
+                if (user.email) {
+                    await supabase
+                        .from('profiles')
+                        .update({ id: user.id, updated_at: new Date().toISOString() })
+                        .eq('email', user.email);
+                }
+                
                 setProfile(data);
+                
                 if (data.status === 'premium') {
-                    alert('✅ Pembayaran terkonfirmasi! Akun Anda sekarang PREMIUM.\n\nSilakan refresh halaman untuk melihat aplikasi.');
-                    window.location.reload();
+                    alert('✅ PEMBAYARAN TERKONFIRMASI!\n\nAkun Anda sekarang PREMIUM.\nAplikasi akan terbuka dalam 2 detik...');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 } else {
                     alert('ℹ️ Status akun masih FREE.\n\nJika Anda baru saja membayar:\n• Tunggu 1-2 menit\n• Pastikan email login SAMA dengan email saat bayar\n• Coba klik tombol ini lagi');
                 }
@@ -112,8 +135,23 @@ export default function DashboardApp({ session }: DashboardAppProps) {
     };
 
     useEffect(() => {
-        getProfile();
+        getProfile(false);
     }, [session]);
+
+    // Auto-refresh untuk cek payment status setiap 5 detik (max 10x = 50 detik)
+    useEffect(() => {
+        if (profile?.status === 'premium' || autoCheckCount >= 10) {
+            return; // Stop jika sudah premium atau sudah cek 10x
+        }
+
+        const interval = setInterval(() => {
+            console.log('Auto-checking payment status... (attempt', autoCheckCount + 1, '/10)');
+            getProfile(true); // Silent check
+            setAutoCheckCount(prev => prev + 1);
+        }, 5000); // Setiap 5 detik
+
+        return () => clearInterval(interval);
+    }, [profile?.status, autoCheckCount]);
 
     if (loading) return (
         <div style={{
