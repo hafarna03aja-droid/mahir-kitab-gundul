@@ -1,92 +1,97 @@
-// Service ini sekarang menggunakan secure backend proxy
 import type { AnalysisResult } from '../types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
 const AI_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-chat`;
 
-// Model prioritas: coba dari yang paling stabil/cepat ke yang paling canggih
+// PENTING: Untuk Free Tier Google AI Studio, gunakan 1.5 Flash.
+// Model Pro memiliki rate limit yang jauh lebih ketat (2 RPM vs 15 RPM di Flash).
 const MODEL_PRIORITY = [
-    "gemini-1.5-flash",    // Paling cepat, cocok untuk free tier
-    "gemini-1.5-pro",      // Lebih canggih, butuh paid tier atau quota lebih
-    "gemini-pro",          // Fallback untuk kompatibilitas
+    "gemini-1.5-flash",    // Recommended: Cepat, Pintar, Free Tier Friendly (15 RPM)
+    "gemini-1.5-pro",      // Fallback: Lebih pintar tapi lambat
 ];
 
 /**
- * Keep for backward compatibility - API keys now handled securely in backend
+ * Helper untuk membersihkan output JSON dari Gemini yang sering ada markdown blocknya
  */
-export const getApiKey = (): string => {
-    // API key is now handled securely in backend
-    // This function is kept for compatibility but returns empty string
-    // Frontend no longer needs to store API keys
-    return '';
-};
+function cleanJsonOutput(text: string): string {
+    // Hapus ```json di awal dan ``` di akhir, serta whitespace
+    return text.replace(/^```json\s*/g, '').replace(/^```\s*/g, '').replace(/\s*```$/g, '').trim();
+}
 
 /**
- * Call AI via secure backend proxy (now handles API keys securely)
+ * Call AI via secure backend proxy
+ * Note: Kita mengirim parameter 'systemInstruction' secara dinamis sekarang
  */
-async function callGeminiSDK(prompt: string, jsonMode: boolean = false): Promise<string> {
+async function callGeminiSDK(
+    prompt: string,
+    systemInstruction: string,
+    jsonMode: boolean = false
+): Promise<string> {
+
     let lastError: any = null;
 
-    // Try each model in priority list
     for (const modelName of MODEL_PRIORITY) {
         try {
             const response = await fetch(AI_CHAT_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-gemini-api-key': localStorage.getItem('gemini_api_key') || ''
                 },
                 body: JSON.stringify({
                     model: modelName,
+                    // Struktur ini HARUS didukung oleh Backend Supabase Anda.
+                    // Jika backend pakai OpenAI SDK, 'messages' sudah benar.
+                    // Jika backend pakai Google GenAI SDK, backend harus convert 'messages' ke 'contents'.
                     messages: [
-                        {
-                            role: "system",
-                            content: "Anda adalah ahli bahasa dan sastra Arab. Tugas Anda adalah menghasilkan teks bahasa Arab yang benar secara tata bahasa (Nahwu dan Sharaf), menggunakan harakat lengkap jika diminta, dan bergaya bahasa formal (Fusha)."
-                        },
+                        { role: "system", content: systemInstruction },
                         { role: "user", content: prompt }
                     ],
+                    // Gemini butuh config ini untuk strict JSON
                     response_format: jsonMode ? { type: "json_object" } : undefined,
                     temperature: 0.3
                 })
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || `HTTP ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP Error ${response.status}`);
             }
 
             const data = await response.json();
-            const text = data.choices?.[0]?.message?.content;
+            // Asumsi response backend mengikuti format OpenAI (data.choices[0].message.content)
+            let text = data.choices?.[0]?.message?.content || data.output || "";
 
-            if (!text) throw new Error("Response kosong dari AI service.");
+            if (!text) throw new Error("Empty response from AI");
+
+            // Jika mode JSON, kita bersihkan dulu format markdownnya
+            if (jsonMode) {
+                text = cleanJsonOutput(text);
+            }
 
             return text;
 
         } catch (error: any) {
+            console.warn(`Model ${modelName} failed:`, error.message);
             lastError = error;
-            const errorMsg = error.message || "";
 
-            // If model not found, try next model
-            if (errorMsg.includes("404") || errorMsg.toLowerCase().includes("not found")) {
-                continue;
-            }
-
-            // If rate limit, throw immediately
-            if (errorMsg.includes("429") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
-                throw new Error("⏱️ Rate limit terlampaui. Tunggu beberapa menit atau coba lagi nanti.");
+            // Jika Rate Limit (429), jangan langsung nyerah, coba model berikutnya (jika ada)
+            // Tapi untuk Free Tier, biasanya lebih baik tunggu (backoff)
+            if (error.message.includes("429")) {
+                await new Promise(r => setTimeout(r, 2000)); // Tunggu 2 detik sebelum retry model lain
             }
         }
     }
 
-    // If all models failed
-    throw new Error(`❌ Gagal menghubungi AI service: ${lastError?.message || 'Unknown error'}`);
+    throw new Error(`Gagal generate AI: ${lastError?.message || 'Unknown error'}`);
 }
 
 /**
- * API untuk asisten AI (Chat Mode).
+ * API 1: Chat Assistant (Nahwu/Sharaf Advice)
  */
 export async function askAiAssistant(userMessage: string): Promise<string> {
-    const prompt = `Kamu adalah asisten pakar Bahasa Arab (Nahwu, Sharaf, Balaghah). Jawablah pertanyaan ini dengan ringkas, jelas, dan menggunakan referensi kaidah bahasa yang benar:\n\nPertanyaan: "${userMessage}"`;
-    return await callGeminiSDK(prompt, false);
+    const systemPrompt = "Kamu adalah asisten pakar Bahasa Arab (Nahwu, Sharaf, Balaghah). Jawab ringkas, jelas, gunakan referensi kaidah.";
+    return await callGeminiSDK(userMessage, systemPrompt, false);
 }
 
 /**
@@ -121,7 +126,8 @@ export async function analyzeArabicText(arabicText: string): Promise<AnalysisRes
 
     try {
         // Panggil dengan mode JSON = true
-        const jsonString = await callGeminiSDK(prompt, true);
+        const systemInstruction = "You are an expert Arabic grammarian. Analyze the following text and output strictly valid JSON as requested.";
+        const jsonString = await callGeminiSDK(prompt, systemInstruction, true);
         const result = JSON.parse(jsonString) as AnalysisResult;
 
         // Validasi data minimal agar tidak crash
@@ -145,6 +151,7 @@ export async function analyzeArabicText(arabicText: string): Promise<AnalysisRes
  */
 export async function convertToArabGundul(indonesianText: string): Promise<string> {
     const prompt = `Ubah kalimat Indonesia ini ke Arab Gundul (tanpa harakat) yang benar secara gramatikal: "${indonesianText}". Hanya output teks Arabnya saja.`;
-    const res = await callGeminiSDK(prompt, false);
+    const systemInstruction = "You are an expert Arabic translator. Convert the following text to accurate Arab Gundul (unvocalized Arabic script).";
+    const res = await callGeminiSDK(prompt, systemInstruction, false);
     return res.trim();
 }
