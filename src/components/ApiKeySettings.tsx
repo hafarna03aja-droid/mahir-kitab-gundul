@@ -19,9 +19,9 @@ const ApiKeySettings: React.FC<ApiKeySettingsProps> = ({ isOpen, onClose, button
     const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
     const [arrowDirection, setArrowDirection] = useState<'left' | 'right'>('left');
     const [isMobile, setIsMobile] = useState(false);
-    const modalBodyRef = React.useRef<HTMLDivElement>(null);
-    const topLabelRef = React.useRef<HTMLLabelElement>(null);
-    const popoverRef = React.useRef<HTMLDivElement>(null);
+    const modalBodyRef = useRef<HTMLDivElement>(null);
+    const topLabelRef = useRef<HTMLLabelElement>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (isOpen) {

@@ -38,5 +38,3 @@ export default function Tabs({ activeTab, setActiveTab }: TabsProps) {
         </div>
     );
 };
-
-export default Tabs;

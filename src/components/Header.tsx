@@ -5,7 +5,7 @@ import ApiKeySettings from './ApiKeySettings';
 
 const Header: React.FC = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const settingsButtonRef = React.useRef<HTMLButtonElement>(null);
+    const settingsButtonRef = useRef<HTMLButtonElement>(null);
 
     return (
         <header className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 shadow-sm transition-colors duration-300">

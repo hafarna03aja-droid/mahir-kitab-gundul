@@ -34,5 +34,3 @@ export default function ThemeToggle() {
         </button>
     );
 };
-
-export default ThemeToggle;

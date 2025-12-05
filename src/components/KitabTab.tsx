@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen, Search, ChevronRight, Book, FileText } from 'lucide-react';
 
 interface Kitab {
@@ -39,7 +39,7 @@ const KitabTab: React.FC = () => {
     const [showBookmarkPanel, setShowBookmarkPanel] = useState(false);
 
     // Load bookmarks from localStorage
-    React.useEffect(() => {
+    useEffect(() => {
         try {
             const saved = localStorage.getItem('kitab-bookmarks');
             if (saved) {
@@ -52,7 +52,7 @@ const KitabTab: React.FC = () => {
     }, []);
 
     // Save bookmarks to localStorage
-    React.useEffect(() => {
+    useEffect(() => {
         localStorage.setItem('kitab-bookmarks', JSON.stringify(bookmarks));
     }, [bookmarks]);
 
