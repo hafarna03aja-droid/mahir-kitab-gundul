@@ -1,0 +1,67 @@
+{
+  "$schema": "https://developers.cloudflare.com/pages/platform/build-configuration",
+  "name": "mahir-arab-gundul",
+  "production_branch": "main",
+  "build": {
+    "command": "npm run build",
+    "destination": "dist",
+    "root_dir": "/"
+  },
+  "preview": {
+    "enabled": true,
+    "branch_patterns": ["dev", "preview/*"]
+  },
+  "deployment": {
+    "compatibility_date": "2024-01-01",
+    "compatibility_flags": []
+  },
+  "environment_variables": {
+    "production": {
+      "VITE_SUPABASE_URL": {
+        "description": "Supabase project URL",
+        "required": true,
+        "example": "https://viywfnjhpnunwhakhnrj.supabase.co"
+      },
+      "VITE_SUPABASE_ANON_KEY": {
+        "description": "Supabase anonymous key for client-side auth",
+        "required": true,
+        "sensitive": true,
+        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "VITE_MIDTRANS_CLIENT_KEY": {
+        "description": "Midtrans client key for payment gateway",
+        "required": true,
+        "example": "SB-Mid-client-xxxxxxxxxxxxx"
+      },
+      "VITE_GEMINI_API_KEY": {
+        "description": "Google Gemini API key (optional - for admin fallback)",
+        "required": false,
+        "sensitive": true,
+        "example": "AIzaSy..."
+      },
+      "VITE_MAIA_API_KEY": {
+        "description": "Maia Router API key (optional - for admin fallback)",
+        "required": false,
+        "sensitive": true,
+        "example": "sk-..."
+      }
+    }
+  },
+  "functions": {
+    "worker": {
+      "file": "_worker.js",
+      "compatibility_date": "2024-01-01"
+    }
+  },
+  "custom_domain": {
+    "domain": "mahirarab.web.id",
+    "type": "pages",
+    "ssl": "flexible"
+  },
+  "notes": {
+    "setup": "See CLOUDFLARE_ENV_SETUP.md for detailed setup instructions",
+    "deployment": "Auto-deploy triggered on push to main branch",
+    "build_cache": "npm dependencies are cached automatically",
+    "preview_urls": "Preview deployments available for all branches except main"
+  }
+}
