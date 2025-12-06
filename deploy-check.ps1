@@ -103,8 +103,8 @@ Write-Host "   git commit -m 'Initial commit'" -ForegroundColor Cyan
 Write-Host "   git remote add origin https://github.com/YOUR_USERNAME/mahir-arab-gundul.git" -ForegroundColor Cyan
 Write-Host "   git push -u origin main" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "4. Deploy to Vercel:" -ForegroundColor White
-Write-Host "   - Visit https://vercel.com" -ForegroundColor Cyan
+Write-Host "4. Deploy to Cloudflare Pages:" -ForegroundColor White
+Write-Host "   - Visit https://dash.cloudflare.com" -ForegroundColor Cyan
 Write-Host "   - Import your GitHub repository" -ForegroundColor Cyan
 Write-Host "   - Add environment variables" -ForegroundColor Cyan
 Write-Host ""

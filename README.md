@@ -82,7 +82,7 @@ Deployment utama menggunakan Cloudflare Pages. Lihat [DEPLOYMENT_CLOUDFLARE.md](
 npm run deploy:cloudflare
 ```
 
-2. Add Environment Variables di Vercel Dashboard
+2. Add Environment Variables di Cloudflare Pages Dashboard
 
 3. Deploy! 🚀
 

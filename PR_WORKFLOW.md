@@ -141,8 +141,8 @@ Jika semua check pass:
 3. Confirm merge
 4. **Delete branch** setelah merge (optional tapi recommended)
 
-### Vercel Auto-Deploy:
-Setelah merge ke main, Vercel akan otomatis:
+### Cloudflare Pages Auto-Deploy:
+Setelah merge ke main, Cloudflare Pages akan otomatis:
 - 🔄 Detect perubahan
 - 🏗️ Build aplikasi
 - 🚀 Deploy ke production (~1-2 menit)
