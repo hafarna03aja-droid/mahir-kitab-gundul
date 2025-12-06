@@ -111,12 +111,24 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             throw new Error('Empty response from AI');
         }
 
-        // Save to KV Cache (TTL: 30 days)
-        const TTL_30_DAYS = 60 * 60 * 24 * 30; // seconds
-        await context.env.AI_CACHE.put(prompt, text, {
-            expirationTtl: TTL_30_DAYS
-        });
-        console.log('💾 Saved to cache');
+        // === MODIFIKASI DEBUGGING ===
+        console.log("🔍 MENCARI BINDING KV...");
+        
+        if (!context.env.AI_CACHE) {
+            console.error("❌ BAHAYA: context.env.AI_CACHE is UNDEFINED! Binding gagal.");
+        } else {
+            console.log("✅ Binding KV Ditemukan. Mencoba menyimpan...");
+            try {
+                const TTL_30_DAYS = 60 * 60 * 24 * 30; // seconds
+                await context.env.AI_CACHE.put(prompt, text, {
+                    expirationTtl: TTL_30_DAYS
+                });
+                console.log("🎉 SUKSES: Data berhasil ditulis ke KV!");
+            } catch (e) {
+                console.error("❌ GAGAL MENYIMPAN ke KV:", e);
+            }
+        }
+        // ============================
 
         // Return successful response
         return new Response(
