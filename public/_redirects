@@ -1,3 +1,3 @@
-# SPA routing untuk React Router -gunakan 404 status untuk fallback
-/app/* /app/index.html 404
-/* /index.html 404
+# SPA routing untuk React Router
+/app/* /app/index.html
+/* /index.html
