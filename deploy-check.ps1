@@ -103,16 +103,10 @@ Write-Host "   git commit -m 'Initial commit'" -ForegroundColor Cyan
 Write-Host "   git remote add origin https://github.com/YOUR_USERNAME/mahir-arab-gundul.git" -ForegroundColor Cyan
 Write-Host "   git push -u origin main" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "4. Deploy to Vercel OR Netlify:" -ForegroundColor White
-Write-Host "   [Vercel]" -ForegroundColor Yellow
+Write-Host "4. Deploy to Vercel:" -ForegroundColor White
 Write-Host "   - Visit https://vercel.com" -ForegroundColor Cyan
 Write-Host "   - Import your GitHub repository" -ForegroundColor Cyan
 Write-Host "   - Add environment variables" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "   [Netlify]" -ForegroundColor Yellow
-Write-Host "   - Visit https://netlify.com" -ForegroundColor Cyan
-Write-Host "   - Import your GitHub repository" -ForegroundColor Cyan
-Write-Host "   - Build settings are auto-configured via netlify.toml" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "✨ Good luck with your deployment! ✨" -ForegroundColor Green
 Write-Host ""
