@@ -10,6 +10,20 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// Cloudflare Workers types
+type KVNamespace = {
+    get(key: string): Promise<string | null>;
+    put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+};
+
+type PagesFunction<Env = any> = (context: {
+    request: Request;
+    env: Env;
+    params: Record<string, string>;
+    waitUntil: (promise: Promise<any>) => void;
+    next: () => Promise<Response>;
+}) => Promise<Response> | Response;
+
 // Environment interface for Cloudflare Pages
 interface Env {
     AI_CACHE: KVNamespace;
