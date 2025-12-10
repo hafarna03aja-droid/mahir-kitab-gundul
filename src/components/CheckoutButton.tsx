@@ -76,11 +76,12 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                         // Update localStorage
                         localStorage.setItem('payment_completed', 'true');
                         
-                        // Manual webhook trigger as backup
+                        // Manual webhook trigger as backup (with auth)
                         fetch(`${SUPABASE_URL}/functions/v1/midtrans-webhook`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                             },
                             body: JSON.stringify({
                                 order_id: result.order_id || data.order_id,

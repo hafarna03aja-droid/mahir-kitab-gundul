@@ -10,5 +10,6 @@
         "types": [
             "jsr:@supabase/functions-js/edge-runtime.d.ts"
         ]
-    }
+    },
+    "verify_jwt": false
 }

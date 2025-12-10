@@ -234,7 +234,7 @@ Deno.serve(async (req: Request) => {
                 transaction_status,
                 fraud_status,
                 payment_type,
-                gross_amount: parseFloat(gross_amount),
+                gross_amount: gross_amount ? parseFloat(gross_amount) : 49000, // Default to 49000 if not provided
                 midtrans_response: payload,
                 webhook_attempts: (existingOrder?.webhook_attempts || 0) + 1,
                 updated_at: new Date().toISOString(),
