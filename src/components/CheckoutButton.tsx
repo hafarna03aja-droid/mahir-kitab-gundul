@@ -1,28 +1,19 @@
 import { useState } from 'react';
 import { ShoppingCart, Loader2 } from 'lucide-react';
+import { useMidtrans } from '../hooks/useMidtrans';
 
 interface CheckoutButtonProps {
     className?: string;
     onSuccess?: () => void;
 }
 
-declare global {
-    interface Window {
-        snap: {
-            pay: (token: string, options: {
-                onSuccess?: (result: any) => void;
-                onPending?: (result: any) => void;
-                onError?: (result: any) => void;
-                onClose?: () => void;
-            }) => void;
-        };
-    }
-}
-
 export default function CheckoutButton({ className = '', onSuccess }: CheckoutButtonProps) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [email, setEmail] = useState('');
     const [showEmailModal, setShowEmailModal] = useState(false);
+
+    // Load Midtrans configuration dynamically
+    const { isLoaded: isMidtransLoaded, error: midtransError, config: midtransConfig } = useMidtrans();
 
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
     const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo';
@@ -72,9 +63,13 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
             // Close modal
             setShowEmailModal(false);
 
+            // Check if Midtrans is loaded
+            if (!isMidtransLoaded || !window.snap) {
+                throw new Error('Midtrans belum siap. Silakan tunggu sebentar dan coba lagi.');
+            }
+
             // Open Midtrans Snap
-            if (typeof window.snap !== 'undefined') {
-                window.snap.pay(data.snap_token, {
+            window.snap.pay(data.snap_token, {
                     onSuccess: function (result) {
                         console.log('✅ Payment success:', result);
                         
@@ -123,9 +118,6 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                         setIsProcessing(false);
                     }
                 });
-            } else {
-                throw new Error('Midtrans Snap tidak tersedia. Silakan refresh halaman.');
-            }
 
         } catch (error: any) {
             console.error('Payment error:', error);
@@ -138,13 +130,23 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
         <>
             <button
                 onClick={handleCheckout}
-                disabled={isProcessing}
-                className={`${className} ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isProcessing || !isMidtransLoaded || !!midtransError}
+                className={`${className} ${(isProcessing || !isMidtransLoaded || midtransError) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={midtransError || (!isMidtransLoaded ? 'Memuat sistem pembayaran...' : '')}
             >
                 {isProcessing ? (
                     <>
                         <Loader2 className="w-5 h-5 animate-spin" />
                         <span>Memproses...</span>
+                    </>
+                ) : !isMidtransLoaded ? (
+                    <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Memuat Pembayaran...</span>
+                    </>
+                ) : midtransError ? (
+                    <>
+                        <span>❌ Error Pembayaran</span>
                     </>
                 ) : (
                     <>
@@ -153,6 +155,13 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     </>
                 )}
             </button>
+            
+            {/* Show environment badge (only in development) */}
+            {import.meta.env.DEV && midtransConfig && (
+                <div className="text-xs text-slate-500 mt-2 text-center">
+                    🔧 {midtransConfig.isProduction ? 'Production' : 'Sandbox'} Mode
+                </div>
+            )}
 
             {/* Email Modal */}
             {showEmailModal && (

@@ -5,16 +5,34 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from '@supabase/supabase-js'
 
+// Midtrans Configuration - Dynamic environment switching
+// After Midtrans production approval, keys no longer have 'SB-' prefix
+// But sandbox and production keys have different numbers
 // @ts-ignore - Deno runtime
-const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY')
-const MIDTRANS_API_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions"
+const IS_PRODUCTION = Deno.env.get('IS_PRODUCTION') === 'true'
+// @ts-ignore - Deno runtime
+const MIDTRANS_SERVER_KEY = IS_PRODUCTION
+    // @ts-ignore - Deno runtime
+    ? Deno.env.get('PROD_SERVER_KEY')
+    // @ts-ignore - Deno runtime
+    : Deno.env.get('SB_SERVER_KEY')
+const MIDTRANS_API_URL = IS_PRODUCTION
+    ? "https://app.midtrans.com/snap/v1/transactions"
+    : "https://app.sandbox.midtrans.com/snap/v1/transactions"
+
+console.log('🔧 Midtrans Config:', {
+    isProduction: IS_PRODUCTION,
+    apiUrl: MIDTRANS_API_URL,
+    hasServerKey: !!MIDTRANS_SERVER_KEY
+})
 // @ts-ignore - Deno runtime
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 // @ts-ignore - Deno runtime
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 if (!MIDTRANS_SERVER_KEY) {
-    throw new Error('MIDTRANS_SERVER_KEY environment variable is required')
+    const requiredKey = IS_PRODUCTION ? 'PROD_SERVER_KEY' : 'SB_SERVER_KEY'
+    throw new Error(`${requiredKey} environment variable is required (IS_PRODUCTION=${IS_PRODUCTION})`)
 }
 
 // CORS Headers

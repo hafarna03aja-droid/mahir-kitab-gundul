@@ -9,8 +9,24 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 // @ts-ignore - Deno runtime
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+// Dynamic environment detection
 // @ts-ignore - Deno runtime
-const MIDTRANS_SERVER_KEY = Deno.env.get('MIDTRANS_SERVER_KEY')
+const IS_PRODUCTION = Deno.env.get('IS_PRODUCTION') === 'true'
+
+// Dynamic server key based on environment
+// @ts-ignore - Deno runtime
+const MIDTRANS_SERVER_KEY = IS_PRODUCTION 
+    // @ts-ignore - Deno runtime
+    ? Deno.env.get('PROD_SERVER_KEY')
+    // @ts-ignore - Deno runtime
+    : Deno.env.get('SB_SERVER_KEY')
+
+console.log('🔧 Webhook Environment:', {
+    isProduction: IS_PRODUCTION,
+    hasServerKey: !!MIDTRANS_SERVER_KEY,
+    serverKeyPrefix: MIDTRANS_SERVER_KEY?.substring(0, 11)
+})
 
 // Helper: Generate Midtrans SHA-512 signature for verification
 async function generateSignature(
@@ -46,10 +62,15 @@ Deno.serve(async (req: Request) => {
 
     try {
         // ✅ STEP 0: Validate required environment variables
+        const requiredKey = IS_PRODUCTION ? 'PROD_SERVER_KEY' : 'SB_SERVER_KEY'
+        
         if (!MIDTRANS_SERVER_KEY) {
-            console.error('❌ MIDTRANS_SERVER_KEY not configured!')
+            console.error(`❌ ${requiredKey} not configured! (IS_PRODUCTION=${IS_PRODUCTION})`)
             return new Response(
-                JSON.stringify({ error: 'Server configuration error' }),
+                JSON.stringify({ 
+                    error: 'Server configuration error',
+                    details: `${requiredKey} environment variable is required`
+                }),
                 { 
                     status: 500,
                     headers: {
@@ -61,6 +82,7 @@ Deno.serve(async (req: Request) => {
         }
 
         console.log('\n=== WEBHOOK RECEIVED ===')
+        console.log('Environment:', IS_PRODUCTION ? 'PRODUCTION' : 'SANDBOX')
         console.log('Timestamp:', new Date().toISOString())
         
         const payload = await req.json()
@@ -317,7 +339,8 @@ Deno.serve(async (req: Request) => {
                 message: 'Payment processed successfully',
                 email: email,
                 order_id: order_id,
-                transaction_status: transaction_status
+                transaction_status: transaction_status,
+                environment: IS_PRODUCTION ? 'production' : 'sandbox'
             }),
             { 
                 status: 200, 
