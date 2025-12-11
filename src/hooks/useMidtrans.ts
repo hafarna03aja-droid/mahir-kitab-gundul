@@ -24,6 +24,7 @@ export function useMidtrans(): UseMidtransReturn {
     useEffect(() => {
         let isMounted = true;
         let scriptElement: HTMLScriptElement | null = null;
+        let loadTimeout: NodeJS.Timeout;
 
         async function loadMidtrans() {
             try {
@@ -34,19 +35,26 @@ export function useMidtrans(): UseMidtransReturn {
                     return;
                 }
 
-                // Fetch Midtrans configuration from backend
+                // Fetch Midtrans configuration from backend with timeout
                 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
                 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo';
 
                 console.log('🔄 Fetching Midtrans configuration...');
                 
+                // Add timeout for mobile networks (15 seconds)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-config`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                         'apikey': SUPABASE_ANON_KEY
-                    }
+                    },
+                    signal: controller.signal
                 });
+
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     throw new Error(`Failed to fetch Midtrans config: ${response.statusText}`);
@@ -76,6 +84,7 @@ export function useMidtrans(): UseMidtransReturn {
                 scriptElement.setAttribute('data-client-key', configData.clientKey);
 
                 scriptElement.onload = () => {
+                    clearTimeout(loadTimeout);
                     if (isMounted) {
                         console.log('✅ Midtrans Snap.js loaded successfully');
                         setIsLoaded(true);
@@ -84,6 +93,7 @@ export function useMidtrans(): UseMidtransReturn {
                 };
 
                 scriptElement.onerror = () => {
+                    clearTimeout(loadTimeout);
                     if (isMounted) {
                         const errorMsg = 'Failed to load Midtrans Snap.js';
                         console.error('❌', errorMsg);
@@ -91,6 +101,14 @@ export function useMidtrans(): UseMidtransReturn {
                         setIsLoaded(false);
                     }
                 };
+
+                // Timeout for script loading (mobile networks can be slow)
+                loadTimeout = setTimeout(() => {
+                    if (!window.snap && isMounted) {
+                        console.warn('⚠️ Midtrans script loading timeout');
+                        setError('Script loading timeout - check your internet connection');
+                    }
+                }, 20000); // 20 seconds timeout
 
                 document.head.appendChild(scriptElement);
 
@@ -109,6 +127,9 @@ export function useMidtrans(): UseMidtransReturn {
         // Cleanup function
         return () => {
             isMounted = false;
+            if (loadTimeout) {
+                clearTimeout(loadTimeout);
+            }
             // Note: We don't remove the script on unmount as it might be needed by other components
         };
     }, []);

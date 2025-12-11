@@ -164,6 +164,19 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 </div>
             )}
 
+            {/* Loading/Error indicator */}
+            {!isMidtransLoaded && !midtransError && (
+                <div className="text-xs text-blue-600 mt-2 text-center animate-pulse">
+                    ⏳ Memuat sistem pembayaran... Mohon tunggu
+                </div>
+            )}
+            
+            {midtransError && (
+                <div className="text-xs text-red-600 mt-2 text-center">
+                    ⚠️ {midtransError}. Refresh halaman atau coba lagi.
+                </div>
+            )}
+
             {/* Email Modal */}
             {showEmailModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
