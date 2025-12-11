@@ -163,10 +163,10 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
         } catch (error: any) {
             console.error('❌ Payment error details:', {
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
-                type: typeof error
+                name: error?.name,
+                message: error?.message,
+                stack: error?.stack,
+                fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
             });
 
             // Better error messages for mobile

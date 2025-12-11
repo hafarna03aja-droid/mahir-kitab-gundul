@@ -33,6 +33,14 @@ const snap = new midtransClient.Snap({
     clientKey: process.env.MIDTRANS_CLIENT_KEY || process.env.VITE_MIDTRANS_CLIENT_KEY
 });
 
+// Debug: Check configuration
+console.log('🔧 Midtrans Config:', {
+    isProduction: true,
+    hasServerKey: !!process.env.MIDTRANS_SERVER_KEY,
+    serverKeyLength: process.env.MIDTRANS_SERVER_KEY ? process.env.MIDTRANS_SERVER_KEY.length : 0,
+    clientKey: process.env.MIDTRANS_CLIENT_KEY || process.env.VITE_MIDTRANS_CLIENT_KEY
+});
+
 // ============================================
 // Supabase Configuration
 // ============================================
@@ -107,8 +115,8 @@ app.post('/api/payment', async (req, res) => {
                 .insert({
                     order_id: orderId,
                     email: email,
-                    amount: amount || 49000,
-                    status: 'pending',
+                    gross_amount: amount || 49000,
+                    transaction_status: 'pending',
                     snap_token: transaction.token,
                     created_at: new Date().toISOString()
                 });
