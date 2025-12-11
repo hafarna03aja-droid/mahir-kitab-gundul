@@ -15,8 +15,17 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
     // Load Midtrans configuration dynamically
     const { isLoaded: isMidtransLoaded, error: midtransError, config: midtransConfig } = useMidtrans();
 
-    // Local Backend API endpoint for payment
-    const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3000';
+    // Backend API URL logic
+    const getBackendUrl = () => {
+        if (import.meta.env.VITE_BACKEND_API_URL) return import.meta.env.VITE_BACKEND_API_URL;
+        if (import.meta.env.PROD) {
+            // In production, use Supabase Edge Functions
+            return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+        }
+        return 'http://localhost:3000';
+    };
+
+    const BACKEND_BASE_URL = getBackendUrl();
 
     const handleCheckout = () => {
         setShowEmailModal(true);
@@ -40,7 +49,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
         const callPaymentAPI = async (retryCount: number = 0): Promise<any> => {
             // Debug: Log environment
             console.log('🔍 Payment Debug:', {
-                backendUrl: BACKEND_API_URL,
+                backendUrl: BACKEND_BASE_URL,
                 email: email,
                 attempt: retryCount + 1
             });
@@ -50,8 +59,10 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
             try {
-                // Call local backend payment API
-                const apiUrl = `${BACKEND_API_URL}/api/payment`;
+                // Determine endpoint based on backend type
+                const isSupabase = BACKEND_BASE_URL.includes('supabase.co');
+                const endpoint = isSupabase ? '/midtrans-payment' : '/api/payment';
+                const apiUrl = `${BACKEND_BASE_URL}${endpoint}`;
                 console.log('📡 Calling API:', apiUrl);
 
                 const response = await fetch(apiUrl, {
@@ -118,8 +129,11 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     // Update localStorage
                     localStorage.setItem('payment_completed', 'true');
 
-                    // Manual webhook trigger as backup via local backend
-                    fetch(`${BACKEND_API_URL}/api/webhook`, {
+                    // Manual webhook trigger as backup via backend
+                    const isSupabase = BACKEND_BASE_URL.includes('supabase.co');
+                    const webhookEndpoint = isSupabase ? '/midtrans-webhook' : '/api/webhook';
+
+                    fetch(`${BACKEND_BASE_URL}${webhookEndpoint}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -178,7 +192,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 debugInfo = 'Timeout after 30 seconds (retried once)';
             } else if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
                 errorMessage = '📡 Gagal terhubung ke server setelah 2x percobaan.\n\nPeriksa koneksi internet Anda atau coba gunakan WiFi.';
-                debugInfo = `API: ${BACKEND_API_URL}/api/payment`;
+                debugInfo = `API: ${BACKEND_BASE_URL}/...`;
             } else if (error.message && error.message.includes('JWT')) {
                 errorMessage = '🔑 Sesi expired. Silakan refresh halaman dan coba lagi.';
                 debugInfo = 'JWT validation failed';
