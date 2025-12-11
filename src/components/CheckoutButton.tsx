@@ -173,7 +173,13 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
             
             {midtransError && (
                 <div className="text-xs text-red-600 mt-2 text-center">
-                    ⚠️ {midtransError}. Refresh halaman atau coba lagi.
+                    <div>⚠️ {midtransError}</div>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="mt-1 text-blue-600 underline hover:text-blue-800"
+                    >
+                        Tap untuk refresh
+                    </button>
                 </div>
             )}
 

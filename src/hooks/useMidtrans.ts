@@ -35,32 +35,47 @@ export function useMidtrans(): UseMidtransReturn {
                     return;
                 }
 
-                // Fetch Midtrans configuration from backend with timeout
-                const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
-                const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo';
+                let configData: MidtransConfig;
 
-                console.log('🔄 Fetching Midtrans configuration...');
-                
-                // Add timeout for mobile networks (15 seconds)
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                // Try to fetch from backend, fallback to hardcoded if fails
+                try {
+                    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
+                    const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo';
 
-                const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-config`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'apikey': SUPABASE_ANON_KEY
-                    },
-                    signal: controller.signal
-                });
+                    console.log('🔄 Fetching Midtrans configuration...');
+                    
+                    // Shorter timeout for mobile (8 seconds)
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                clearTimeout(timeoutId);
+                    const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-config`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'apikey': SUPABASE_ANON_KEY
+                        },
+                        signal: controller.signal
+                    });
 
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch Midtrans config: ${response.statusText}`);
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`Config API failed: ${response.statusText}`);
+                    }
+
+                    configData = await response.json();
+                    console.log('✅ Config fetched from API');
+
+                } catch (fetchError) {
+                    // FALLBACK: Use hardcoded production config for mobile
+                    console.warn('⚠️ API fetch failed, using fallback config:', fetchError);
+                    configData = {
+                        isProduction: true, // Always use production for fallback
+                        clientKey: 'Mid-client-N8v5q9LUYAGiokGy',
+                        scriptUrl: 'https://app.midtrans.com/snap/snap.js'
+                    };
+                    console.log('✅ Using fallback production config');
                 }
-
-                const configData: MidtransConfig = await response.json();
                 
                 if (!isMounted) return;
                 
@@ -102,13 +117,14 @@ export function useMidtrans(): UseMidtransReturn {
                     }
                 };
 
-                // Timeout for script loading (mobile networks can be slow)
+                // Timeout for script loading (reduced for faster feedback)
                 loadTimeout = setTimeout(() => {
                     if (!window.snap && isMounted) {
                         console.warn('⚠️ Midtrans script loading timeout');
-                        setError('Script loading timeout - check your internet connection');
+                        setError('Koneksi lambat. Coba refresh halaman atau gunakan WiFi.');
+                        setIsLoaded(false);
                     }
-                }, 20000); // 20 seconds timeout
+                }, 15000); // 15 seconds timeout (reduced from 20)
 
                 document.head.appendChild(scriptElement);
 
