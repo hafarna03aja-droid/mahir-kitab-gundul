@@ -248,13 +248,6 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 )}
             </button>
 
-            {/* Show environment badge (only in development) */}
-            {import.meta.env.DEV && midtransConfig && (
-                <div className="text-xs text-slate-500 mt-2 text-center">
-                    🔧 {midtransConfig.isProduction ? 'Production' : 'Sandbox'} Mode
-                </div>
-            )}
-
             {/* Loading/Error indicator */}
             {!isMidtransLoaded && !midtransError && (
                 <div className="text-xs text-blue-600 mt-2 text-center animate-pulse">
