@@ -48,11 +48,15 @@ export function useMidtrans(): UseMidtransReturn {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                    const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-config`, {
+                    // Add cache busting to force fresh config fetch
+                    const cacheBuster = Date.now();
+                    const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-config?v=${cacheBuster}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'apikey': SUPABASE_ANON_KEY
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache'
                         },
                         signal: controller.signal
                     });

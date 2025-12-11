@@ -31,13 +31,16 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
         setIsProcessing(true);
 
         try {
-            // Call Midtrans payment function
-            const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-payment`, {
+            // Call Midtrans payment function with cache busting
+            const cacheBuster = Date.now();
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-payment?v=${cacheBuster}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'apikey': SUPABASE_ANON_KEY
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
                 },
                 body: JSON.stringify({
                     email: email,
