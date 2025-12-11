@@ -199,7 +199,7 @@ curl -X POST https://mahirarab.web.id/webhook/midtrans \
    ```
    VITE_MIDTRANS_CLIENT_KEY = Mid-client-N8v5q9LUYAGiokGy
    VITE_SUPABASE_URL = https://viywfnjhpnunwhakhnrj.supabase.co
-   VITE_SUPABASE_ANON_KEY = [your_anon_key]
+   VITE_SUPABASE_ANON_KEY = [get from Supabase Dashboard]
    ```
 4. Save and trigger manual deployment
 

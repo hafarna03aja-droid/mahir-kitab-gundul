@@ -19,7 +19,7 @@ Dibuat Edge Function untuk proxy semua AI requests:
 
 ```bash
 # Set di Supabase Secrets (backend only)
-npx supabase secrets set MAIA_API_KEY=sk-RTfzBVMp744fN-WAdlQacg
+npx supabase secrets set MAIA_API_KEY=[your_maia_api_key]
 ```
 
 ### **3. Frontend Services Updated**

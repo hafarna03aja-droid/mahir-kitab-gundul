@@ -5,12 +5,12 @@
 Aplikasi ini membutuhkan environment variables berikut untuk berfungsi dengan baik:
 
 ### 1. VITE_MAIA_API_KEY
-- **Nilai:** `sk-RTfzBVMp744fN-WAdlQacg`
+- **Nilai:** `[Get from Maiarouter Dashboard]`
 - **Deskripsi:** API key untuk Maiarouter (AI provider default)
 - **Provider:** Maiarouter (https://api.maiarouter.ai)
 
 ### 2. VITE_GEMINI_API_KEY
-- **Nilai:** `sk-RTfzBVMp744fN-WAdlQacg` (sama dengan Maia karena routing)
+- **Nilai:** `[Get from Google AI Studio]`
 - **Deskripsi:** API key untuk Google Gemini (fallback provider)
 - **Provider:** Google AI Studio
 
@@ -25,7 +25,7 @@ Aplikasi ini membutuhkan environment variables berikut untuk berfungsi dengan ba
 - **Provider:** Supabase
 
 ### 5. VITE_SUPABASE_ANON_KEY
-- **Nilai:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo`
+- **Nilai:** `[Get from Supabase Dashboard → Settings → API]`
 - **Deskripsi:** Supabase Anon Key untuk authentication
 - **Provider:** Supabase
 
@@ -55,11 +55,11 @@ Aplikasi ini membutuhkan environment variables berikut untuk berfungsi dengan ba
 
 5. **Ulangi untuk semua 5 variables**
    ```
-   VITE_MAIA_API_KEY = sk-RTfzBVMp744fN-WAdlQacg
-   VITE_GEMINI_API_KEY = sk-RTfzBVMp744fN-WAdlQacg
-   VITE_MIDTRANS_CLIENT_KEY = SB-Mid-client-W4qSN0B-zyY2x_dN
+   VITE_MAIA_API_KEY = [your_maia_api_key]
+   VITE_GEMINI_API_KEY = [your_gemini_api_key]
+   VITE_MIDTRANS_CLIENT_KEY = Mid-client-N8v5q9LUYAGiokGy
    VITE_SUPABASE_URL = https://viywfnjhpnunwhakhnrj.supabase.co
-   VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   VITE_SUPABASE_ANON_KEY = [Get from Supabase Dashboard]
    ```
 
 6. **Redeploy Project**
