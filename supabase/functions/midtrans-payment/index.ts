@@ -5,23 +5,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from '@supabase/supabase-js'
 
-// Midtrans Configuration - Dynamic environment switching
-// After Midtrans production approval, keys no longer have 'SB-' prefix
-// But sandbox and production keys have different numbers
+// Midtrans Configuration - PRODUCTION ONLY
+// Sandbox mode has been removed, always use production
 // @ts-ignore - Deno runtime
-const IS_PRODUCTION = Deno.env.get('IS_PRODUCTION') === 'true'
-// @ts-ignore - Deno runtime
-const MIDTRANS_SERVER_KEY = IS_PRODUCTION
-    // @ts-ignore - Deno runtime
-    ? Deno.env.get('PROD_SERVER_KEY')
-    // @ts-ignore - Deno runtime
-    : Deno.env.get('SB_SERVER_KEY')
-const MIDTRANS_API_URL = IS_PRODUCTION
-    ? "https://app.midtrans.com/snap/v1/transactions"
-    : "https://app.sandbox.midtrans.com/snap/v1/transactions"
+const MIDTRANS_SERVER_KEY = Deno.env.get('PROD_SERVER_KEY')
+const MIDTRANS_API_URL = "https://app.midtrans.com/snap/v1/transactions"
 
 console.log('🔧 Midtrans Config:', {
-    isProduction: IS_PRODUCTION,
+    isProduction: true,
     apiUrl: MIDTRANS_API_URL,
     hasServerKey: !!MIDTRANS_SERVER_KEY
 })
@@ -31,8 +22,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 if (!MIDTRANS_SERVER_KEY) {
-    const requiredKey = IS_PRODUCTION ? 'PROD_SERVER_KEY' : 'SB_SERVER_KEY'
-    throw new Error(`${requiredKey} environment variable is required (IS_PRODUCTION=${IS_PRODUCTION})`)
+    throw new Error('PROD_SERVER_KEY environment variable is required')
 }
 
 // CORS Headers
@@ -59,7 +49,7 @@ Deno.serve(async (req: Request) => {
 
         // Initialize Supabase client for auth check
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
-        
+
         // For authenticated users - verify token and get user
         let userId: string | null = null
         let userEmail: string | null = null
@@ -68,16 +58,16 @@ Deno.serve(async (req: Request) => {
             try {
                 // Extract token from "Bearer <token>"
                 const token = authHeader.replace('Bearer ', '')
-                
+
                 // Check if this is anon key (not a user session)
                 // @ts-ignore - Deno runtime
                 const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
                 const isAnonKey = token === anonKey
-                
+
                 if (!isAnonKey) {
                     // This looks like a user session token, try to verify it
                     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-                    
+
                     if (!authError && user) {
                         userId = user.id
                         userEmail = user.email || null
@@ -109,12 +99,12 @@ Deno.serve(async (req: Request) => {
         if (!customerEmail || !amount) {
             return new Response(
                 JSON.stringify({ error: 'Email and amount are required' }),
-                { 
-                    status: 400, 
-                    headers: { 
+                {
+                    status: 400,
+                    headers: {
                         ...corsHeaders,
                         'Content-Type': 'application/json'
-                    } 
+                    }
                 }
             )
         }
@@ -123,21 +113,21 @@ Deno.serve(async (req: Request) => {
         if (!customerEmail.includes('@') || customerEmail.length < 5) {
             return new Response(
                 JSON.stringify({ error: 'Invalid email format' }),
-                { 
-                    status: 400, 
-                    headers: { 
+                {
+                    status: 400,
+                    headers: {
                         ...corsHeaders,
                         'Content-Type': 'application/json'
-                    } 
+                    }
                 }
             )
         }
 
         // ✅ STEP 3: CREATE ORDER IN DATABASE (before Midtrans call)
         console.log('Step 3: Creating order record in database...')
-        
+
         const orderId = `MAHIR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        
+
         const { data: orderData, error: insertError } = await supabase
             .from('orders')
             .insert({
@@ -154,7 +144,7 @@ Deno.serve(async (req: Request) => {
         if (insertError) {
             console.error('❌ Failed to create order record:', insertError)
             return new Response(
-                JSON.stringify({ 
+                JSON.stringify({
                     error: 'Failed to create order record',
                     details: insertError.message
                 }),
@@ -215,19 +205,19 @@ Deno.serve(async (req: Request) => {
                 statusText: response.statusText,
                 data: data
             })
-            
+
             // Update order status to 'failure'
             await supabase
                 .from('orders')
-                .update({ 
+                .update({
                     transaction_status: 'failure',
                     midtrans_response: data
                 })
                 .eq('order_id', orderId)
-            
+
             return new Response(
-                JSON.stringify({ 
-                    error: 'Failed to create transaction', 
+                JSON.stringify({
+                    error: 'Failed to create transaction',
                     details: data,
                     status: response.status,
                     message: data.error_messages || data.message || 'Unknown error',
@@ -248,7 +238,7 @@ Deno.serve(async (req: Request) => {
 
         // ✅ STEP 6: UPDATE ORDER WITH SNAP TOKEN
         console.log('Step 6: Updating order with snap_token...')
-        
+
         const { error: updateError } = await supabase
             .from('orders')
             .update({
@@ -267,7 +257,7 @@ Deno.serve(async (req: Request) => {
 
         // ✅ STEP 7: RETURN RESPONSE
         console.log('✅ Payment creation successful!')
-        
+
         return new Response(
             JSON.stringify({
                 success: true,
@@ -288,7 +278,7 @@ Deno.serve(async (req: Request) => {
     } catch (error: any) {
         console.error('Payment function error:', error.message)
         return new Response(
-            JSON.stringify({ 
+            JSON.stringify({
                 error: error.message || 'Internal server error'
             }),
             {

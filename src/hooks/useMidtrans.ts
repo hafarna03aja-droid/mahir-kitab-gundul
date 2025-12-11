@@ -35,54 +35,25 @@ export function useMidtrans(): UseMidtransReturn {
                     return;
                 }
 
-                let configData: MidtransConfig;
+                // Production Mode Configuration
+                // Load client key from environment variable
+                const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
 
-                // Try to fetch from backend, fallback to hardcoded if fails
-                try {
-                    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
-                    const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo';
-
-                    console.log('🔄 Fetching Midtrans configuration...');
-                    
-                    // Shorter timeout for mobile (8 seconds)
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-                    // Add cache busting to force fresh config fetch
-                    const cacheBuster = Date.now();
-                    const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-config?v=${cacheBuster}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Cache-Control': 'no-cache, no-store, must-revalidate',
-                            'Pragma': 'no-cache'
-                        },
-                        signal: controller.signal
-                    });
-
-                    clearTimeout(timeoutId);
-
-                    if (!response.ok) {
-                        throw new Error(`Config API failed: ${response.statusText}`);
-                    }
-
-                    configData = await response.json();
-                    console.log('✅ Config fetched from API');
-
-                } catch (fetchError) {
-                    // FALLBACK: Use hardcoded production config for mobile
-                    console.warn('⚠️ API fetch failed, using fallback config:', fetchError);
-                    configData = {
-                        isProduction: true, // Always use production for fallback
-                        clientKey: 'Mid-client-N8v5q9LUYAGiokGy',
-                        scriptUrl: 'https://app.midtrans.com/snap/snap.js'
-                    };
-                    console.log('✅ Using fallback production config');
+                if (!MIDTRANS_CLIENT_KEY) {
+                    throw new Error('Missing VITE_MIDTRANS_CLIENT_KEY environment variable');
                 }
-                
+
+                // Use Production Snap URL (no sandbox)
+                const configData: MidtransConfig = {
+                    isProduction: true,
+                    clientKey: MIDTRANS_CLIENT_KEY,
+                    scriptUrl: 'https://app.midtrans.com/snap/snap.js'
+                };
+
+                console.log('✅ Using Production Midtrans config');
+
                 if (!isMounted) return;
-                
+
                 setConfig(configData);
                 console.log('✅ Midtrans config loaded:', {
                     environment: configData.isProduction ? 'Production' : 'Sandbox',

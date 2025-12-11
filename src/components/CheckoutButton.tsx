@@ -15,8 +15,8 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
     // Load Midtrans configuration dynamically
     const { isLoaded: isMidtransLoaded, error: midtransError, config: midtransConfig } = useMidtrans();
 
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
-    const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo';
+    // Local Backend API endpoint for payment
+    const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3000';
 
     const handleCheckout = () => {
         setShowEmailModal(true);
@@ -28,48 +28,71 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
             return;
         }
 
+        // Check if online first
+        if (!navigator.onLine) {
+            alert('❌ Tidak ada koneksi internet.\n\nPeriksa koneksi internet Anda dan coba lagi.');
+            return;
+        }
+
         setIsProcessing(true);
 
-        try {
+        // Helper function for API call with retry
+        const callPaymentAPI = async (retryCount: number = 0): Promise<any> => {
             // Debug: Log environment
             console.log('🔍 Payment Debug:', {
-                supabaseUrl: SUPABASE_URL,
-                hasAnonKey: !!SUPABASE_ANON_KEY,
-                email: email
+                backendUrl: BACKEND_API_URL,
+                email: email,
+                attempt: retryCount + 1
             });
 
-            // Add timeout for mobile networks (15 seconds)
+            // Extended timeout (30 seconds) for slow connections
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-            // Call Midtrans payment function with cache busting
-            const cacheBuster = Date.now();
-            const apiUrl = `${SUPABASE_URL}/functions/v1/midtrans-payment?v=${cacheBuster}`;
-            console.log('📡 Calling API:', apiUrl);
-            
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache'
-                },
-                body: JSON.stringify({
-                    email: email,
-                    amount: 49000,
-                    item_name: 'Mahir Arab Gundul - Lifetime Access'
-                }),
-                signal: controller.signal
-            });
+            try {
+                // Call local backend payment API
+                const apiUrl = `${BACKEND_API_URL}/api/payment`;
+                console.log('📡 Calling API:', apiUrl);
 
-            clearTimeout(timeoutId);
-            const data = await response.json();
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        amount: 49000,
+                        item_name: 'Mahir Arab Gundul - Lifetime Access'
+                    }),
+                    signal: controller.signal
+                });
 
-            if (!response.ok) {
-                throw new Error(data.message || data.error || 'Gagal membuat transaksi');
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || 'Gagal membuat transaksi');
+                }
+
+                return await response.json();
+            } catch (error: any) {
+                clearTimeout(timeoutId);
+
+                // Retry once on network errors
+                if (retryCount < 1 && (error.name === 'AbortError' || error.message === 'Failed to fetch')) {
+                    console.log('⚠️ Retrying payment API call...');
+                    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+                    return callPaymentAPI(retryCount + 1);
+                }
+
+                throw error;
             }
+        };
+
+        try {
+            const data = await callPaymentAPI();
 
             if (!data.snap_token) {
                 throw new Error('Tidak mendapatkan token pembayaran');
@@ -89,55 +112,54 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
             // Open Midtrans Snap
             window.snap.pay(data.snap_token, {
-                    onSuccess: function (result) {
-                        console.log('✅ Payment success:', result);
-                        
-                        // Update localStorage
-                        localStorage.setItem('payment_completed', 'true');
-                        
-                        // Manual webhook trigger as backup (with auth)
-                        fetch(`${SUPABASE_URL}/functions/v1/midtrans-webhook`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            },
-                            body: JSON.stringify({
-                                order_id: result.order_id || data.order_id,
-                                transaction_status: 'settlement',
-                                fraud_status: 'accept',
-                                customer_details: {
-                                    email: email,
-                                    first_name: email.split('@')[0]
-                                }
-                            })
-                        }).catch(err => console.error('Webhook trigger error:', err));
+                onSuccess: function (result) {
+                    console.log('✅ Payment success:', result);
 
-                        // Show success message
-                        alert(`✅ Pembayaran Berhasil!\n\n🎉 Selamat! Akun Anda telah diaktifkan.\n\n📧 Email: ${email}\n\nSilakan login untuk mengakses semua fitur premium.`);
-                        
-                        // Redirect to member area
-                        if (onSuccess) {
-                            onSuccess();
-                        } else {
-                            window.location.href = '/app';
-                        }
-                    },
-                    onPending: function (result) {
-                        console.log('⏳ Payment pending:', result);
-                        alert('⏳ Pembayaran Sedang Diproses\n\nSilakan selesaikan pembayaran Anda.\nCek email untuk status pembayaran.');
-                        setIsProcessing(false);
-                    },
-                    onError: function (result) {
-                        console.error('❌ Payment error:', result);
-                        alert('❌ Pembayaran Gagal\n\nTerjadi kesalahan saat memproses pembayaran.\nSilakan coba lagi.');
-                        setIsProcessing(false);
-                    },
-                    onClose: function () {
-                        console.log('🔒 Payment popup closed');
-                        setIsProcessing(false);
+                    // Update localStorage
+                    localStorage.setItem('payment_completed', 'true');
+
+                    // Manual webhook trigger as backup via local backend
+                    fetch(`${BACKEND_API_URL}/api/webhook`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            order_id: result.order_id || data.order_id,
+                            transaction_status: 'settlement',
+                            fraud_status: 'accept',
+                            customer_details: {
+                                email: email,
+                                first_name: email.split('@')[0]
+                            }
+                        })
+                    }).catch(err => console.error('Webhook trigger error:', err));
+
+                    // Show success message
+                    alert(`✅ Pembayaran Berhasil!\n\n🎉 Selamat! Akun Anda telah diaktifkan.\n\n📧 Email: ${email}\n\nSilakan login untuk mengakses semua fitur premium.`);
+
+                    // Redirect to member area
+                    if (onSuccess) {
+                        onSuccess();
+                    } else {
+                        window.location.href = '/app';
                     }
-                });
+                },
+                onPending: function (result) {
+                    console.log('⏳ Payment pending:', result);
+                    alert('⏳ Pembayaran Sedang Diproses\n\nSilakan selesaikan pembayaran Anda.\nCek email untuk status pembayaran.');
+                    setIsProcessing(false);
+                },
+                onError: function (result) {
+                    console.error('❌ Payment error:', result);
+                    alert('❌ Pembayaran Gagal\n\nTerjadi kesalahan saat memproses pembayaran.\nSilakan coba lagi.');
+                    setIsProcessing(false);
+                },
+                onClose: function () {
+                    console.log('🔒 Payment popup closed');
+                    setIsProcessing(false);
+                }
+            });
 
         } catch (error: any) {
             console.error('❌ Payment error details:', {
@@ -146,17 +168,17 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 stack: error.stack,
                 type: typeof error
             });
-            
+
             // Better error messages for mobile
             let errorMessage = 'Terjadi kesalahan saat memproses pembayaran';
             let debugInfo = '';
-            
+
             if (error.name === 'AbortError') {
-                errorMessage = '⏱️ Koneksi timeout (>15 detik). Coba lagi dengan koneksi lebih baik.';
-                debugInfo = 'Timeout after 15 seconds';
+                errorMessage = '⏱️ Koneksi timeout (>30 detik setelah 2x percobaan).\n\nCoba lagi dengan koneksi WiFi yang lebih stabil.';
+                debugInfo = 'Timeout after 30 seconds (retried once)';
             } else if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
-                errorMessage = '📡 Gagal terhubung ke server. Periksa koneksi internet Anda.';
-                debugInfo = `API: ${SUPABASE_URL}/functions/v1/midtrans-payment`;
+                errorMessage = '📡 Gagal terhubung ke server setelah 2x percobaan.\n\nPeriksa koneksi internet Anda atau coba gunakan WiFi.';
+                debugInfo = `API: ${BACKEND_API_URL}/api/payment`;
             } else if (error.message && error.message.includes('JWT')) {
                 errorMessage = '🔑 Sesi expired. Silakan refresh halaman dan coba lagi.';
                 debugInfo = 'JWT validation failed';
@@ -164,7 +186,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 errorMessage = error.message;
                 debugInfo = error.name || 'Unknown error';
             }
-            
+
             console.log('🐛 Debug info:', debugInfo);
             alert(`❌ Terjadi Kesalahan\n\n${errorMessage}\n\nSilakan coba lagi atau hubungi admin.`);
             setIsProcessing(false);
@@ -200,7 +222,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     </>
                 )}
             </button>
-            
+
             {/* Show environment badge (only in development) */}
             {import.meta.env.DEV && midtransConfig && (
                 <div className="text-xs text-slate-500 mt-2 text-center">
@@ -214,11 +236,11 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     ⏳ Memuat sistem pembayaran... Mohon tunggu
                 </div>
             )}
-            
+
             {midtransError && (
                 <div className="text-xs text-red-600 mt-2 text-center">
                     <div>⚠️ {midtransError}</div>
-                    <button 
+                    <button
                         onClick={() => window.location.reload()}
                         className="mt-1 text-blue-600 underline hover:text-blue-800"
                     >

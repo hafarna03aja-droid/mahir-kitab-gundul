@@ -1,12 +1,10 @@
 require('dotenv').config();
 
-const isProduction = process.env.IS_PRODUCTION === 'true';
-
+// Midtrans Configuration - PRODUCTION MODE ONLY
+// Sandbox mode has been removed, always use production
 module.exports = {
-    isProduction,
-    serverKey: isProduction ? process.env.PROD_SERVER_KEY : process.env.SB_SERVER_KEY,
-    clientKey: isProduction ? process.env.PROD_CLIENT_KEY : process.env.SB_CLIENT_KEY,
-    apiUrl: isProduction 
-        ? 'https://app.midtrans.com/snap/snap.js' 
-        : 'https://app.sandbox.midtrans.com/snap/snap.js'
+    isProduction: true,
+    serverKey: process.env.MIDTRANS_SERVER_KEY,
+    clientKey: process.env.MIDTRANS_CLIENT_KEY,
+    apiUrl: 'https://app.midtrans.com/snap/snap.js'
 };

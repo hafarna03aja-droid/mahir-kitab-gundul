@@ -1,7 +1,23 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://viywfnjhpnunwhakhnrj.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxOTgzMTMsImV4cCI6MjA3OTc3NDMxM30._Zj2FGSI7BnZBt6mUvOoJMZXXcUXSLijjPjiNYrTjQo';
+// Load Supabase configuration from environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Validate that required environment variables are defined
+if (!supabaseUrl || typeof supabaseUrl !== 'string') {
+    throw new Error(
+        'Missing VITE_SUPABASE_URL environment variable. ' +
+        'Please check your .env file and ensure VITE_SUPABASE_URL is set.'
+    );
+}
+
+if (!supabaseAnonKey || typeof supabaseAnonKey !== 'string') {
+    throw new Error(
+        'Missing VITE_SUPABASE_ANON_KEY environment variable. ' +
+        'Please check your .env file and ensure VITE_SUPABASE_ANON_KEY is set.'
+    );
+}
+
+// Create Supabase client with validated credentials
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

@@ -4,23 +4,14 @@
 // @ts-ignore - Deno runtime types
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
-// Midtrans Configuration - Dynamic environment switching
-// After Midtrans production approval, keys no longer have 'SB-' prefix
-// But sandbox and production keys have different numbers
+// Midtrans Configuration - PRODUCTION ONLY
+// Sandbox mode has been removed, always use production
 // @ts-ignore - Deno runtime
-const IS_PRODUCTION = Deno.env.get('IS_PRODUCTION') === 'true'
-// @ts-ignore - Deno runtime
-const MIDTRANS_CLIENT_KEY = IS_PRODUCTION
-    // @ts-ignore - Deno runtime
-    ? Deno.env.get('PROD_CLIENT_KEY')
-    // @ts-ignore - Deno runtime
-    : Deno.env.get('SB_CLIENT_KEY')
-const MIDTRANS_SCRIPT_URL = IS_PRODUCTION
-    ? "https://app.midtrans.com/snap/snap.js"
-    : "https://app.sandbox.midtrans.com/snap/snap.js"
+const MIDTRANS_CLIENT_KEY = Deno.env.get('PROD_CLIENT_KEY')
+const MIDTRANS_SCRIPT_URL = "https://app.midtrans.com/snap/snap.js"
 
 console.log('🔧 Midtrans Client Config:', {
-    isProduction: IS_PRODUCTION,
+    isProduction: true,
     scriptUrl: MIDTRANS_SCRIPT_URL,
     hasClientKey: !!MIDTRANS_CLIENT_KEY
 })
@@ -46,7 +37,7 @@ Deno.serve(async (req: Request) => {
         // Return client configuration
         return new Response(
             JSON.stringify({
-                isProduction: IS_PRODUCTION,
+                isProduction: true,
                 clientKey: MIDTRANS_CLIENT_KEY,
                 scriptUrl: MIDTRANS_SCRIPT_URL
             }),
@@ -63,7 +54,7 @@ Deno.serve(async (req: Request) => {
     } catch (error: any) {
         console.error('Config API error:', error.message)
         return new Response(
-            JSON.stringify({ 
+            JSON.stringify({
                 error: error.message || 'Internal server error'
             }),
             {
