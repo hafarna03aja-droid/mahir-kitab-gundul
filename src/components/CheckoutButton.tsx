@@ -13,7 +13,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
     const [showEmailModal, setShowEmailModal] = useState(false);
 
     // Load Midtrans configuration dynamically
-    const { isLoaded: isMidtransLoaded, error: midtransError, config: midtransConfig } = useMidtrans();
+    const { isLoaded: isMidtransLoaded, error: midtransError } = useMidtrans();
 
     // Backend API URL logic
     const getBackendUrl = () => {
@@ -309,7 +309,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                                     }
                                 }}
                                 placeholder="nama@example.com"
-                                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors"
+                                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors bg-white text-slate-900 placeholder:text-slate-400"
                                 autoFocus
                             />
                             <p className="text-xs text-slate-500 mt-2">
