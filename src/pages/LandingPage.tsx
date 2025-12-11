@@ -42,7 +42,7 @@ export default function LandingPage() {
                         </div>
 
                         {/* Mobile Menu Button */}
-                        <button 
+                        <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="md:hidden p-2 text-slate-600"
                         >
@@ -76,7 +76,7 @@ export default function LandingPage() {
             <section className="relative bg-gradient-to-br from-emerald-50 via-white to-amber-50 overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(16,185,129,0.1),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(251,191,36,0.1),transparent_50%)]" />
-                
+
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
                     <div className="text-center max-w-4xl mx-auto">
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-6">
@@ -95,7 +95,7 @@ export default function LandingPage() {
                             (Nahwu-Sharaf) Secara Otomatis dalam Hitungan Detik.
                         </p>
 
-                        <CheckoutButton 
+                        <CheckoutButton
                             className="group px-8 py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-3"
                             onSuccess={() => window.location.href = '/app'}
                         />
@@ -171,7 +171,7 @@ export default function LandingPage() {
                                 <div className="flex justify-start mb-3">
                                     <div className="bg-white/20 backdrop-blur-sm rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%]">
                                         <p className="text-white text-sm leading-relaxed">
-                                            <span className="font-bold">Fa'il (الفاعل)</span> adalah kata yang menunjukkan 
+                                            <span className="font-bold">Fa'il (الفاعل)</span> adalah kata yang menunjukkan
                                             pelaku dari suatu perbuatan. Contoh: <span className="font-arabic">كَتَبَ الطَّالِبُ</span>
                                         </p>
                                     </div>
@@ -268,7 +268,7 @@ export default function LandingPage() {
                             <Sparkles className="w-4 h-4" />
                             <span>Penawaran Terbatas</span>
                         </div>
-                        
+
                         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
                             Investasi Terbaik untuk Ilmu Anda
                         </h2>
@@ -294,7 +294,7 @@ export default function LandingPage() {
                                     <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-69%</span>
                                 </div>
                                 <div className="flex items-baseline justify-center gap-2">
-                                    <span className="text-5xl md:text-6xl font-bold text-emerald-600">Rp 49.000</span>
+                                    <span className="text-5xl md:text-6xl font-bold text-emerald-600">Rp 1.000</span>
                                 </div>
                                 <p className="text-slate-500 mt-2">Sekali bayar, akses selamanya ✨</p>
                             </div>
@@ -316,7 +316,7 @@ export default function LandingPage() {
                                 ))}
                             </div>
 
-                            <CheckoutButton 
+                            <CheckoutButton
                                 className="w-full py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
                                 onSuccess={() => window.location.href = '/app'}
                             />
@@ -330,7 +330,7 @@ export default function LandingPage() {
 
                     <div className="text-center mt-12">
                         <p className="text-slate-600 max-w-2xl mx-auto">
-                            💡 <span className="font-semibold">Hemat hingga 97%</span> dibanding biaya les privat 
+                            💡 <span className="font-semibold">Hemat hingga 97%</span> dibanding biaya les privat
                             (Rp 200.000/pertemuan × 20x = Rp 4 juta)
                         </p>
                     </div>
@@ -388,7 +388,7 @@ export default function LandingPage() {
                         <p className="text-slate-300 text-lg mb-6">
                             Bergabunglah dengan ribuan penuntut ilmu lainnya
                         </p>
-                        <CheckoutButton 
+                        <CheckoutButton
                             className="px-8 py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-3"
                             onSuccess={() => window.location.href = '/app'}
                         />
@@ -416,9 +416,9 @@ export default function LandingPage() {
                             <div className="space-y-3 text-slate-400 text-sm">
                                 <div className="flex items-center gap-2">
                                     <MessageCircle className="w-4 h-4" />
-                                    <a 
-                                        href="https://wa.me/6287844528626?text=Halo%20admin%20saya%20ingin%20tanya%20tentang%20Mahir%20Arab" 
-                                        target="_blank" 
+                                    <a
+                                        href="https://wa.me/6287844528626?text=Halo%20admin%20saya%20ingin%20tanya%20tentang%20Mahir%20Arab"
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="hover:text-white transition-colors"
                                     >
