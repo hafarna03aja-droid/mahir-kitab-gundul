@@ -75,6 +75,14 @@ app.post('/api/payment', async (req, res) => {
             });
         }
 
+        // Validate amount is required and positive
+        if (!amount || amount <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Amount tidak valid'
+            });
+        }
+
         // Generate unique order ID
         const orderId = `MAG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -82,11 +90,11 @@ app.post('/api/payment', async (req, res) => {
         const parameter = {
             transaction_details: {
                 order_id: orderId,
-                gross_amount: amount || 49000
+                gross_amount: amount
             },
             item_details: [{
                 id: 'MAG-LIFETIME',
-                price: amount || 49000,
+                price: amount,
                 quantity: 1,
                 name: item_name || 'Mahir Arab Gundul - Lifetime Access'
             }],
@@ -115,7 +123,7 @@ app.post('/api/payment', async (req, res) => {
                 .insert({
                     order_id: orderId,
                     email: email,
-                    gross_amount: amount || 49000,
+                    gross_amount: amount,
                     transaction_status: 'pending',
                     snap_token: transaction.token,
                     created_at: new Date().toISOString()
@@ -179,7 +187,7 @@ app.post('/api/webhook', async (req, res) => {
             const { error: updateError } = await supabase
                 .from('orders')
                 .update({
-                    status: 'paid',
+                    transaction_status: 'settlement',
                     paid_at: new Date().toISOString()
                 })
                 .eq('order_id', order_id);
@@ -202,20 +210,23 @@ app.post('/api/webhook', async (req, res) => {
             }
 
             if (userEmail) {
-                // Create or update user with premium access
-                const { error: userError } = await supabase
-                    .from('users')
+                // Calculate subscription expiry (30 days from now)
+                const expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + 30);
+
+                // Create or update profile with premium access
+                const { error: profileError } = await supabase
+                    .from('profiles')
                     .upsert({
                         email: userEmail,
-                        is_premium: true,
-                        premium_since: new Date().toISOString(),
-                        order_id: order_id
+                        status: 'premium',
+                        subscription_expires_at: expiryDate.toISOString()
                     }, { onConflict: 'email' });
 
-                if (userError) {
-                    console.warn('⚠️ Failed to update user:', userError.message);
+                if (profileError) {
+                    console.warn('⚠️ Failed to update profile:', profileError.message);
                 } else {
-                    console.log('✅ User premium status updated:', userEmail);
+                    console.log('✅ Profile premium status updated:', userEmail);
                 }
             }
         } else if (transaction_status === 'pending') {
@@ -223,7 +234,7 @@ app.post('/api/webhook', async (req, res) => {
 
             await supabase
                 .from('orders')
-                .update({ status: 'pending' })
+                .update({ transaction_status: 'pending' })
                 .eq('order_id', order_id);
 
         } else if (['deny', 'cancel', 'expire', 'failure'].includes(transaction_status)) {
@@ -231,7 +242,7 @@ app.post('/api/webhook', async (req, res) => {
 
             await supabase
                 .from('orders')
-                .update({ status: 'failed' })
+                .update({ transaction_status: 'failure' })
                 .eq('order_id', order_id);
         }
 

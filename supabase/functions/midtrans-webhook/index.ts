@@ -16,7 +16,7 @@ const IS_PRODUCTION = Deno.env.get('IS_PRODUCTION') === 'true'
 
 // Dynamic server key based on environment
 // @ts-ignore - Deno runtime
-const MIDTRANS_SERVER_KEY = IS_PRODUCTION 
+const MIDTRANS_SERVER_KEY = IS_PRODUCTION
     // @ts-ignore - Deno runtime
     ? Deno.env.get('PROD_SERVER_KEY')
     // @ts-ignore - Deno runtime
@@ -63,15 +63,15 @@ Deno.serve(async (req: Request) => {
     try {
         // ✅ STEP 0: Validate required environment variables
         const requiredKey = IS_PRODUCTION ? 'PROD_SERVER_KEY' : 'SB_SERVER_KEY'
-        
+
         if (!MIDTRANS_SERVER_KEY) {
             console.error(`❌ ${requiredKey} not configured! (IS_PRODUCTION=${IS_PRODUCTION})`)
             return new Response(
-                JSON.stringify({ 
+                JSON.stringify({
                     error: 'Server configuration error',
                     details: `${requiredKey} environment variable is required`
                 }),
-                { 
+                {
                     status: 500,
                     headers: {
                         ...corsHeaders,
@@ -84,7 +84,7 @@ Deno.serve(async (req: Request) => {
         console.log('\n=== WEBHOOK RECEIVED ===')
         console.log('Environment:', IS_PRODUCTION ? 'PRODUCTION' : 'SANDBOX')
         console.log('Timestamp:', new Date().toISOString())
-        
+
         const payload = await req.json()
         console.log('Payload received:', JSON.stringify(payload, null, 2))
 
@@ -110,14 +110,14 @@ Deno.serve(async (req: Request) => {
                 gross_amount,
                 MIDTRANS_SERVER_KEY
             )
-            
+
             if (signature_key !== expectedSignature) {
                 console.error('❌ INVALID SIGNATURE - Possible fraud attempt!')
                 console.error('Expected:', expectedSignature)
                 console.error('Received:', signature_key)
                 return new Response(
                     JSON.stringify({ error: 'Invalid signature' }),
-                    { 
+                    {
                         status: 401,
                         headers: {
                             ...corsHeaders,
@@ -141,7 +141,7 @@ Deno.serve(async (req: Request) => {
             console.error('ERROR: Email not found in payload')
             return new Response(
                 JSON.stringify({ error: 'Email is required' }),
-                { 
+                {
                     status: 400,
                     headers: {
                         ...corsHeaders,
@@ -155,7 +155,7 @@ Deno.serve(async (req: Request) => {
             console.error('ERROR: Invalid email format:', email)
             return new Response(
                 JSON.stringify({ error: 'Invalid email format' }),
-                { 
+                {
                     status: 400,
                     headers: {
                         ...corsHeaders,
@@ -176,12 +176,12 @@ Deno.serve(async (req: Request) => {
         if (!isSuccess) {
             console.log('Payment not successful yet, skipping profile update')
             return new Response(
-                JSON.stringify({ 
+                JSON.stringify({
                     message: 'Payment not successful yet',
                     transaction_status,
                     fraud_status
                 }),
-                { 
+                {
                     status: 200,
                     headers: {
                         ...corsHeaders,
@@ -212,7 +212,7 @@ Deno.serve(async (req: Request) => {
                     order_id,
                     previous_status: existingOrder.transaction_status
                 }),
-                { 
+                {
                     status: 200,
                     headers: {
                         ...corsHeaders,
@@ -234,11 +234,11 @@ Deno.serve(async (req: Request) => {
                 transaction_status,
                 fraud_status,
                 payment_type,
-                gross_amount: gross_amount ? parseFloat(gross_amount) : 49000, // Default to 49000 if not provided
+                gross_amount: gross_amount ? parseFloat(gross_amount) : 0, // Use actual amount from Midtrans, no fallback
                 midtrans_response: payload,
                 webhook_attempts: (existingOrder?.webhook_attempts || 0) + 1,
                 updated_at: new Date().toISOString(),
-                paid_at: (transaction_status === 'settlement' || transaction_status === 'capture') 
+                paid_at: (transaction_status === 'settlement' || transaction_status === 'capture')
                     ? (transaction_time ? new Date(transaction_time).toISOString() : new Date().toISOString())
                     : null,
                 expired_at: expiry_time ? new Date(expiry_time).toISOString() : null
@@ -267,7 +267,7 @@ Deno.serve(async (req: Request) => {
         if (lookupError) {
             console.log('Profile lookup error (might be normal if profile doesnt exist):', lookupError.message)
         }
-        
+
         if (existingUser) {
             console.log('Found existing profile:', existingUser)
         } else {
@@ -288,7 +288,7 @@ Deno.serve(async (req: Request) => {
             console.log('Updating existing profile to premium...')
             const result = await supabase
                 .from('profiles')
-                .update({ 
+                .update({
                     status: 'premium',
                     subscription_expires_at: expiryIso
                 })
@@ -318,7 +318,7 @@ Deno.serve(async (req: Request) => {
             console.error('Full error:', JSON.stringify(profileError, null, 2))
             return new Response(
                 JSON.stringify({ error: 'Failed to update user status', details: profileError }),
-                { 
+                {
                     status: 500,
                     headers: {
                         ...corsHeaders,
@@ -342,12 +342,12 @@ Deno.serve(async (req: Request) => {
                 transaction_status: transaction_status,
                 environment: IS_PRODUCTION ? 'production' : 'sandbox'
             }),
-            { 
-                status: 200, 
-                headers: { 
+            {
+                status: 200,
+                headers: {
                     ...corsHeaders,
-                    'Content-Type': 'application/json' 
-                } 
+                    'Content-Type': 'application/json'
+                }
             }
         )
 
@@ -355,7 +355,7 @@ Deno.serve(async (req: Request) => {
         console.error('Webhook processing error:', error)
         return new Response(
             JSON.stringify({ error: error.message }),
-            { 
+            {
                 status: 500,
                 headers: {
                     ...corsHeaders,
