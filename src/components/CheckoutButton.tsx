@@ -85,7 +85,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     headers: headers,
                     body: JSON.stringify({
                         email: email,
-                        amount: 49000,
+                        amount: 1000,
                         item_name: 'Mahir Arab Gundul - Lifetime Access'
                     }),
                     signal: controller.signal
@@ -320,7 +320,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-slate-600">Total Pembayaran:</span>
-                                <span className="text-2xl font-bold text-emerald-600">Rp 49.000</span>
+                                <span className="text-2xl font-bold text-emerald-600">Rp 1.000</span>
                             </div>
                             <p className="text-xs text-slate-500">
                                 ✅ Lifetime Access • No Monthly Fees
