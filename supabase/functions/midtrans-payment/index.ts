@@ -65,20 +65,32 @@ Deno.serve(async (req: Request) => {
         let userEmail: string | null = null
 
         if (authHeader) {
-            // Extract token from "Bearer <token>"
-            const token = authHeader.replace('Bearer ', '')
-            
-            // Verify user session
-            const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-            
-            if (authError || !user) {
-                console.error('Auth verification failed:', authError)
-                // Allow anonymous payment (payment-first flow)
-                console.log('⚠️ Anonymous payment - user will need to signup after')
-            } else {
-                userId = user.id
-                userEmail = user.email || null
-                console.log('✅ Authenticated user:', { userId, email: userEmail })
+            try {
+                // Extract token from "Bearer <token>"
+                const token = authHeader.replace('Bearer ', '')
+                
+                // Check if this is anon key (not a user session)
+                // @ts-ignore - Deno runtime
+                const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+                const isAnonKey = token === anonKey
+                
+                if (!isAnonKey) {
+                    // This looks like a user session token, try to verify it
+                    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+                    
+                    if (!authError && user) {
+                        userId = user.id
+                        userEmail = user.email || null
+                        console.log('✅ Authenticated user:', { userId, email: userEmail })
+                    } else {
+                        console.log('⚠️ Token verification failed, treating as anonymous')
+                    }
+                } else {
+                    console.log('⚠️ Anonymous key detected - anonymous payment flow')
+                }
+            } catch (authError) {
+                // If anything goes wrong with auth, just allow anonymous payment
+                console.error('Auth check error (allowing anonymous):', authError)
             }
         } else {
             console.log('⚠️ No auth header - anonymous payment flow')
