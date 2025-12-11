@@ -22,11 +22,11 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && node scripts/inject-env.js",
-    "build:cloudflare": "tsc && vite build && node scripts/inject-env.js && copy _worker.js dist\\_worker.js",
+    "build": "tsc && vite build && node scripts/inject-env.js && node scripts/copy-worker.js",
+    "build:cloudflare": "npm run build",
     "preview": "vite preview",
     "deploy:check": "powershell -ExecutionPolicy Bypass -File ./deploy-check.ps1",
-    "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy dist --project-name mahir-kitab-gundul"
+    "deploy:cloudflare": "npm run build && wrangler pages deploy dist --project-name mahir-kitab-gundul"
   },
   "dependencies": {
     "@google/genai": "^1.29.1",
