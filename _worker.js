@@ -213,6 +213,22 @@ export default {
     }
 
     // ========================================
+    // DEBUG: Check available environment variables
+    // ========================================
+    if (pathname === '/api/debug-env' && request.method === 'GET') {
+      const envKeys = Object.keys(env || {});
+      return new Response(JSON.stringify({
+        available_keys: envKeys,
+        has_midtrans_key: envKeys.includes('MIDTRANS_SERVER_KEY'),
+        has_supabase_url: envKeys.includes('SUPABASE_URL'),
+        has_supabase_service_key: envKeys.includes('SUPABASE_SERVICE_ROLE_KEY'),
+        has_supabase_anon_key: envKeys.includes('SUPABASE_ANON_KEY'),
+        env_type: typeof env,
+        note: 'Values are hidden for security'
+      }), { status: 200, headers: corsHeaders });
+    }
+
+    // ========================================
     // HEALTH CHECK ENDPOINT
     // ========================================
     if (pathname === '/api/health' && request.method === 'GET') {
