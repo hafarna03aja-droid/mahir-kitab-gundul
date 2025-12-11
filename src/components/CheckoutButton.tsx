@@ -65,13 +65,24 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 const apiUrl = `${BACKEND_BASE_URL}${endpoint}`;
                 console.log('📡 Calling API:', apiUrl);
 
+                // Prepare headers
+                const headers: HeadersInit = {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                };
+
+                // Add Auth header for Supabase functions
+                if (isSupabase) {
+                    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+                    if (anonKey) {
+                        headers['Authorization'] = `Bearer ${anonKey}`;
+                    }
+                }
+
                 const response = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache'
-                    },
+                    headers: headers,
                     body: JSON.stringify({
                         email: email,
                         amount: 49000,
