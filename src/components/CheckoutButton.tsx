@@ -17,12 +17,26 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
     // Backend API URL logic
     const getBackendUrl = () => {
+        // 1. Check for explicit backend URL from environment
         if (import.meta.env.VITE_BACKEND_API_URL) return import.meta.env.VITE_BACKEND_API_URL;
+
+        // 2. Production mode: always use Supabase Edge Functions
         if (import.meta.env.PROD) {
-            // In production, use Supabase Edge Functions
             return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         }
-        return 'http://localhost:3000';
+
+        // 3. Development mode: detect if accessed from mobile/other device
+        const currentHost = window.location.hostname;
+        const isLocalhost = currentHost === 'localhost' || currentHost === '127.0.0.1';
+
+        if (isLocalhost) {
+            // Accessed from same machine - use localhost
+            return 'http://localhost:3000';
+        } else {
+            // Accessed from mobile/other device - use the same host IP
+            // This assumes backend is running on the same machine as the Vite dev server
+            return `http://${currentHost}:3000`;
+        }
     };
 
     const BACKEND_BASE_URL = getBackendUrl();

@@ -260,11 +260,26 @@ app.post('/api/webhook', async (req, res) => {
 // ============================================
 // Start Server
 // ============================================
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
+    // Get local network IP dynamically
+    const { networkInterfaces } = require('os');
+    const nets = networkInterfaces();
+    let localIP = 'localhost';
+
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            if (net.family === 'IPv4' && !net.internal) {
+                localIP = net.address;
+                break;
+            }
+        }
+    }
+
     console.log(`
 🚀 Backend Server Running!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-📍 URL: http://localhost:${PORT}
+📍 Local:   http://localhost:${PORT}
+📍 Network: http://${localIP}:${PORT}
 📡 Endpoints:
    - GET  /api/health   → Health check
    - POST /api/payment  → Create payment
