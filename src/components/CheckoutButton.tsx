@@ -31,13 +31,23 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
         setIsProcessing(true);
 
         try {
+            // Debug: Log environment
+            console.log('🔍 Payment Debug:', {
+                supabaseUrl: SUPABASE_URL,
+                hasAnonKey: !!SUPABASE_ANON_KEY,
+                email: email
+            });
+
             // Add timeout for mobile networks (15 seconds)
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             // Call Midtrans payment function with cache busting
             const cacheBuster = Date.now();
-            const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-payment?v=${cacheBuster}`, {
+            const apiUrl = `${SUPABASE_URL}/functions/v1/midtrans-payment?v=${cacheBuster}`;
+            console.log('📡 Calling API:', apiUrl);
+            
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -130,21 +140,32 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 });
 
         } catch (error: any) {
-            console.error('Payment error:', error);
+            console.error('❌ Payment error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+                type: typeof error
+            });
             
             // Better error messages for mobile
             let errorMessage = 'Terjadi kesalahan saat memproses pembayaran';
+            let debugInfo = '';
             
             if (error.name === 'AbortError') {
-                errorMessage = '⏱️ Koneksi timeout. Coba lagi dengan koneksi lebih baik.';
-            } else if (error.message === 'Failed to fetch') {
+                errorMessage = '⏱️ Koneksi timeout (>15 detik). Coba lagi dengan koneksi lebih baik.';
+                debugInfo = 'Timeout after 15 seconds';
+            } else if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
                 errorMessage = '📡 Gagal terhubung ke server. Periksa koneksi internet Anda.';
+                debugInfo = `API: ${SUPABASE_URL}/functions/v1/midtrans-payment`;
             } else if (error.message && error.message.includes('JWT')) {
                 errorMessage = '🔑 Sesi expired. Silakan refresh halaman dan coba lagi.';
+                debugInfo = 'JWT validation failed';
             } else if (error.message) {
                 errorMessage = error.message;
+                debugInfo = error.name || 'Unknown error';
             }
             
+            console.log('🐛 Debug info:', debugInfo);
             alert(`❌ Terjadi Kesalahan\n\n${errorMessage}\n\nSilakan coba lagi atau hubungi admin.`);
             setIsProcessing(false);
         }
