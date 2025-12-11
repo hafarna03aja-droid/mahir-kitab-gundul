@@ -31,6 +31,10 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
         setIsProcessing(true);
 
         try {
+            // Add timeout for mobile networks (15 seconds)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
             // Call Midtrans payment function with cache busting
             const cacheBuster = Date.now();
             const response = await fetch(`${SUPABASE_URL}/functions/v1/midtrans-payment?v=${cacheBuster}`, {
@@ -46,9 +50,11 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     email: email,
                     amount: 49000,
                     item_name: 'Mahir Arab Gundul - Lifetime Access'
-                })
+                }),
+                signal: controller.signal
             });
 
+            clearTimeout(timeoutId);
             const data = await response.json();
 
             if (!response.ok) {
@@ -125,7 +131,21 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
         } catch (error: any) {
             console.error('Payment error:', error);
-            alert(`❌ Terjadi Kesalahan\n\n${error.message}\n\nSilakan coba lagi atau hubungi admin.`);
+            
+            // Better error messages for mobile
+            let errorMessage = 'Terjadi kesalahan saat memproses pembayaran';
+            
+            if (error.name === 'AbortError') {
+                errorMessage = '⏱️ Koneksi timeout. Coba lagi dengan koneksi lebih baik.';
+            } else if (error.message === 'Failed to fetch') {
+                errorMessage = '📡 Gagal terhubung ke server. Periksa koneksi internet Anda.';
+            } else if (error.message && error.message.includes('JWT')) {
+                errorMessage = '🔑 Sesi expired. Silakan refresh halaman dan coba lagi.';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            alert(`❌ Terjadi Kesalahan\n\n${errorMessage}\n\nSilakan coba lagi atau hubungi admin.`);
             setIsProcessing(false);
         }
     };
