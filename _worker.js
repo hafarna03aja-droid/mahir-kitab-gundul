@@ -300,7 +300,7 @@ export default {
             },
             body: JSON.stringify({
               email: email,
-              gross_amount: parseFloat(gross_amount) || 1000,
+              gross_amount: parseFloat(gross_amount) || 100,
               transaction_status: transaction_status,
               fraud_status: fraud_status,
               payment_type: payment_type || 'unknown',
@@ -330,7 +330,7 @@ export default {
             body: JSON.stringify({
               order_id: order_id,
               email: email,
-              gross_amount: parseFloat(gross_amount) || 1000,
+              gross_amount: parseFloat(gross_amount) || 100,
               transaction_status: transaction_status,
               fraud_status: fraud_status,
               payment_type: payment_type || 'unknown',

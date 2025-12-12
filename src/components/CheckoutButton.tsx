@@ -177,7 +177,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     headers: headers,
                     body: JSON.stringify({
                         email: email,
-                        amount: 1000,
+                        amount: 100,
                         item_name: 'Mahir Arab Gundul - Lifetime Access'
                     }),
                     signal: controller.signal
@@ -247,7 +247,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                             transaction_status: 'settlement',
                             fraud_status: 'accept',
                             status_code: '200',
-                            gross_amount: '1000.00',
+                            gross_amount: '100.00',
                             payment_type: result.payment_type || 'manual_trigger',
                             transaction_time: new Date().toISOString(),
                             customer_details: {
@@ -283,7 +283,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                             transaction_status: result.transaction_status || 'pending',
                             fraud_status: result.fraud_status || 'accept',
                             status_code: result.status_code || '201',
-                            gross_amount: '1000.00',
+                            gross_amount: '100.00',
                             payment_type: result.payment_type || 'pending_payment',
                             transaction_time: new Date().toISOString(),
                             customer_details: {
@@ -457,7 +457,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-slate-600">Total Pembayaran:</span>
-                                <span className="text-2xl font-bold text-emerald-600">Rp 1.000</span>
+                                <span className="text-2xl font-bold text-emerald-600">Rp 100</span>
                             </div>
                             <p className="text-xs text-slate-500">
                                 ✅ Lifetime Access • No Monthly Fees

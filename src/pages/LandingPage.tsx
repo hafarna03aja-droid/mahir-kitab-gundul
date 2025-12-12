@@ -294,7 +294,7 @@ export default function LandingPage() {
                                     <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-69%</span>
                                 </div>
                                 <div className="flex items-baseline justify-center gap-2">
-                                    <span className="text-5xl md:text-6xl font-bold text-emerald-600">Rp 1.000</span>
+                                    <span className="text-5xl md:text-6xl font-bold text-emerald-600">Rp 100</span>
                                 </div>
                                 <p className="text-slate-500 mt-2">Sekali bayar, akses selamanya ✨</p>
                             </div>
