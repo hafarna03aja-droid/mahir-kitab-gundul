@@ -117,30 +117,36 @@ export default {
           }), { status: 400, headers: corsHeaders });
         }
 
-        // ✅ STEP 3: Update order in Supabase via REST API
-        console.log('📝 Updating order:', order_id);
+        // ✅ STEP 3: Upsert order in Supabase via REST API
+        // Using POST with upsert to INSERT if not exists, UPDATE if exists
+        console.log('📝 Upserting order:', order_id);
 
-        const orderUpdateResponse = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_id=eq.${order_id}`, {
-          method: 'PATCH',
+        const orderUpsertResponse = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
             'apikey': SUPABASE_SERVICE_KEY,
-            'Prefer': 'return=representation'
+            'Prefer': 'resolution=merge-duplicates,return=representation'
           },
           body: JSON.stringify({
+            order_id: order_id,
+            email: email,
+            gross_amount: parseFloat(gross_amount) || 0,
             transaction_status: transaction_status,
             fraud_status: fraud_status,
             payment_type: payment_type,
             paid_at: transaction_time || new Date().toISOString(),
-            midtrans_response: payload
+            midtrans_response: payload,
+            updated_at: new Date().toISOString()
           })
         });
 
-        if (!orderUpdateResponse.ok) {
-          console.warn('⚠️ Order update failed:', await orderUpdateResponse.text());
+        if (!orderUpsertResponse.ok) {
+          const errorText = await orderUpsertResponse.text();
+          console.warn('⚠️ Order upsert failed:', errorText);
         } else {
-          console.log('✅ Order updated');
+          console.log('✅ Order upserted successfully');
         }
 
         // ✅ STEP 4: Update/Create user profile with premium status
