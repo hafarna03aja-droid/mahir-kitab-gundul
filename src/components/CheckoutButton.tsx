@@ -11,6 +11,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
     const [isProcessing, setIsProcessing] = useState(false);
     const [email, setEmail] = useState('');
     const [showEmailModal, setShowEmailModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     // Load Midtrans configuration dynamically
     const { isLoaded: isMidtransLoaded, error: midtransError } = useMidtrans();
@@ -190,15 +191,9 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                         .then(data => console.log('✅ Webhook response:', data))
                         .catch(err => console.error('❌ Webhook trigger error:', err));
 
-                    // Show success message
-                    alert(`✅ Pembayaran Berhasil!\n\n🎉 Selamat! Akun Anda telah diaktifkan.\n\n📧 Email: ${email}\n\nSilakan login untuk mengakses semua fitur premium.`);
-
-                    // Redirect to member area
-                    if (onSuccess) {
-                        onSuccess();
-                    } else {
-                        window.location.href = '/app';
-                    }
+                    // Show success modal instead of alert
+                    setIsProcessing(false);
+                    setShowSuccessModal(true);
                 },
                 onPending: function (result) {
                     console.log('⏳ Payment pending:', result);
@@ -377,6 +372,70 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
                         <p className="text-center text-xs text-slate-500 mt-4">
                             Pembayaran aman via Midtrans
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Payment Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+                        {/* Success Icon */}
+                        <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+
+                        <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                            🎉 Pembayaran Berhasil!
+                        </h2>
+
+                        <p className="text-slate-600 mb-4">
+                            Selamat! Akun Anda telah diaktifkan.
+                        </p>
+
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
+                            <p className="text-sm text-slate-600 mb-1">Email terdaftar:</p>
+                            <p className="font-bold text-emerald-700 text-lg">{email}</p>
+                        </div>
+
+                        <p className="text-sm text-slate-500 mb-6">
+                            📧 Email konfirmasi telah dikirim ke alamat email Anda.
+                        </p>
+
+                        {/* Action Buttons */}
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => {
+                                    if (onSuccess) {
+                                        onSuccess();
+                                    } else {
+                                        window.location.href = '/app';
+                                    }
+                                }}
+                                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                </svg>
+                                Login ke Aplikasi
+                            </button>
+
+                            <button
+                                onClick={() => window.location.href = '/app?check_payment=true'}
+                                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Cek Status Pembayaran
+                            </button>
+                        </div>
+
+                        <p className="text-xs text-slate-400 mt-4">
+                            Butuh bantuan? Hubungi admin@mahirarab.web.id
                         </p>
                     </div>
                 </div>
