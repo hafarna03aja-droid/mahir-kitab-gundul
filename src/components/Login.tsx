@@ -33,15 +33,21 @@ export default function Login({ onPreviewMode }: LoginProps) {
         setLoading(true);
         setMessage('');
 
+        console.log('🔍 Reset password request for:', email);
+        console.log('🔍 Redirect URL:', `${window.location.origin}/reset-password`);
+
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            const { error, data } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/reset-password`,
             });
+
+            console.log('🔍 Supabase response:', { error, data });
 
             if (error) throw error;
 
             setMessage('✅ Email reset password telah dikirim!\n\n📧 Silakan cek inbox Anda dan klik link untuk reset password.\n\n💡 Tip: Cek folder Spam jika tidak ada di Inbox.');
         } catch (error: any) {
+            console.error('❌ Reset password error:', error);
             setMessage('❌ Gagal mengirim email reset: ' + error.message);
         } finally {
             setLoading(false);
@@ -255,10 +261,10 @@ export default function Login({ onPreviewMode }: LoginProps) {
                         {/* Message Alert */}
                         {message && (
                             <div className={`mt-5 p-4 rounded-xl text-sm text-left whitespace-pre-line leading-relaxed border-2 ${message.includes('✅')
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                                    : message.includes('⚠️')
-                                        ? 'bg-amber-50 border-amber-200 text-amber-900'
-                                        : 'bg-red-50 border-red-200 text-red-900'
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                                : message.includes('⚠️')
+                                    ? 'bg-amber-50 border-amber-200 text-amber-900'
+                                    : 'bg-red-50 border-red-200 text-red-900'
                                 }`}>
                                 {message}
                             </div>
