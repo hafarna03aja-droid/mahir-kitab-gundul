@@ -12,9 +12,10 @@ export default function Login({ onPreviewMode }: LoginProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [message, setMessage] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    
+
     // Check if email is pre-filled from payment
     useEffect(() => {
         const savedEmail = localStorage.getItem('user_email');
@@ -26,6 +27,26 @@ export default function Login({ onPreviewMode }: LoginProps) {
             localStorage.removeItem('user_email');
         }
     }, []);
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage('');
+
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+            });
+
+            if (error) throw error;
+
+            setMessage('✅ Email reset password telah dikirim!\n\n📧 Silakan cek inbox Anda dan klik link untuk reset password.\n\n💡 Tip: Cek folder Spam jika tidak ada di Inbox.');
+        } catch (error: any) {
+            setMessage('❌ Gagal mengirim email reset: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,7 +61,7 @@ export default function Login({ onPreviewMode }: LoginProps) {
                     .select('status, subscription_expires_at')
                     .eq('email', email)
                     .single();
-                
+
                 // Sign up with options
                 const signUpOptions: any = {
                     email,
@@ -58,26 +79,26 @@ export default function Login({ onPreviewMode }: LoginProps) {
                 }
 
                 const { data, error } = await supabase.auth.signUp(signUpOptions);
-                
+
                 if (error) throw error;
-                
+
                 // Create or update profile
                 if (data.user) {
                     if (existingProfile) {
                         // Update existing profile with user ID
                         await supabase
                             .from('profiles')
-                            .update({ 
+                            .update({
                                 id: data.user.id,
                                 updated_at: new Date().toISOString()
                             })
                             .eq('email', email);
-                        
+
                         if (existingProfile.status === 'premium') {
-                            const expiresAt = existingProfile.subscription_expires_at 
+                            const expiresAt = existingProfile.subscription_expires_at
                                 ? new Date(existingProfile.subscription_expires_at).toLocaleDateString('id-ID')
                                 : 'Selamanya';
-                            
+
                             setMessage(`✅ Akun Premium Berhasil Dibuat!\n\n🎉 Selamat! Akun Anda telah aktif.\n📧 Email: ${email}\n⏰ Berlaku hingga: ${expiresAt}\n\n${data.user.email_confirmed_at ? '✅ Email sudah terverifikasi.' : '📧 Silakan cek email untuk verifikasi (opsional).'}`);
                         } else {
                             setMessage('✅ Pendaftaran berhasil!\n\n📧 Silakan cek email Anda untuk link konfirmasi.\n\n💡 Tip: Cek folder Spam jika tidak ada di Inbox.');
@@ -118,21 +139,21 @@ export default function Login({ onPreviewMode }: LoginProps) {
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(16,185,129,0.1),transparent_50%)]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(251,191,36,0.1),transparent_50%)]" />
-            
+
             <div className="relative w-full max-w-md">
                 {/* Card */}
                 <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-200/50 overflow-hidden">
                     {/* Header dengan Gradient */}
                     <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-8 text-center">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.2),transparent_50%)]" />
-                        
+
                         {/* Logo */}
                         <div className="relative flex justify-center mb-4">
                             <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30 shadow-lg">
                                 <BookOpen className="w-8 h-8 text-white" />
                             </div>
                         </div>
-                        
+
                         <h1 className="text-3xl font-bold text-white mb-2">
                             {isSignUp ? 'Buat Akun Baru' : 'Selamat Datang'}
                         </h1>
@@ -143,7 +164,7 @@ export default function Login({ onPreviewMode }: LoginProps) {
 
                     {/* Form */}
                     <div className="p-8">
-                        <form onSubmit={handleAuth} className="space-y-5">
+                        <form onSubmit={isForgotPassword ? handleForgotPassword : handleAuth} className="space-y-5">
                             {/* Email Input */}
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -162,30 +183,48 @@ export default function Login({ onPreviewMode }: LoginProps) {
                                 </div>
                             </div>
 
-                            {/* Password Input */}
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                                    Password
-                                </label>
-                                <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        placeholder="••••••••"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                        className="w-full pl-12 pr-12 py-3.5 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-slate-900"
-                                    />
+                            {/* Password Input - Hidden in Forgot Password mode */}
+                            {!isForgotPassword && (
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                        Password
+                                    </label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            placeholder="••••••••"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                            className="w-full pl-12 pr-12 py-3.5 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-slate-900"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Forgot Password Link - Only show in login mode */}
+                            {!isSignUp && !isForgotPassword && (
+                                <div className="flex justify-end">
                                     <button
                                         type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        onClick={() => {
+                                            setIsForgotPassword(true);
+                                            setMessage('');
+                                        }}
+                                        className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline font-semibold transition-colors"
                                     >
-                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        Lupa Password?
                                     </button>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Submit Button */}
                             <button
@@ -201,24 +240,30 @@ export default function Login({ onPreviewMode }: LoginProps) {
                                 ) : (
                                     <>
                                         <Sparkles className="w-5 h-5" />
-                                        <span>{isSignUp ? 'Daftar Sekarang' : 'Masuk'}</span>
+                                        <span>
+                                            {isForgotPassword
+                                                ? 'Kirim Link Reset'
+                                                : isSignUp
+                                                    ? 'Daftar Sekarang'
+                                                    : 'Masuk'
+                                            }
+                                        </span>
                                     </>
                                 )}
                             </button>
                         </form>
                         {/* Message Alert */}
                         {message && (
-                            <div className={`mt-5 p-4 rounded-xl text-sm text-left whitespace-pre-line leading-relaxed border-2 ${
-                                message.includes('✅') 
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900' 
-                                    : message.includes('⚠️') 
-                                    ? 'bg-amber-50 border-amber-200 text-amber-900' 
-                                    : 'bg-red-50 border-red-200 text-red-900'
-                            }`}>
+                            <div className={`mt-5 p-4 rounded-xl text-sm text-left whitespace-pre-line leading-relaxed border-2 ${message.includes('✅')
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                                    : message.includes('⚠️')
+                                        ? 'bg-amber-50 border-amber-200 text-amber-900'
+                                        : 'bg-red-50 border-red-200 text-red-900'
+                                }`}>
                                 {message}
                             </div>
                         )}
-                        
+
                         {/* Resend Email Button */}
                         {isSignUp && message.includes('📧 Silakan cek email') && (
                             <div className="mt-4">
@@ -245,25 +290,40 @@ export default function Login({ onPreviewMode }: LoginProps) {
                                 </button>
                             </div>
                         )}
-                        
-                        {/* Switch Login/Signup */}
+
+                        {/* Switch Login/Signup/Forgot Password */}
                         <div className="mt-6 text-center">
-                            <p className="text-slate-600">
-                                {isSignUp ? 'Sudah punya akun?' : 'Belum punya akun?'}{' '}
-                                <button
-                                    onClick={() => {
-                                        setIsSignUp(!isSignUp);
-                                        setMessage('');
-                                    }}
-                                    className="text-emerald-600 font-semibold hover:text-emerald-700 hover:underline transition-colors"
-                                >
-                                    {isSignUp ? 'Login' : 'Daftar'}
-                                </button>
-                            </p>
+                            {isForgotPassword ? (
+                                <p className="text-slate-600">
+                                    Ingat password Anda?{' '}
+                                    <button
+                                        onClick={() => {
+                                            setIsForgotPassword(false);
+                                            setMessage('');
+                                        }}
+                                        className="text-emerald-600 font-semibold hover:text-emerald-700 hover:underline transition-colors"
+                                    >
+                                        Kembali ke Login
+                                    </button>
+                                </p>
+                            ) : (
+                                <p className="text-slate-600">
+                                    {isSignUp ? 'Sudah punya akun?' : 'Belum punya akun?'}{' '}
+                                    <button
+                                        onClick={() => {
+                                            setIsSignUp(!isSignUp);
+                                            setMessage('');
+                                        }}
+                                        className="text-emerald-600 font-semibold hover:text-emerald-700 hover:underline transition-colors"
+                                    >
+                                        {isSignUp ? 'Login' : 'Daftar'}
+                                    </button>
+                                </p>
+                            )}
                         </div>
-                        
+
                         {/* Info Box for Payment Users */}
-                        {!isSignUp && (
+                        {!isSignUp && !isForgotPassword && (
                             <div className="mt-6 p-4 bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-200 rounded-xl">
                                 <p className="text-amber-900 font-semibold text-sm flex items-start gap-2">
                                     <span className="text-lg">💡</span>

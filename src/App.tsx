@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import { Session } from '@supabase/supabase-js';
 import Login from './components/Login';
+import ResetPassword from './components/ResetPassword';
 import DashboardApp from './DashboardApp';
 import MainApp from './components/MainApp';
 import PreviewModeWrapper from './components/PreviewModeWrapper';
@@ -19,16 +20,16 @@ const Home: React.FC = () => {
         // Check if user just completed payment
         const paymentCompleted = localStorage.getItem('payment_completed');
         const paymentEmail = localStorage.getItem('payment_email');
-        
+
         if (paymentCompleted === 'true' && paymentEmail) {
             // Clear payment flags
             localStorage.removeItem('payment_completed');
             localStorage.removeItem('payment_email');
-            
+
             // Store email for login
             localStorage.setItem('user_email', paymentEmail);
         }
-        
+
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setLoading(false);
@@ -69,7 +70,10 @@ const App: React.FC = () => {
             <Routes>
                 {/* Landing Page - Public */}
                 <Route path="/" element={<LandingPage />} />
-                
+
+                {/* Password Reset - Public */}
+                <Route path="/reset-password" element={<ResetPassword />} />
+
                 {/* Member Area - Protected */}
                 <Route path="/app" element={<Home />} />
                 <Route path="/app/terms" element={<TermsPage />} />
