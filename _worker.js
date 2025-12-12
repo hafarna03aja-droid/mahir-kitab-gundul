@@ -20,28 +20,42 @@ async function generateSignature(orderId, statusCode, grossAmount, serverKey) {
 // Send email via MailChannels API (free 100 emails/day)
 async function sendEmail({ to, subject, htmlContent, fromName = 'Mahir Arab' }) {
   try {
+    const emailPayload = {
+      personalizations: [{
+        to: [{ email: to }],
+        dkim_domain: 'mahirarab.web.id',
+        dkim_selector: 'cf2024-1',
+        dkim_private_key: '' // Will use Cloudflare's automatic DKIM
+      }],
+      from: {
+        email: 'admin@mahirarab.web.id',
+        name: fromName
+      },
+      subject: subject,
+      content: [{ type: 'text/html', value: htmlContent }]
+    };
+
+    console.log('📧 Sending email via MailChannels to:', to);
+
     const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: to }] }],
-        from: { email: 'admin@mahirarab.web.id', name: fromName },
-        subject: subject,
-        content: [{ type: 'text/html', value: htmlContent }]
-      })
+      body: JSON.stringify(emailPayload)
     });
 
+    const responseText = await response.text();
+    console.log('📧 MailChannels response:', response.status, responseText);
+
     if (!response.ok) {
-      const error = await response.text();
-      console.error('❌ Email send failed:', error);
-      return false;
+      console.error('❌ Email send failed:', response.status, responseText);
+      return { success: false, error: responseText, status: response.status };
     }
 
     console.log('✅ Email sent successfully to:', to);
-    return true;
+    return { success: true };
   } catch (error) {
     console.error('❌ Email error:', error.message);
-    return false;
+    return { success: false, error: error.message };
   }
 }
 
@@ -402,7 +416,7 @@ export default {
           htmlContent: getWelcomeEmail(email)
         });
 
-        console.log('📧 Emails sent:', { confirmation: confirmationEmailSent, welcome: welcomeEmailSent });
+        console.log('📧 Emails sent:', { confirmation: confirmationEmailSent.success, welcome: welcomeEmailSent.success });
 
         console.log('🎉 Webhook processed successfully!');
 
@@ -592,7 +606,7 @@ export default {
 
         console.log('📧 Testing email to:', email);
 
-        const testEmailSent = await sendEmail({
+        const testEmailResult = await sendEmail({
           to: email,
           subject: '✅ Test Email - Mahir Arab Gundul',
           htmlContent: `
@@ -607,9 +621,10 @@ export default {
         });
 
         return new Response(JSON.stringify({
-          success: testEmailSent,
-          message: testEmailSent ? 'Test email terkirim!' : 'Gagal mengirim email',
-          email: email
+          success: testEmailResult.success,
+          message: testEmailResult.success ? 'Test email terkirim!' : 'Gagal mengirim email',
+          email: email,
+          error: testEmailResult.error || null
         }), { status: 200, headers: corsHeaders });
 
       } catch (error) {
