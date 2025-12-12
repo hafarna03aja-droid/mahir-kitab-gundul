@@ -20,11 +20,11 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
         // 1. Check for explicit backend URL from environment
         if (import.meta.env.VITE_BACKEND_API_URL) return import.meta.env.VITE_BACKEND_API_URL;
 
-        // 2. Production mode: always use Supabase Edge Functions
+        // 2. Production mode: use Cloudflare Worker API (same domain)
+        // This is more reliable than Supabase Edge Functions
         if (import.meta.env.PROD) {
-            // Use env var or fallback to hardcoded URL
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
-            return `${supabaseUrl}/functions/v1`;
+            // Use the same origin - Cloudflare Worker handles /api/* routes
+            return window.location.origin;
         }
 
         // 3. Development mode: detect if accessed from mobile/other device
@@ -47,8 +47,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
     console.log('🔧 CheckoutButton Config:', {
         isProd: import.meta.env.PROD,
         backendUrl: BACKEND_BASE_URL,
-        hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
-        hasAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+        origin: window.location.origin
     });
 
     const handleCheckout = () => {

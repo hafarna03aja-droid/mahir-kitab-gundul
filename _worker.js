@@ -213,6 +213,135 @@ export default {
     }
 
     // ========================================
+    // PAYMENT API ENDPOINT
+    // URL: https://mahirarab.web.id/api/payment
+    // Creates Midtrans Snap token for payment
+    // ========================================
+    if (pathname === '/api/payment' && request.method === 'POST') {
+      try {
+        const { email, amount, item_name } = await request.json();
+
+        console.log('💳 Payment Request:', { email, amount, item_name });
+
+        // Validate input
+        if (!email || !email.includes('@')) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Email tidak valid'
+          }), { status: 400, headers: corsHeaders });
+        }
+
+        if (!amount || amount <= 0) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Amount tidak valid'
+          }), { status: 400, headers: corsHeaders });
+        }
+
+        // Get environment variables
+        const MIDTRANS_SERVER_KEY = env.MIDTRANS_SERVER_KEY;
+        const SUPABASE_URL = env.SUPABASE_URL || env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
+        const SUPABASE_SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_ANON_KEY;
+
+        if (!MIDTRANS_SERVER_KEY) {
+          console.error('❌ MIDTRANS_SERVER_KEY not configured!');
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Server configuration error'
+          }), { status: 500, headers: corsHeaders });
+        }
+
+        // Generate unique order ID
+        const orderId = `MAG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Create Midtrans transaction
+        const transactionData = {
+          transaction_details: {
+            order_id: orderId,
+            gross_amount: amount
+          },
+          item_details: [{
+            id: 'MAG-LIFETIME',
+            price: amount,
+            quantity: 1,
+            name: item_name || 'Mahir Arab Gundul - Lifetime Access'
+          }],
+          customer_details: {
+            email: email,
+            first_name: email.split('@')[0]
+          },
+          callbacks: {
+            finish: 'https://mahirarab.web.id/app?payment=success'
+          }
+        };
+
+        // Call Midtrans API
+        const midtransAuth = 'Basic ' + btoa(MIDTRANS_SERVER_KEY + ':');
+        const midtransResponse = await fetch('https://app.midtrans.com/snap/v1/transactions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': midtransAuth
+          },
+          body: JSON.stringify(transactionData)
+        });
+
+        const midtransData = await midtransResponse.json();
+
+        if (!midtransResponse.ok) {
+          console.error('❌ Midtrans Error:', midtransData);
+          return new Response(JSON.stringify({
+            success: false,
+            error: midtransData.error_messages?.[0] || 'Gagal membuat transaksi'
+          }), { status: 500, headers: corsHeaders });
+        }
+
+        console.log('✅ Snap token created:', orderId);
+
+        // Save order to Supabase
+        if (SUPABASE_SERVICE_KEY) {
+          try {
+            await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                'apikey': SUPABASE_SERVICE_KEY,
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify({
+                order_id: orderId,
+                email: email,
+                gross_amount: amount,
+                transaction_status: 'pending',
+                snap_token: midtransData.token,
+                created_at: new Date().toISOString()
+              })
+            });
+            console.log('✅ Order saved to database');
+          } catch (dbError) {
+            console.warn('⚠️ Failed to save order:', dbError.message);
+          }
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          snap_token: midtransData.token,
+          redirect_url: midtransData.redirect_url,
+          order_id: orderId
+        }), { status: 200, headers: corsHeaders });
+
+      } catch (error) {
+        console.error('❌ Payment error:', error.message);
+        return new Response(JSON.stringify({
+          success: false,
+          error: error.message || 'Gagal memproses pembayaran'
+        }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // ========================================
     // DEBUG: Check available environment variables
     // ========================================
     if (pathname === '/api/debug-env' && request.method === 'GET') {
