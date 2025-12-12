@@ -106,7 +106,11 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
                 // Redirect to app after short delay
                 setTimeout(() => {
-                    window.location.href = '/app';
+                    if (onSuccess) {
+                        onSuccess();
+                    } else {
+                        window.location.href = '/app';
+                    }
                 }, 1500);
             }
         } catch (error: any) {
@@ -537,7 +541,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
                             {signupMessage && (
                                 <p className={`mt-3 text-sm text-center ${signupMessage.includes('✅') ? 'text-emerald-600' :
-                                        signupMessage.includes('⚠️') ? 'text-amber-600' : 'text-red-600'
+                                    signupMessage.includes('⚠️') ? 'text-amber-600' : 'text-red-600'
                                     }`}>
                                     {signupMessage}
                                 </p>
