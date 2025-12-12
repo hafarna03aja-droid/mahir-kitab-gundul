@@ -167,8 +167,10 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
                 // Add Auth header for Supabase functions
                 if (isSupabase) {
-                    // Use env var or fallback to hardcoded anon key
-                    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NzQzMDAsImV4cCI6MjA0ODQ1MDMwMH0.Lj2Z-v1JHnr1VZsFplDUlXECPIiZGwzyNPdnrWf-sYM';
+                    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+                    if (!anonKey) {
+                        throw new Error('VITE_SUPABASE_ANON_KEY tidak dikonfigurasi di environment variables');
+                    }
                     headers['Authorization'] = `Bearer ${anonKey}`;
                 }
 

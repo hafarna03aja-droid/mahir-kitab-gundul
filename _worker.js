@@ -60,6 +60,33 @@ async function sendEmail({ to, subject, htmlContent, fromName = 'Mahir Arab', en
   }
 }
 
+// Send email with retry logic (3 attempts with exponential backoff)
+async function sendEmailWithRetry({ to, subject, htmlContent, fromName, env, maxRetries = 3 }) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(`📧 Email attempt ${attempt}/${maxRetries} to ${to}`);
+
+    const result = await sendEmail({ to, subject, htmlContent, fromName, env });
+
+    if (result.success) {
+      if (attempt > 1) {
+        console.log(`✅ Email sent successfully on attempt ${attempt}`);
+      }
+      return result;
+    }
+
+    // If this was the last attempt, return the failure
+    if (attempt === maxRetries) {
+      console.error(`❌ Email failed after ${maxRetries} attempts:`, result.error);
+      return result;
+    }
+
+    // Exponential backoff: 1s, 2s, 4s
+    const delayMs = Math.pow(2, attempt - 1) * 1000;
+    console.log(`⏳ Retrying in ${delayMs / 1000}s...`);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+}
+
 // Payment confirmation email template
 function getPaymentConfirmationEmail(orderId, email, amount) {
   return `
@@ -180,9 +207,9 @@ function getWelcomeEmail(email) {
 </html>`;
 }
 
-// CORS Headers
+// CORS Headers - Restricted to production domain
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://mahirarab.web.id',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Content-Type': 'application/json'
@@ -216,7 +243,7 @@ export default {
 
         // Get environment variables (MUST be set in Cloudflare Pages)
         const MIDTRANS_SERVER_KEY = env.MIDTRANS_SERVER_KEY;
-        const SUPABASE_URL = env.SUPABASE_URL || env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
+        const SUPABASE_URL = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
         const SUPABASE_SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY;
 
         if (!MIDTRANS_SERVER_KEY) {
@@ -284,6 +311,74 @@ export default {
           }), { status: 400, headers: corsHeaders });
         }
 
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          console.error('❌ Invalid email format:', email);
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Invalid email format'
+          }), { status: 400, headers: corsHeaders });
+        }
+
+        // ✅ STEP 2.5: Idempotency Check - Prevent duplicate processing
+        console.log('🔍 Checking if order already processed...');
+        try {
+          const checkExisting = await fetch(
+            `${SUPABASE_URL}/rest/v1/orders?order_id=eq.${encodeURIComponent(order_id)}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                'apikey': SUPABASE_SERVICE_KEY
+              }
+            }
+          );
+
+          if (checkExisting.ok) {
+            const existingOrders = await checkExisting.json();
+            if (existingOrders && existingOrders.length > 0) {
+              const existingOrder = existingOrders[0];
+
+              // If already settled/captured, skip processing to prevent duplicate emails
+              if (existingOrder.transaction_status === 'settlement' ||
+                existingOrder.transaction_status === 'capture') {
+                console.log('⏭️ Order already processed as', existingOrder.transaction_status, '- skipping duplicate webhook');
+
+                // Update webhook attempts counter only
+                await fetch(
+                  `${SUPABASE_URL}/rest/v1/orders?order_id=eq.${encodeURIComponent(order_id)}`,
+                  {
+                    method: 'PATCH',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                      'apikey': SUPABASE_SERVICE_KEY
+                    },
+                    body: JSON.stringify({
+                      webhook_attempts: (existingOrder.webhook_attempts || 0) + 1,
+                      updated_at: new Date().toISOString()
+                    })
+                  }
+                );
+
+                return new Response(JSON.stringify({
+                  success: true,
+                  message: 'Already processed (idempotent)',
+                  order_id: order_id,
+                  status: existingOrder.transaction_status,
+                  webhook_attempt: (existingOrder.webhook_attempts || 0) + 1
+                }), { status: 200, headers: corsHeaders });
+              }
+
+              console.log(`📊 Processing webhook attempt #${(existingOrder.webhook_attempts || 0) + 1}`);
+            }
+          }
+        } catch (idempotencyError) {
+          // If idempotency check fails, log but continue processing
+          // This ensures webhook still works even if check fails
+          console.warn('⚠️ Idempotency check failed, continuing anyway:', idempotencyError.message);
+        }
+
         // ✅ STEP 3: Update or Create order in Supabase
         console.log('📝 Updating order:', order_id);
 
@@ -312,11 +407,15 @@ export default {
           }
         );
 
+        if (!orderUpdateResponse.ok) {
+          const errorText = await orderUpdateResponse.text();
+          console.error('❌ Order update failed:', errorText);
+          throw new Error('Failed to update order in database');
+        }
+
         const updatedOrders = await orderUpdateResponse.json();
 
-        if (!orderUpdateResponse.ok) {
-          console.warn('⚠️ Order update failed:', JSON.stringify(updatedOrders));
-        } else if (!updatedOrders || updatedOrders.length === 0) {
+        if (!updatedOrders || updatedOrders.length === 0) {
           // Order doesn't exist, create new one
           console.log('📝 Order not found, creating new one...');
           const createResponse = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
@@ -325,7 +424,7 @@ export default {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
               'apikey': SUPABASE_SERVICE_KEY,
-              'Prefer': 'return=minimal'
+              'Prefer': 'return=representation'
             },
             body: JSON.stringify({
               order_id: order_id,
@@ -340,12 +439,20 @@ export default {
               webhook_attempts: 1
             })
           });
+
           if (!createResponse.ok) {
-            const err = await createResponse.text();
-            console.warn('⚠️ Order create failed:', err);
-          } else {
-            console.log('✅ New order created');
+            const errorText = await createResponse.text();
+            console.error('❌ Order creation failed:', errorText);
+            throw new Error('Failed to create order in database');
           }
+
+          const createdOrder = await createResponse.json();
+          if (!createdOrder || createdOrder.length === 0) {
+            console.error('❌ Order creation returned empty result');
+            throw new Error('Order creation verification failed');
+          }
+
+          console.log('✅ New order created:', createdOrder[0]?.order_id);
         } else {
           console.log('✅ Order updated:', updatedOrders[0]?.order_id);
         }
@@ -365,31 +472,54 @@ export default {
           }
         });
 
+        if (!checkProfile.ok) {
+          const errorText = await checkProfile.text();
+          console.error('❌ Failed to check profile:', errorText);
+          throw new Error('Failed to verify profile status');
+        }
+
         const existingProfiles = await checkProfile.json();
 
         if (existingProfiles && existingProfiles.length > 0) {
           // Update existing profile
-          await fetch(`${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}`, {
+          console.log('📝 Updating existing profile to premium...');
+          const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-              'apikey': SUPABASE_SERVICE_KEY
+              'apikey': SUPABASE_SERVICE_KEY,
+              'Prefer': 'return=representation'
             },
             body: JSON.stringify({
               status: 'premium',
               subscription_expires_at: expiryDate.toISOString()
             })
           });
-          console.log('✅ Profile updated to premium');
+
+          if (!updateResponse.ok) {
+            const errorText = await updateResponse.text();
+            console.error('❌ Profile update failed:', errorText);
+            throw new Error('Failed to update profile to premium status');
+          }
+
+          const updatedProfile = await updateResponse.json();
+          if (!updatedProfile || updatedProfile.length === 0) {
+            console.error('❌ Profile update returned empty result');
+            throw new Error('Profile update verification failed');
+          }
+
+          console.log('✅ Profile updated to premium:', updatedProfile[0].email);
         } else {
           // Create new profile
-          await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+          console.log('📝 Creating new premium profile...');
+          const createResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-              'apikey': SUPABASE_SERVICE_KEY
+              'apikey': SUPABASE_SERVICE_KEY,
+              'Prefer': 'return=representation'
             },
             body: JSON.stringify({
               email: email,
@@ -397,22 +527,35 @@ export default {
               subscription_expires_at: expiryDate.toISOString()
             })
           });
-          console.log('✅ New premium profile created');
+
+          if (!createResponse.ok) {
+            const errorText = await createResponse.text();
+            console.error('❌ Profile creation failed:', errorText);
+            throw new Error('Failed to create premium profile');
+          }
+
+          const createdProfile = await createResponse.json();
+          if (!createdProfile || createdProfile.length === 0) {
+            console.error('❌ Profile creation returned empty result');
+            throw new Error('Profile creation verification failed');
+          }
+
+          console.log('✅ New premium profile created:', createdProfile[0].email);
         }
 
-        // ✅ STEP 5: Send confirmation email
+        // ✅ STEP 5: Send confirmation email with retry
         console.log('📧 Sending confirmation email to:', email);
 
         const emailAmount = parseFloat(gross_amount) || 0;
-        const confirmationEmailSent = await sendEmail({
+        const confirmationEmailSent = await sendEmailWithRetry({
           to: email,
           subject: '🎉 Pembayaran Berhasil - Mahir Arab Gundul',
           htmlContent: getPaymentConfirmationEmail(order_id, email, emailAmount),
           env: env
         });
 
-        // Also send welcome email
-        const welcomeEmailSent = await sendEmail({
+        // Also send welcome email with retry
+        const welcomeEmailSent = await sendEmailWithRetry({
           to: email,
           subject: '🌟 Selamat Datang di Mahir Arab Gundul!',
           htmlContent: getWelcomeEmail(email),
@@ -420,6 +563,14 @@ export default {
         });
 
         console.log('📧 Emails sent:', { confirmation: confirmationEmailSent.success, welcome: welcomeEmailSent.success });
+
+        // Log email failures for monitoring (but don't fail webhook)
+        if (!confirmationEmailSent.success) {
+          console.error('⚠️ Confirmation email failed after retries:', confirmationEmailSent.error);
+        }
+        if (!welcomeEmailSent.success) {
+          console.error('⚠️ Welcome email failed after retries:', welcomeEmailSent.error);
+        }
 
         console.log('🎉 Webhook processed successfully!');
 
@@ -452,14 +603,23 @@ export default {
 
         console.log('💳 Payment Request:', { email, amount, item_name });
 
-        // Validate input
-        if (!email || !email.includes('@')) {
+        // Validate email format with regex (consistent with webhook validation)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
           return new Response(JSON.stringify({
             success: false,
-            error: 'Email tidak valid'
+            error: 'Email tidak boleh kosong'
           }), { status: 400, headers: corsHeaders });
         }
 
+        if (!emailRegex.test(email)) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Format email tidak valid'
+          }), { status: 400, headers: corsHeaders });
+        }
+
+        // Validate amount
         if (!amount || amount <= 0) {
           return new Response(JSON.stringify({
             success: false,
@@ -469,7 +629,7 @@ export default {
 
         // Get environment variables
         const MIDTRANS_SERVER_KEY = env.MIDTRANS_SERVER_KEY;
-        const SUPABASE_URL = env.SUPABASE_URL || env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
+        const SUPABASE_URL = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
         const SUPABASE_SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_ANON_KEY;
 
         if (!MIDTRANS_SERVER_KEY) {
