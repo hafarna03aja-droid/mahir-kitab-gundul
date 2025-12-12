@@ -166,6 +166,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     const isSupabase = BACKEND_BASE_URL.includes('supabase.co');
                     const webhookEndpoint = isSupabase ? '/midtrans-webhook' : '/api/webhook';
 
+                    // Manual webhook with complete data for proper processing
                     fetch(`${BACKEND_BASE_URL}${webhookEndpoint}`, {
                         method: 'POST',
                         headers: {
@@ -175,12 +176,19 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                             order_id: result.order_id || data.order_id,
                             transaction_status: 'settlement',
                             fraud_status: 'accept',
+                            status_code: '200',
+                            gross_amount: '1000.00',
+                            payment_type: result.payment_type || 'manual_trigger',
+                            transaction_time: new Date().toISOString(),
                             customer_details: {
                                 email: email,
                                 first_name: email.split('@')[0]
                             }
                         })
-                    }).catch(err => console.error('Webhook trigger error:', err));
+                    })
+                        .then(res => res.json())
+                        .then(data => console.log('✅ Webhook response:', data))
+                        .catch(err => console.error('❌ Webhook trigger error:', err));
 
                     // Show success message
                     alert(`✅ Pembayaran Berhasil!\n\n🎉 Selamat! Akun Anda telah diaktifkan.\n\n📧 Email: ${email}\n\nSilakan login untuk mengakses semua fitur premium.`);

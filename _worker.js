@@ -117,36 +117,70 @@ export default {
           }), { status: 400, headers: corsHeaders });
         }
 
-        // ✅ STEP 3: Upsert order in Supabase via REST API
-        // Using POST with upsert to INSERT if not exists, UPDATE if exists
-        console.log('📝 Upserting order:', order_id);
+        // ✅ STEP 3: Update or Create order in Supabase
+        console.log('📝 Updating order:', order_id);
 
-        const orderUpsertResponse = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-            'apikey': SUPABASE_SERVICE_KEY,
-            'Prefer': 'resolution=merge-duplicates,return=representation'
-          },
-          body: JSON.stringify({
-            order_id: order_id,
-            email: email,
-            gross_amount: parseFloat(gross_amount) || 0,
-            transaction_status: transaction_status,
-            fraud_status: fraud_status,
-            payment_type: payment_type,
-            paid_at: transaction_time || new Date().toISOString(),
-            midtrans_response: payload,
-            updated_at: new Date().toISOString()
-          })
-        });
+        // First try PATCH (update existing order)
+        const orderUpdateResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/orders?order_id=eq.${encodeURIComponent(order_id)}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+              'apikey': SUPABASE_SERVICE_KEY,
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({
+              email: email,
+              gross_amount: parseFloat(gross_amount) || 1000,
+              transaction_status: transaction_status,
+              fraud_status: fraud_status,
+              payment_type: payment_type || 'unknown',
+              paid_at: transaction_time || new Date().toISOString(),
+              midtrans_response: payload,
+              updated_at: new Date().toISOString(),
+              webhook_attempts: 1
+            })
+          }
+        );
 
-        if (!orderUpsertResponse.ok) {
-          const errorText = await orderUpsertResponse.text();
-          console.warn('⚠️ Order upsert failed:', errorText);
+        const updatedOrders = await orderUpdateResponse.json();
+
+        if (!orderUpdateResponse.ok) {
+          console.warn('⚠️ Order update failed:', JSON.stringify(updatedOrders));
+        } else if (!updatedOrders || updatedOrders.length === 0) {
+          // Order doesn't exist, create new one
+          console.log('📝 Order not found, creating new one...');
+          const createResponse = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+              'apikey': SUPABASE_SERVICE_KEY,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              order_id: order_id,
+              email: email,
+              gross_amount: parseFloat(gross_amount) || 1000,
+              transaction_status: transaction_status,
+              fraud_status: fraud_status,
+              payment_type: payment_type || 'unknown',
+              paid_at: transaction_time || new Date().toISOString(),
+              midtrans_response: payload,
+              created_at: new Date().toISOString(),
+              webhook_attempts: 1
+            })
+          });
+          if (!createResponse.ok) {
+            const err = await createResponse.text();
+            console.warn('⚠️ Order create failed:', err);
+          } else {
+            console.log('✅ New order created');
+          }
         } else {
-          console.log('✅ Order upserted successfully');
+          console.log('✅ Order updated:', updatedOrders[0]?.order_id);
         }
 
         // ✅ STEP 4: Update/Create user profile with premium status
