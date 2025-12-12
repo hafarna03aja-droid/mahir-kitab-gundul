@@ -1,9 +1,0 @@
-{
-  "order_id": "VERIFY-001",
-  "transaction_status": "settlement",
-  "fraud_status": "accept",
-  "customer_details": {
-    "email": "verifypremium@example.com",
-    "first_name": "Verify"
-  }
-}
