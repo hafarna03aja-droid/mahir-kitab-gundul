@@ -197,8 +197,36 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 },
                 onPending: function (result) {
                     console.log('⏳ Payment pending:', result);
-                    alert('⏳ Pembayaran Sedang Diproses\n\nSilakan selesaikan pembayaran Anda.\nCek email untuk status pembayaran.');
+
+                    // Update localStorage - payment initiated
+                    localStorage.setItem('payment_completed', 'pending');
+                    localStorage.setItem('payment_email', email);
+
+                    // Trigger webhook anyway for pending - some payments complete later
+                    const isSupabase = BACKEND_BASE_URL.includes('supabase.co');
+                    const webhookEndpoint = isSupabase ? '/midtrans-webhook' : '/api/webhook';
+
+                    fetch(`${BACKEND_BASE_URL}${webhookEndpoint}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            order_id: result.order_id || data.order_id,
+                            transaction_status: result.transaction_status || 'pending',
+                            fraud_status: result.fraud_status || 'accept',
+                            status_code: result.status_code || '201',
+                            gross_amount: '1000.00',
+                            payment_type: result.payment_type || 'pending_payment',
+                            transaction_time: new Date().toISOString(),
+                            customer_details: {
+                                email: email,
+                                first_name: email.split('@')[0]
+                            }
+                        })
+                    }).catch(err => console.error('Webhook error:', err));
+
+                    // Show success modal anyway - user can proceed to login/check status
                     setIsProcessing(false);
+                    setShowSuccessModal(true);
                 },
                 onError: function (result) {
                     console.error('❌ Payment error:', result);
