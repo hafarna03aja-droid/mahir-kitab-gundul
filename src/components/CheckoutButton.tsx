@@ -304,6 +304,21 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                 },
                 onClose: function () {
                     console.log('🔒 Payment popup closed');
+
+                    // Check if payment was initiated (localStorage was set in onSuccess/onPending)
+                    const paymentStatus = localStorage.getItem('payment_completed');
+
+                    if (paymentStatus === 'true' || paymentStatus === 'pending') {
+                        // Payment was processed, show success modal
+                        setShowSuccessModal(true);
+                    } else {
+                        // User closed without completing payment
+                        // Still show success modal with option to check status
+                        // In case they completed payment but callback didn't fire properly
+                        localStorage.setItem('payment_email', email);
+                        setShowSuccessModal(true);
+                    }
+
                     setIsProcessing(false);
                 }
             });
