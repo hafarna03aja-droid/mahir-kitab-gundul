@@ -14,45 +14,46 @@ async function generateSignature(orderId, statusCode, grossAmount, serverKey) {
 }
 
 // ========================================
-// EMAIL HELPER FUNCTIONS (MailChannels)
+// EMAIL HELPER FUNCTIONS (Resend API)
+// Free: 3,000 emails/month
 // ========================================
 
-// Send email via MailChannels API (free 100 emails/day)
-async function sendEmail({ to, subject, htmlContent, fromName = 'Mahir Arab' }) {
+// Send email via Resend API
+async function sendEmail({ to, subject, htmlContent, fromName = 'Mahir Arab', env }) {
   try {
-    const emailPayload = {
-      personalizations: [{
-        to: [{ email: to }],
-        dkim_domain: 'mahirarab.web.id',
-        dkim_selector: 'cf2024-1',
-        dkim_private_key: '' // Will use Cloudflare's automatic DKIM
-      }],
-      from: {
-        email: 'admin@mahirarab.web.id',
-        name: fromName
-      },
-      subject: subject,
-      content: [{ type: 'text/html', value: htmlContent }]
-    };
+    const RESEND_API_KEY = env?.RESEND_API_KEY;
 
-    console.log('📧 Sending email via MailChannels to:', to);
-
-    const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(emailPayload)
-    });
-
-    const responseText = await response.text();
-    console.log('📧 MailChannels response:', response.status, responseText);
-
-    if (!response.ok) {
-      console.error('❌ Email send failed:', response.status, responseText);
-      return { success: false, error: responseText, status: response.status };
+    if (!RESEND_API_KEY) {
+      console.error('❌ RESEND_API_KEY not configured!');
+      return { success: false, error: 'RESEND_API_KEY not configured' };
     }
 
-    console.log('✅ Email sent successfully to:', to);
-    return { success: true };
+    console.log('📧 Sending email via Resend to:', to);
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: `${fromName} <admin@mahirarab.web.id>`,
+        to: to,
+        subject: subject,
+        html: htmlContent
+      })
+    });
+
+    const responseData = await response.json();
+    console.log('📧 Resend response:', response.status, JSON.stringify(responseData));
+
+    if (!response.ok) {
+      console.error('❌ Email send failed:', response.status, responseData);
+      return { success: false, error: responseData.message || 'Failed to send', status: response.status };
+    }
+
+    console.log('✅ Email sent successfully to:', to, 'ID:', responseData.id);
+    return { success: true, id: responseData.id };
   } catch (error) {
     console.error('❌ Email error:', error.message);
     return { success: false, error: error.message };
@@ -406,14 +407,16 @@ export default {
         const confirmationEmailSent = await sendEmail({
           to: email,
           subject: '🎉 Pembayaran Berhasil - Mahir Arab Gundul',
-          htmlContent: getPaymentConfirmationEmail(order_id, email, emailAmount)
+          htmlContent: getPaymentConfirmationEmail(order_id, email, emailAmount),
+          env: env
         });
 
         // Also send welcome email
         const welcomeEmailSent = await sendEmail({
           to: email,
           subject: '🌟 Selamat Datang di Mahir Arab Gundul!',
-          htmlContent: getWelcomeEmail(email)
+          htmlContent: getWelcomeEmail(email),
+          env: env
         });
 
         console.log('📧 Emails sent:', { confirmation: confirmationEmailSent.success, welcome: welcomeEmailSent.success });
@@ -617,7 +620,8 @@ export default {
               <hr style="border:1px solid #eee;margin:20px 0;">
               <p style="color:#666;font-size:12px;">Email ini dikirim dari mahirarab.web.id</p>
             </div>
-          `
+          `,
+          env: env
         });
 
         return new Response(JSON.stringify({
