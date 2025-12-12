@@ -24,28 +24,28 @@ export default function DashboardApp({ session }: DashboardAppProps) {
 
         try {
             console.log('Checking profile for user:', user.email);
-            
+
             // PRIORITAS: Cek by email dulu (untuk payment-first users)
             let { data, error } = await supabase
                 .from('profiles')
                 .select('status')
                 .eq('email', user.email)
-                .single();
+                .maybeSingle(); // PENTING: maybeSingle() tidak throw error jika tidak ada data
 
-            console.log('Profile by email result:', { data, error: error?.message });
+            console.log('Profile by email result:', { found: !!data, status: data?.status, error: error?.message });
 
             // Jika tidak ketemu by email, coba by user ID
-            if (error || !data) {
+            if (!data && !error) {
                 console.log('Trying by user ID...');
                 const result = await supabase
                     .from('profiles')
                     .select('status')
                     .eq('id', user.id)
-                    .single();
-                
+                    .maybeSingle(); // PENTING: maybeSingle() tidak throw error jika tidak ada data
+
                 data = result.data;
                 error = result.error;
-                console.log('Profile by ID result:', { data, error: error?.message });
+                console.log('Profile by ID result:', { found: !!data, status: data?.status, error: error?.message });
             }
 
             // Jika ketemu profile, update dengan user ID (untuk link profile payment dengan account)
@@ -55,16 +55,35 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                     .from('profiles')
                     .update({ id: user.id, updated_at: new Date().toISOString() })
                     .eq('email', user.email);
-                
+
                 setProfile(data);
                 console.log('Profile status:', data.status);
-                
+
                 // Jika premium, stop auto-check
                 if (data.status === 'premium') {
                     setAutoCheckCount(999); // Stop auto-check
                 }
-            } else {
-                console.log('No profile found for email:', user.email);
+            } else if (!error) {
+                // Profile tidak ditemukan - auto create dengan status free
+                console.log('No profile found, creating new profile...');
+                const { data: newProfile, error: createError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        email: user.email,
+                        status: 'free',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+
+                if (!createError && newProfile) {
+                    console.log('New profile created:', newProfile);
+                    setProfile(newProfile);
+                } else {
+                    console.error('Failed to create profile:', createError);
+                }
             }
         } catch (error: any) {
             console.error('Error getting profile:', error);
@@ -79,56 +98,96 @@ export default function DashboardApp({ session }: DashboardAppProps) {
         const { user } = session;
 
         try {
-            console.log('Manual check status for:', user.email);
-            
-            // PRIORITAS: Cek by email dulu
+            console.log('🔍 Manual check status for:', user.email);
+            console.log('🆔 User ID:', user.id);
+
+            // PRIORITAS: Cek by email dulu (menggunakan maybeSingle untuk avoid error)
             let { data, error } = await supabase
                 .from('profiles')
                 .select('status, email, created_at')
                 .eq('email', user.email)
-                .single();
+                .maybeSingle(); // PENTING: maybeSingle() tidak throw error jika tidak ada data
 
-            console.log('Check status result (by email):', { data, error: error?.message });
+            console.log('📧 Check status result (by email):', {
+                found: !!data,
+                status: data?.status,
+                error: error?.message
+            });
 
-            // Fallback: coba by user ID
-            if (error || !data) {
-                console.log('Trying by user ID...');
+            // Fallback: coba by user ID jika tidak ketemu by email
+            if (!data && !error) {
+                console.log('🔄 Profile not found by email, trying by user ID...');
                 const result = await supabase
                     .from('profiles')
                     .select('status, email, created_at')
                     .eq('id', user.id)
-                    .single();
-                
+                    .maybeSingle(); // PENTING: maybeSingle() tidak throw error jika tidak ada data
+
                 data = result.data;
                 error = result.error;
-                console.log('Check status result (by ID):', { data, error: error?.message });
+                console.log('🆔 Check status result (by ID):', {
+                    found: !!data,
+                    status: data?.status,
+                    error: error?.message
+                });
+            }
+
+            // Jika ada error dari database (bukan just "not found")
+            if (error) {
+                throw error;
             }
 
             if (data) {
-                // Update profile dengan user ID
+                console.log('✅ Profile found!', data);
+
+                // Update profile dengan user ID untuk linking
                 if (user.email) {
+                    console.log('🔗 Linking profile with user ID...');
                     await supabase
                         .from('profiles')
                         .update({ id: user.id, updated_at: new Date().toISOString() })
                         .eq('email', user.email);
                 }
-                
+
                 setProfile(data);
-                
+
                 if (data.status === 'premium') {
                     alert('✅ PEMBAYARAN TERKONFIRMASI!\n\nAkun Anda sekarang PREMIUM.\nAplikasi akan terbuka dalam 2 detik...');
                     setTimeout(() => {
                         window.location.reload();
                     }, 2000);
                 } else {
-                    alert('ℹ️ Status akun masih FREE.\n\nJika Anda baru saja membayar:\n• Tunggu 1-2 menit\n• Pastikan email login SAMA dengan email saat bayar\n• Coba klik tombol ini lagi');
+                    alert('ℹ️ Status akun masih FREE.\n\nJika Anda baru saja membayar:\n• Tunggu 1-2 menit untuk konfirmasi webhook\n• Pastikan email login SAMA dengan email saat bayar\n• Coba klik tombol ini lagi\n\n📧 Email Anda: ' + user.email);
                 }
             } else {
-                alert('⚠️ Profile tidak ditemukan.\n\nPastikan Anda:\n1. Sudah melakukan pembayaran\n2. Login dengan email yang SAMA saat bayar\n3. Sudah verifikasi email dari Supabase');
+                // Profile benar-benar tidak ada - buat profile baru
+                console.log('⚠️ Profile not found, creating new FREE profile...');
+
+                const { data: newProfile, error: createError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        email: user.email,
+                        status: 'free',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+
+                if (createError) {
+                    console.error('❌ Failed to create profile:', createError);
+                    throw createError;
+                }
+
+                console.log('✅ New profile created:', newProfile);
+                setProfile(newProfile);
+
+                alert('ℹ️ Profile dibuat dengan status FREE.\n\nJika Anda sudah melakukan pembayaran:\n1. Pastikan email yang digunakan SAMA: ' + user.email + '\n2. Tunggu 1-2 menit untuk konfirmasi webhook\n3. Klik "Cek Status Pembayaran" lagi\n\nJika masih FREE setelah 5 menit, hubungi admin dengan menyertakan email Anda.');
             }
         } catch (error: any) {
-            console.error('Error checking status:', error);
-            alert('❌ Gagal memeriksa status: ' + (error.message || 'Unknown error'));
+            console.error('❌ Error checking status:', error);
+            alert('❌ Gagal memeriksa status.\n\nError: ' + (error.message || 'Unknown error') + '\n\nSilakan coba lagi atau hubungi admin.');
         } finally {
             setChecking(false);
         }
