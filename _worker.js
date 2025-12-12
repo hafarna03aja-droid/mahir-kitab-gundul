@@ -13,6 +13,158 @@ async function generateSignature(orderId, statusCode, grossAmount, serverKey) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// ========================================
+// EMAIL HELPER FUNCTIONS (MailChannels)
+// ========================================
+
+// Send email via MailChannels API (free 100 emails/day)
+async function sendEmail({ to, subject, htmlContent, fromName = 'Mahir Arab' }) {
+  try {
+    const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: 'admin@mahirarab.web.id', name: fromName },
+        subject: subject,
+        content: [{ type: 'text/html', value: htmlContent }]
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('❌ Email send failed:', error);
+      return false;
+    }
+
+    console.log('✅ Email sent successfully to:', to);
+    return true;
+  } catch (error) {
+    console.error('❌ Email error:', error.message);
+    return false;
+  }
+}
+
+// Payment confirmation email template
+function getPaymentConfirmationEmail(orderId, email, amount) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background-color:#ffffff;">
+    <tr>
+      <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:40px 30px;text-align:center;">
+        <h1 style="color:#ffffff;margin:0;font-size:28px;">🎉 Pembayaran Berhasil!</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:40px 30px;">
+        <p style="font-size:16px;color:#333;margin-bottom:20px;">Assalamu'alaikum,</p>
+        <p style="font-size:16px;color:#333;margin-bottom:20px;">
+          Terima kasih telah berlangganan <strong>Mahir Arab Gundul</strong>! Pembayaran Anda telah kami terima.
+        </p>
+        
+        <div style="background-color:#f8f9fa;border-radius:10px;padding:20px;margin:20px 0;">
+          <table width="100%" cellpadding="5">
+            <tr>
+              <td style="color:#666;font-size:14px;">Order ID:</td>
+              <td style="color:#333;font-size:14px;font-weight:bold;">${orderId}</td>
+            </tr>
+            <tr>
+              <td style="color:#666;font-size:14px;">Email:</td>
+              <td style="color:#333;font-size:14px;">${email}</td>
+            </tr>
+            <tr>
+              <td style="color:#666;font-size:14px;">Jumlah:</td>
+              <td style="color:#333;font-size:14px;font-weight:bold;">Rp ${amount?.toLocaleString('id-ID') || '-'}</td>
+            </tr>
+            <tr>
+              <td style="color:#666;font-size:14px;">Status:</td>
+              <td style="color:#28a745;font-size:14px;font-weight:bold;">✅ Premium Aktif</td>
+            </tr>
+          </table>
+        </div>
+        
+        <p style="font-size:16px;color:#333;margin-bottom:30px;">
+          Akses premium Anda sudah aktif! Silakan login untuk mulai belajar.
+        </p>
+        
+        <div style="text-align:center;">
+          <a href="https://mahirarab.web.id/app" 
+             style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;text-decoration:none;padding:15px 40px;border-radius:30px;font-size:16px;font-weight:bold;">
+            🚀 Masuk ke Aplikasi
+          </a>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color:#f8f9fa;padding:20px 30px;text-align:center;">
+        <p style="color:#666;font-size:12px;margin:0;">
+          © 2025 Mahir Arab Gundul | <a href="https://mahirarab.web.id" style="color:#667eea;">mahirarab.web.id</a>
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+// Welcome email template for new users
+function getWelcomeEmail(email) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background-color:#ffffff;">
+    <tr>
+      <td style="background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);padding:40px 30px;text-align:center;">
+        <h1 style="color:#ffffff;margin:0;font-size:28px;">🌟 Selamat Datang!</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:40px 30px;">
+        <p style="font-size:16px;color:#333;margin-bottom:20px;">Assalamu'alaikum,</p>
+        <p style="font-size:16px;color:#333;margin-bottom:20px;">
+          Selamat bergabung dengan <strong>Mahir Arab Gundul</strong>! 🎊
+        </p>
+        <p style="font-size:16px;color:#333;margin-bottom:20px;">
+          Anda sekarang memiliki akses ke semua fitur premium untuk belajar membaca kitab gundul dengan mudah.
+        </p>
+        
+        <div style="background-color:#e8f5e9;border-left:4px solid #4caf50;padding:15px;margin:20px 0;">
+          <p style="margin:0;color:#2e7d32;font-size:14px;">
+            <strong>💡 Tips:</strong> Mulailah dengan latihan dasar untuk memahami pola-pola huruf Arab tanpa harakat.
+          </p>
+        </div>
+        
+        <div style="text-align:center;margin-top:30px;">
+          <a href="https://mahirarab.web.id/app" 
+             style="display:inline-block;background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);color:#ffffff;text-decoration:none;padding:15px 40px;border-radius:30px;font-size:16px;font-weight:bold;">
+            📚 Mulai Belajar Sekarang
+          </a>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color:#f8f9fa;padding:20px 30px;text-align:center;">
+        <p style="color:#666;font-size:12px;margin:0;">
+          © 2025 Mahir Arab Gundul | <a href="https://mahirarab.web.id" style="color:#11998e;">mahirarab.web.id</a>
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 // CORS Headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -233,13 +385,33 @@ export default {
           console.log('✅ New premium profile created');
         }
 
+        // ✅ STEP 5: Send confirmation email
+        console.log('📧 Sending confirmation email to:', email);
+
+        const emailAmount = parseFloat(gross_amount) || 0;
+        const confirmationEmailSent = await sendEmail({
+          to: email,
+          subject: '🎉 Pembayaran Berhasil - Mahir Arab Gundul',
+          htmlContent: getPaymentConfirmationEmail(order_id, email, emailAmount)
+        });
+
+        // Also send welcome email
+        const welcomeEmailSent = await sendEmail({
+          to: email,
+          subject: '🌟 Selamat Datang di Mahir Arab Gundul!',
+          htmlContent: getWelcomeEmail(email)
+        });
+
+        console.log('📧 Emails sent:', { confirmation: confirmationEmailSent, welcome: welcomeEmailSent });
+
         console.log('🎉 Webhook processed successfully!');
 
         return new Response(JSON.stringify({
           success: true,
           message: 'Payment processed',
           email: email,
-          order_id: order_id
+          order_id: order_id,
+          emails_sent: { confirmation: confirmationEmailSent, welcome: welcomeEmailSent }
         }), { status: 200, headers: corsHeaders });
 
       } catch (error) {
@@ -400,6 +572,53 @@ export default {
         env_type: typeof env,
         note: 'Values are hidden for security'
       }), { status: 200, headers: corsHeaders });
+    }
+
+    // ========================================
+    // TEST EMAIL ENDPOINT
+    // URL: POST https://mahirarab.web.id/api/test-email
+    // Body: { "email": "your@email.com" }
+    // ========================================
+    if (pathname === '/api/test-email' && request.method === 'POST') {
+      try {
+        const { email } = await request.json();
+
+        if (!email || !email.includes('@')) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Email tidak valid'
+          }), { status: 400, headers: corsHeaders });
+        }
+
+        console.log('📧 Testing email to:', email);
+
+        const testEmailSent = await sendEmail({
+          to: email,
+          subject: '✅ Test Email - Mahir Arab Gundul',
+          htmlContent: `
+            <div style="font-family:Arial,sans-serif;padding:20px;max-width:500px;margin:0 auto;">
+              <h2 style="color:#667eea;">🎉 Email Test Berhasil!</h2>
+              <p>Jika Anda menerima email ini, berarti sistem email Mahir Arab sudah berfungsi dengan baik.</p>
+              <p><strong>Waktu:</strong> ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}</p>
+              <hr style="border:1px solid #eee;margin:20px 0;">
+              <p style="color:#666;font-size:12px;">Email ini dikirim dari mahirarab.web.id</p>
+            </div>
+          `
+        });
+
+        return new Response(JSON.stringify({
+          success: testEmailSent,
+          message: testEmailSent ? 'Test email terkirim!' : 'Gagal mengirim email',
+          email: email
+        }), { status: 200, headers: corsHeaders });
+
+      } catch (error) {
+        console.error('❌ Test email error:', error.message);
+        return new Response(JSON.stringify({
+          success: false,
+          error: error.message
+        }), { status: 500, headers: corsHeaders });
+      }
     }
 
     // ========================================
