@@ -22,7 +22,9 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
         // 2. Production mode: always use Supabase Edge Functions
         if (import.meta.env.PROD) {
-            return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+            // Use env var or fallback to hardcoded URL
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://viywfnjhpnunwhakhnrj.supabase.co';
+            return `${supabaseUrl}/functions/v1`;
         }
 
         // 3. Development mode: detect if accessed from mobile/other device
@@ -40,6 +42,14 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
     };
 
     const BACKEND_BASE_URL = getBackendUrl();
+
+    // Debug: log backend URL on component mount (only in dev or when debugging)
+    console.log('🔧 CheckoutButton Config:', {
+        isProd: import.meta.env.PROD,
+        backendUrl: BACKEND_BASE_URL,
+        hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
+        hasAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+    });
 
     const handleCheckout = () => {
         setShowEmailModal(true);
@@ -88,10 +98,9 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
 
                 // Add Auth header for Supabase functions
                 if (isSupabase) {
-                    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-                    if (anonKey) {
-                        headers['Authorization'] = `Bearer ${anonKey}`;
-                    }
+                    // Use env var or fallback to hardcoded anon key
+                    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeXdmbmpocG51bndoYWtobnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NzQzMDAsImV4cCI6MjA0ODQ1MDMwMH0.Lj2Z-v1JHnr1VZsFplDUlXECPIiZGwzyNPdnrWf-sYM';
+                    headers['Authorization'] = `Bearer ${anonKey}`;
                 }
 
                 const response = await fetch(apiUrl, {
