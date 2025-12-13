@@ -288,15 +288,40 @@ export default function LandingPage() {
                                 <p className="text-amber-600 font-semibold text-lg">(LIFETIME ACCESS)</p>
                             </div>
 
+                            {/* Ramadan Promo Badge */}
+                            <div className="relative mb-6 mx-auto max-w-md">
+                                <div className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-0.5 shadow-lg animate-pulse">
+                                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl px-6 py-4">
+                                        <div className="flex items-center justify-center gap-3 mb-2">
+                                            <span className="text-3xl">🌙</span>
+                                            <h4 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                                PROMO RAMADHAN
+                                            </h4>
+                                            <span className="text-3xl">✨</span>
+                                        </div>
+                                        <p className="text-center text-emerald-700 font-bold text-sm md:text-base">
+                                            Berkah Berlimpah, Harga Istimewa!
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="text-center mb-8">
-                                <div className="flex items-center justify-center gap-3 mb-2">
+                                <div className="flex items-center justify-center gap-3 mb-3">
                                     <span className="text-2xl text-slate-400 line-through">Rp 159.000</span>
-                                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-69%</span>
+                                    <span className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
+                                        HEMAT 69%
+                                    </span>
                                 </div>
-                                <div className="flex items-baseline justify-center gap-2">
-                                    <span className="text-5xl md:text-6xl font-bold text-emerald-600">Rp 1.000</span>
+                                <div className="relative inline-block">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 blur-xl opacity-30 animate-pulse"></div>
+                                    <div className="relative flex items-baseline justify-center gap-2 bg-gradient-to-br from-emerald-50 to-teal-50 px-8 py-4 rounded-2xl border-2 border-emerald-200">
+                                        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                            Rp 49.000
+                                        </span>
+                                    </div>
                                 </div>
-                                <p className="text-slate-500 mt-2">Sekali bayar, akses selamanya ✨</p>
+                                <p className="text-slate-500 mt-3 font-semibold">Sekali bayar, akses selamanya ✨</p>
                             </div>
 
                             <div className="space-y-4 mb-8">
