@@ -3,7 +3,7 @@ import { BookOpen, Sparkles, Rocket, Bot, Zap, Check, ChevronDown, XCircle, Menu
 import CheckoutButton from '../components/CheckoutButton';
 
 export default function LandingPage() {
-    const [openFaq, setOpenFaq] = useState<string | null>(null);
+    const [openFaq, setOpenFaq] = useState<number | null>(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const scrollToSection = (id: string) => {
@@ -347,94 +347,50 @@ export default function LandingPage() {
                         </h2>
                     </div>
 
-                    <div className="space-y-6">
-                        {/* Category 1: Keraguan Soal Kemampuan Dasar */}
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-bold text-emerald-600">1. Keraguan Soal Kemampuan Dasar</h3>
-                            {[
-                                {
-                                    q: 'Saya benar-benar nol (belum tahu Nahwu/Shorof sama sekali), apakah bisa ikut?',
-                                    a: 'Justru aplikasi "Semudah Baca Koran" ini dirancang untuk Anda. Kami tidak memulai dari hafalan rumus yang rumit, tapi dari pola kalimat yang sering muncul.\n\nAnda akan dibimbing mengenali pola, bukan sekadar menghafal teori.'
-                                },
-                                {
-                                    q: 'Apakah saya harus lancar bahasa Arab percakapan dulu?',
-                                    a: 'Tidak perlu. Bahasa Arab untuk percakapan (Muhadatsah) berbeda dengan Bahasa Arab untuk membaca kitab (Qiroatul Kutub). Di sini kita fokus pada skill membaca dan memahami teks, jadi Anda tidak perlu pusing memikirkan cara ngobrol dalam bahasa Arab.'
-                                }
-                            ].map((faq, i) => (
-                                <div key={`kemampuan-${i}`} className="bg-slate-50 rounded-xl border-2 border-slate-200 overflow-hidden">
-                                    <button
-                                        onClick={() => setOpenFaq(openFaq === `kemampuan-${i}` ? null : `kemampuan-${i}`)}
-                                        className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-100 transition-colors"
-                                    >
-                                        <span className="font-bold text-slate-900 pr-4">{faq.q}</span>
-                                        <ChevronDown className={`w-5 h-5 text-slate-500 flex-shrink-0 transition-transform ${openFaq === `kemampuan-${i}` ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {openFaq === `kemampuan-${i}` && (
-                                        <div className="px-6 pb-6 text-slate-600 leading-relaxed whitespace-pre-line">{faq.a}</div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Category 2: Keraguan Soal Metode & Waktu */}
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-bold text-emerald-600">2. Keraguan Soal Metode & Waktu</h3>
-                            {[
-                                {
-                                    q: 'Berapa lama sampai saya bisa baca kitab sendiri?',
-                                    a: 'Setiap orang berbeda, namun dengan aplikasi ini, target kami adalah Anda sudah bisa mengenali struktur kalimat dasar dan membaca teks sederhana dalam waktu 1-3 bulan (tergantung intensitas belajar). Kuncinya adalah konsistensi, bukan kecepatan.'
-                                },
-                                {
-                                    q: 'Saya orang sibuk, apakah belajarnya menyita waktu?',
-                                    a: 'Anda bisa akses aplikasi kapan saja lewat HP di sela-sela istirahat kerja atau sebelum tidur.'
-                                }
-                            ].map((faq, i) => (
-                                <div key={`metode-${i}`} className="bg-slate-50 rounded-xl border-2 border-slate-200 overflow-hidden">
-                                    <button
-                                        onClick={() => setOpenFaq(openFaq === `metode-${i}` ? null : `metode-${i}`)}
-                                        className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-100 transition-colors"
-                                    >
-                                        <span className="font-bold text-slate-900 pr-4">{faq.q}</span>
-                                        <ChevronDown className={`w-5 h-5 text-slate-500 flex-shrink-0 transition-transform ${openFaq === `metode-${i}` ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {openFaq === `metode-${i}` && (
-                                        <div className="px-6 pb-6 text-slate-600 leading-relaxed whitespace-pre-line">{faq.a}</div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Category 3: Keraguan Soal Hasil & Dukungan */}
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-bold text-emerald-600">3. Keraguan Soal Hasil & Dukungan</h3>
-                            {[
-                                {
-                                    q: 'Aplikasi "Semudah Baca Koran" itu maksudnya bagaimana?',
-                                    a: 'Saat baca koran, kita tidak mengeja huruf satu per satu, tapi langsung menangkap makna kalimat. Aplikasi kami melatih mata Anda untuk melihat "pola kata" dan "kedudukan kata" secara otomatis, sehingga membaca kitab gundul terasa mengalir seperti membaca teks Indonesia.'
-                                },
-                                {
-                                    q: 'Kalau saya bingung di tengah jalan, bisa tanya ke siapa?',
-                                    a: 'Anda tidak belajar sendirian. Ada fitur AI Mentor yang siap menjawab pertanyaan tata bahasa Anda 24 jam, serta grup komunitas di mana Anda bisa berdiskusi dengan sesama pembelajar dan instruktur.'
-                                },
-                                {
-                                    q: 'Apakah ada jaminan saya pasti bisa?',
-                                    a: 'Kami menjamin aplikasinya terstruktur dan mudah dicerna. Hasil akhir bergantung pada praktek Anda.'
-                                }
-                            ].map((faq, i) => (
-                                <div key={`hasil-${i}`} className="bg-slate-50 rounded-xl border-2 border-slate-200 overflow-hidden">
-                                    <button
-                                        onClick={() => setOpenFaq(openFaq === `hasil-${i}` ? null : `hasil-${i}`)}
-                                        className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-100 transition-colors"
-                                    >
-                                        <span className="font-bold text-slate-900 pr-4">{faq.q}</span>
-                                        <ChevronDown className={`w-5 h-5 text-slate-500 flex-shrink-0 transition-transform ${openFaq === `hasil-${i}` ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {openFaq === `hasil-${i}` && (
-                                        <div className="px-6 pb-6 text-slate-600 leading-relaxed whitespace-pre-line">{faq.a}</div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
+                    <div className="space-y-4">
+                        {[
+                            {
+                                q: 'Saya benar-benar nol (belum tahu Nahwu/Shorof sama sekali), apakah bisa ikut?',
+                                a: 'Justru aplikasi "Semudah Baca Koran" ini dirancang untuk Anda. Kami tidak memulai dari hafalan rumus yang rumit, tapi dari pola kalimat yang sering muncul.'
+                            },
+                            {
+                                q: 'Apakah saya harus lancar bahasa Arab percakapan dulu?',
+                                a: 'Tidak perlu. Bahasa Arab untuk percakapan (Muhadatsah) berbeda dengan Bahasa Arab untuk membaca kitab (Qiroatul Kutub). Di sini kita fokus pada skill membaca dan memahami teks, jadi Anda tidak perlu pusing memikirkan cara ngobrol dalam bahasa Arab.'
+                            },
+                            {
+                                q: 'Berapa lama sampai saya bisa baca kitab sendiri?',
+                                a: 'Setiap orang berbeda, namun dengan aplikasi ini, target kami adalah Anda sudah bisa mengenali struktur kalimat dasar dan membaca teks sederhana dalam waktu 1-3 bulan (tergantung intensitas belajar). Kuncinya adalah konsistensi, bukan kecepatan.'
+                            },
+                            {
+                                q: 'Saya orang sibuk, apakah belajarnya menyita waktu?',
+                                a: 'Anda bisa akses aplikasi kapan saja lewat HP di sela-sela istirahat kerja atau sebelum tidur.'
+                            },
+                            {
+                                q: 'Aplikasi "Semudah Baca Koran" itu maksudnya bagaimana?',
+                                a: 'Saat baca koran, kita tidak mengeja huruf satu per satu, tapi langsung menangkap makna kalimat. Aplikasi kami melatih mata Anda untuk melihat "pola kata" dan "kedudukan kata" secara otomatis, sehingga membaca kitab gundul terasa mengalir seperti membaca teks Indonesia.'
+                            },
+                            {
+                                q: 'Kalau saya bingung di tengah jalan, bisa tanya ke siapa?',
+                                a: 'Anda tidak belajar sendirian. Ada fitur AI Mentor yang siap menjawab pertanyaan tata bahasa Anda 24 jam, serta grup komunitas di mana Anda bisa berdiskusi dengan sesama pembelajar dan instruktur.'
+                            },
+                            {
+                                q: 'Apakah ada jaminan saya pasti bisa?',
+                                a: 'Kami menjamin aplikasinya terstruktur dan mudah dicerna. Hasil akhir bergantung pada praktek Anda.'
+                            }
+                        ].map((faq, i) => (
+                            <div key={i} className="bg-slate-50 rounded-xl border-2 border-slate-200 overflow-hidden">
+                                <button
+                                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                                    className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-100 transition-colors"
+                                >
+                                    <span className="font-bold text-slate-900 pr-4">{faq.q}</span>
+                                    <ChevronDown className={`w-5 h-5 text-slate-500 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
+                                </button>
+                                {openFaq === i && (
+                                    <div className="px-6 pb-6 text-slate-600 leading-relaxed">{faq.a}</div>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
