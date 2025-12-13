@@ -196,7 +196,7 @@ export default function LandingPage() {
                             </h2>
 
                             <p className="text-2xl font-semibold text-slate-700 mb-4">
-                                Asisten Pribadi Anda untuk baca kitab semudah baca koran
+                                Asisten Pribadi Anda Untuk Baca Kitab Semudah Baca Koran
                             </p>
 
                             <p className="text-lg text-slate-600 leading-relaxed mb-6">
