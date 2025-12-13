@@ -118,10 +118,10 @@ export default function LandingPage() {
 
                     <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                         {[
-                            { title: 'Pusing Menebak Harakat', desc: 'Bingung apakah dibaca Fa\'ila atau Fu\'ila? Salah baca, salah makna.' },
-                            { title: 'Stuck di I\'rab', desc: 'Tahu artinya, tapi bingung kedudukan katanya. Mana Fa\'il, mana Maf\'ul Bih?' },
-                            { title: 'Lelah Buka Kamus', desc: 'Menghabiskan waktu berjam-jam hanya untuk mencari makna satu kata.' },
-                            { title: 'Tidak Ada Mentor', desc: 'Belajar otodidak tapi bingung mau tanya siapa saat mentok.' }
+                            { title: 'Pusing Menebak Harakat', desc: 'Masih sering ragu cara membunyikan huruf dan tanda baca dengan benar.' },
+                            { title: 'Pusing Tata Bahasa', desc: 'Merasa aturan perubahan kata terlalu rumit dan sulit dihafal' },
+                            { title: 'Sulit Paham Arti', desc: 'Lelah buka kamus satu per satu, tapi kalimatnya tetap sulit dimengerti.' },
+                            { title: 'Belajar Tanpa Arah', desc: 'Bingung harus mulai dari mana dan tidak ada tempat bertanya saat kesulitan.' }
                         ].map((problem, i) => (
                             <div key={i} className="flex gap-4 p-6 bg-slate-50 rounded-xl border-2 border-slate-200 hover:border-red-300 transition-all">
                                 <XCircle className="w-8 h-8 text-red-500 flex-shrink-0 mt-1" />
@@ -196,7 +196,7 @@ export default function LandingPage() {
                             </h2>
 
                             <p className="text-2xl font-semibold text-slate-700 mb-4">
-                                Asisten Pribadi Anda untuk Menaklukkan Literatur Arab Klasik
+                                Asisten Pribadi Anda untuk baca kitab semudah baca koran
                             </p>
 
                             <p className="text-lg text-slate-600 leading-relaxed mb-6">
@@ -214,7 +214,7 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                            Fitur-Fitur Canggih yang Mengubah Permainan
+                            Fitur-Fitur Canggih yang memudahkan belajar dari nol
                         </h2>
                     </div>
 
@@ -270,7 +270,7 @@ export default function LandingPage() {
                         </div>
 
                         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                            Investasi Terbaik untuk Ilmu Anda
+                            Investasi Terbaik Belajar Kitab Dari Nol
                         </h2>
                         <p className="text-xl text-slate-600">
                             Lupakan biaya les privat jutaan rupiah
@@ -342,15 +342,16 @@ export default function LandingPage() {
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                            Pertanyaan yang Sering Diajukan
+                            Jawaban untuk Keraguanmu Memulai Baca Kitab
+
                         </h2>
                     </div>
 
                     <div className="space-y-4">
                         {[
                             {
-                                q: 'Apakah aplikasi ini bisa dijalankan di HP?',
-                                a: 'Ya! Mahir Arab adalah Web App yang responsif dan dapat diakses dari browser HP, tablet, atau komputer. Tidak perlu install aplikasi.'
+                                q: 'Saya benar-benar nol (belum tahu Nahwu/Shorof sama sekali), apakah bisa ikut?',
+                                a: 'Justru metode "Semudah Baca Koran" ini dirancang untuk Anda. Kami tidak memulai dari hafalan rumus yang rumit, tapi dari pola kalimat yang sering muncul.'
                             },
                             {
                                 q: 'Apakah butuh biaya tambahan untuk fitur AI?',
@@ -383,7 +384,7 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12 pb-12 border-b border-slate-700">
                         <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                            Siap Meningkatkan Skill Bahasa Arab Anda?
+                            Belum bisa bahasa Arab? Mulai dari sini.
                         </h3>
                         <p className="text-slate-300 text-lg mb-6">
                             Bergabunglah dengan ribuan penuntut ilmu lainnya
