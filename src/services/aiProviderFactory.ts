@@ -86,8 +86,51 @@ class GeminiProvider {
 }
 
 /**
+ * Cloudflare Worker Provider (uses /api/chat with KV caching)
+ * Used when no user API key is provided - leverages server-side caching
+ */
+class CloudflareProvider {
+    async generate(prompt: string, systemInstruction?: string, jsonMode: boolean = false): Promise<AIResponse> {
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    systemInstruction: systemInstruction,
+                    jsonMode: jsonMode
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || error.message || 'API request failed');
+            }
+
+            const data = await response.json();
+
+            // Log cache status for debugging
+            if (data.source === 'cache_kv') {
+                console.log('⚡ Response from KV cache (fast!)');
+            } else {
+                console.log('🤖 Response from Gemini API via Cloudflare');
+            }
+
+            return {
+                text: jsonMode ? cleanJsonOutput(data.text) : data.text,
+                rawResponse: data
+            };
+        } catch (error: any) {
+            console.error('Cloudflare Provider Error:', error);
+            throw new Error(`Cloudflare API Error: ${error.message}`);
+        }
+    }
+}
+
+/**
  * OpenAI-Compatible Provider (OpenAI, Maia, OpenRouter)
  */
+
 class OpenAICompatibleProvider {
     private client: OpenAI;
     private model: string;
@@ -124,11 +167,11 @@ class OpenAICompatibleProvider {
     async generate(prompt: string, systemInstruction?: string, jsonMode: boolean = false): Promise<AIResponse> {
         try {
             const messages: any[] = [];
-            
+
             if (systemInstruction) {
                 messages.push({ role: 'system', content: systemInstruction });
             }
-            
+
             messages.push({ role: 'user', content: prompt });
 
             const completion = await this.client.chat.completions.create({
@@ -162,13 +205,21 @@ export class AIProviderFactory {
     static createProvider(config: ProviderConfig) {
         const { provider, apiKey, model } = config;
 
-        if (!apiKey || apiKey.trim() === '') {
-            throw new Error(`API Key required for ${provider}`);
+        // Special case: Use CloudflareProvider with KV caching when no user API key
+        // This enables server-side caching and keeps API key secure
+        if (!apiKey || apiKey.trim() === '' || apiKey === 'USE_SERVER') {
+            if (provider === 'gemini') {
+                console.log('🌐 Using Cloudflare Provider with KV caching');
+                return new CloudflareProvider();
+            }
+            throw new Error(`API Key required for ${provider}. Please configure in settings.`);
         }
 
         switch (provider) {
             case 'gemini':
+                console.log('🔑 Using direct Gemini API with user key');
                 return new GeminiProvider(apiKey, model || 'gemini-1.5-flash');
+
 
             case 'openai':
                 return new OpenAICompatibleProvider({
@@ -208,7 +259,7 @@ export class AIProviderFactory {
     static async askAssistant(config: ProviderConfig, userMessage: string): Promise<string> {
         const provider = this.createProvider(config);
         const systemInstruction = "Kamu adalah asisten pakar Bahasa Arab (Nahwu, Sharaf, Balaghah). Jawab ringkas, jelas, gunakan referensi kaidah.";
-        
+
         const response = await provider.generate(userMessage, systemInstruction, false);
         return response.text;
     }
@@ -218,9 +269,9 @@ export class AIProviderFactory {
      */
     static async analyzeText(config: ProviderConfig, arabicText: string): Promise<AnalysisResult> {
         const provider = this.createProvider(config);
-        
+
         const systemInstruction = "You are an expert Arabic grammarian. Analyze the following text and output strictly valid JSON as requested.";
-        
+
         const prompt = `Analisis struktur gramatikal (I'rab) kalimat Arab berikut: "${arabicText}".
     
 Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
@@ -265,10 +316,10 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
      */
     static async convertToArabGundul(config: ProviderConfig, indonesianText: string): Promise<string> {
         const provider = this.createProvider(config);
-        
+
         const systemInstruction = "You are an expert Arabic translator. Convert the following text to accurate Arab Gundul (unvocalized Arabic script).";
         const prompt = `Ubah kalimat Indonesia ini ke Arab Gundul (tanpa harakat) yang benar secara gramatikal: "${indonesianText}". Hanya output teks Arabnya saja.`;
-        
+
         const response = await provider.generate(prompt, systemInstruction, false);
         return response.text.trim();
     }

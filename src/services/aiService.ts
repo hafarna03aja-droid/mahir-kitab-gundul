@@ -21,7 +21,8 @@ export const getAIConfig = (): AIConfig => {
 
     switch (provider) {
         case 'gemini':
-            apiKey = localStorage.getItem('gemini_api_key') || ENV_GEMINI_API_KEY;
+            // Use user's API key if set, otherwise use server-side with KV cache
+            apiKey = localStorage.getItem('gemini_api_key') || ENV_GEMINI_API_KEY || 'USE_SERVER';
             model = 'gemini-1.5-flash';
             break;
         case 'openai':
@@ -46,35 +47,18 @@ export const getAIConfig = (): AIConfig => {
 
 export async function askAiAssistant(userMessage: string): Promise<string> {
     const config = getAIConfig();
-    
-    if (!config.apiKey) {
-        throw new Error(`API Key belum dikonfigurasi untuk ${config.provider}. Silakan atur di pengaturan.`);
-    }
-    
+    // No need to check for API key - factory handles fallback to Cloudflare/KV cache
     return await AIProviderFactory.askAssistant(config, userMessage);
 }
 
 export async function analyzeArabicText(arabicText: string): Promise<AnalysisResult> {
     const config = getAIConfig();
-    
-    if (!config.apiKey) {
-        return {
-            originalText: arabicText,
-            vocalizedText: arabicText,
-            translation: `API Key belum dikonfigurasi untuk ${config.provider}. Silakan atur di pengaturan.`,
-            irab: []
-        };
-    }
-    
+    // No need to check for API key - factory handles fallback to Cloudflare/KV cache
     return await AIProviderFactory.analyzeText(config, arabicText);
 }
 
 export async function convertToArabGundul(indonesianText: string): Promise<string> {
     const config = getAIConfig();
-    
-    if (!config.apiKey) {
-        throw new Error(`API Key belum dikonfigurasi untuk ${config.provider}. Silakan atur di pengaturan.`);
-    }
-    
+    // No need to check for API key - factory handles fallback to Cloudflare/KV cache
     return await AIProviderFactory.convertToArabGundul(config, indonesianText);
 }

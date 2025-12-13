@@ -226,11 +226,158 @@ export default {
     }
 
     // ========================================
+    // AI CHAT WITH KV CACHE
+    // URL: https://mahirarab.web.id/api/chat
+    // Caches AI responses in Cloudflare KV for 30 days
+    // ========================================
+    if (pathname === '/api/chat' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const { prompt, userApiKey, systemInstruction, jsonMode } = body;
+
+        // Validation
+        if (!prompt || prompt.trim() === '') {
+          return new Response(JSON.stringify({
+            error: 'Prompt is required',
+            message: 'Please provide a valid prompt'
+          }), { status: 400, headers: corsHeaders });
+        }
+
+        // Build full prompt with system instruction if provided
+        const fullPrompt = systemInstruction
+          ? `${systemInstruction}\n\nUser: ${prompt}`
+          : prompt;
+
+        // Create cache key (hash of full prompt for consistency)
+        const cacheKey = fullPrompt.substring(0, 500); // Limit key length
+
+        // Priority 1: Check KV Cache (only for app key, not user key)
+        if (!userApiKey && env.AI_CACHE) {
+          try {
+            const cachedResponse = await env.AI_CACHE.get(cacheKey);
+            if (cachedResponse) {
+              console.log('✅ Cache HIT:', prompt.substring(0, 50));
+              return new Response(JSON.stringify({
+                text: cachedResponse,
+                source: 'cache_kv'
+              }), { status: 200, headers: corsHeaders });
+            }
+            console.log('❌ Cache MISS:', prompt.substring(0, 50));
+          } catch (kvError) {
+            console.warn('⚠️ KV read error:', kvError.message);
+          }
+        }
+
+        // Priority 2: Determine API Key
+        let activeApiKey;
+        let source;
+
+        if (userApiKey && userApiKey.trim().length > 0) {
+          activeApiKey = userApiKey.trim();
+          source = 'api_user';
+          console.log('🔑 Using USER API Key');
+        } else {
+          // Try multiple env variable names for compatibility
+          const serverApiKey = env.GOOGLE_API_KEY || env.VITE_GEMINI_API_KEY;
+          if (!serverApiKey) {
+            return new Response(JSON.stringify({
+              error: 'API Key not configured',
+              message: 'Server API key is not set. Please provide your own API key or configure GOOGLE_API_KEY in environment.'
+            }), { status: 500, headers: corsHeaders });
+          }
+          activeApiKey = serverApiKey;
+          source = 'api_app';
+          console.log('🔑 Using APP API Key');
+        }
+
+
+        // Build Gemini request
+        const geminiPayload = {
+          contents: [{ parts: [{ text: fullPrompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+          }
+        };
+
+        // Add JSON mode if requested
+        if (jsonMode) {
+          geminiPayload.generationConfig.responseMimeType = 'application/json';
+        }
+
+        // Call Gemini API
+        console.log('🤖 Calling Gemini API...');
+        const geminiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeApiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(geminiPayload)
+          }
+        );
+
+        const geminiData = await geminiResponse.json();
+
+        if (!geminiResponse.ok) {
+          const errorMsg = geminiData.error?.message || 'Gemini API error';
+          console.error('❌ Gemini Error:', errorMsg);
+
+          // Handle specific errors
+          let statusCode = 500;
+          if (errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('invalid')) {
+            statusCode = 401;
+          } else if (errorMsg.includes('quota') || errorMsg.includes('limit')) {
+            statusCode = 429;
+          }
+
+          return new Response(JSON.stringify({
+            error: errorMsg,
+            source: source
+          }), { status: statusCode, headers: corsHeaders });
+        }
+
+        const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+          return new Response(JSON.stringify({
+            error: 'Empty response from AI',
+            source: source
+          }), { status: 500, headers: corsHeaders });
+        }
+
+        // Save to KV Cache (only for app key, not user key)
+        if (!userApiKey && env.AI_CACHE) {
+          try {
+            const TTL_30_DAYS = 60 * 60 * 24 * 30; // 30 days in seconds
+            await env.AI_CACHE.put(cacheKey, text, { expirationTtl: TTL_30_DAYS });
+            console.log('💾 Saved to KV cache');
+          } catch (kvError) {
+            console.warn('⚠️ KV write error:', kvError.message);
+          }
+        }
+
+        console.log('✅ Chat response generated, source:', source);
+
+        return new Response(JSON.stringify({
+          text: text,
+          source: source
+        }), { status: 200, headers: corsHeaders });
+
+      } catch (error) {
+        console.error('❌ Chat error:', error.message);
+        return new Response(JSON.stringify({
+          error: error.message || 'Failed to process request',
+          details: error.toString()
+        }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // ========================================
     // PUBLIC MIDTRANS WEBHOOK ENDPOINT
     // URL: https://mahirarab.web.id/api/webhook
     // Register this URL in Midtrans Dashboard
     // ========================================
     if ((pathname === '/api/webhook' || pathname === '/webhook/midtrans') && request.method === 'POST') {
+
       try {
         const payload = await request.json();
 
