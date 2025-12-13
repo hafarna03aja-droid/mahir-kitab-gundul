@@ -214,7 +214,7 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                            Fitur-Fitur Canggih yang memudahkan belajar dari nol
+                            Fitur-Fitur Canggih Yang Memudahkan Belajar Dari Nol
                         </h2>
                     </div>
 
