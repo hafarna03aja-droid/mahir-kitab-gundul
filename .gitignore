@@ -32,3 +32,6 @@ server/.env
 .wrangler/
 wrangler.toml.local
 
+# Test Reports
+test-reports/
+testsprite_tests/
