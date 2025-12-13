@@ -279,7 +279,7 @@ export default function LandingPage() {
 
                     <div className="max-w-lg mx-auto">
                         <div className="relative bg-white rounded-3xl border-4 border-amber-400 shadow-2xl p-8 hover:scale-105 transition-transform">
-                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-900 px-6 py-2 rounded-full font-bold text-sm shadow-lg">
+                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-900 px-3 py-1.5 sm:px-6 sm:py-2 rounded-full font-bold text-xs sm:text-sm shadow-lg whitespace-nowrap">
                                 🔥 PALING POPULER
                             </div>
 
