@@ -1,0 +1,110 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "React 18",
+        "Vite",
+        "TailwindCSS",
+        "Supabase",
+        "Google Generative AI (Gemini)",
+        "OpenAI"
+    ],
+    "features": [
+        {
+            "name": "Landing Page",
+            "description": "Main landing page with hero section, features showcase, pricing, and FAQ",
+            "files": [
+                "src/pages/LandingPage.tsx"
+            ]
+        },
+        {
+            "name": "Authentication",
+            "description": "User login and reset password functionality with Supabase Auth",
+            "files": [
+                "src/components/Login.tsx",
+                "src/components/ResetPassword.tsx",
+                "src/supabaseClient.ts"
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "description": "Main application dashboard with tabbed navigation",
+            "files": [
+                "src/DashboardApp.tsx",
+                "src/components/MainApp.tsx",
+                "src/components/Tabs.tsx"
+            ]
+        },
+        {
+            "name": "Arabic Text Analysis",
+            "description": "AI-powered Arabic grammar analysis with Nahwu and Sharaf parsing",
+            "files": [
+                "src/components/AnalysisTab.tsx",
+                "src/components/AnalysisResultDisplay.tsx"
+            ]
+        },
+        {
+            "name": "Kitab Digital",
+            "description": "Digital Islamic book reader with AI explanations",
+            "files": [
+                "src/components/KitabTab.tsx"
+            ]
+        },
+        {
+            "name": "Live AI Tutor",
+            "description": "Interactive AI tutor with voice input/output for Arabic learning",
+            "files": [
+                "src/components/LiveTutorTab.tsx"
+            ]
+        },
+        {
+            "name": "AI Assistant Chat",
+            "description": "General AI assistant for Arabic learning questions",
+            "files": [
+                "src/components/AiAssistantTab.tsx"
+            ]
+        },
+        {
+            "name": "AI Services",
+            "description": "AI provider integration for Gemini and OpenAI",
+            "files": [
+                "src/services/aiService.ts",
+                "src/services/aiProviderFactory.ts"
+            ]
+        },
+        {
+            "name": "Payment Checkout",
+            "description": "Midtrans payment integration for premium access",
+            "files": [
+                "src/components/CheckoutButton.tsx"
+            ]
+        },
+        {
+            "name": "API Key Settings",
+            "description": "User configuration for custom AI API keys",
+            "files": [
+                "src/components/ApiKeySettings.tsx"
+            ]
+        },
+        {
+            "name": "Theme Toggle",
+            "description": "Dark/Light mode switching",
+            "files": [
+                "src/components/ThemeToggle.tsx"
+            ]
+        },
+        {
+            "name": "Privacy Policy",
+            "description": "Privacy policy page",
+            "files": [
+                "src/pages/PrivacyPage.tsx"
+            ]
+        },
+        {
+            "name": "Terms of Service",
+            "description": "Terms and conditions page",
+            "files": [
+                "src/pages/TermsPage.tsx"
+            ]
+        }
+    ]
+}

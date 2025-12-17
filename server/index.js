@@ -1,10 +1,16 @@
 require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const midtransClient = require('midtrans-client');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ============================================
+// Gzip Compression - Optimize response size
+// ============================================
+app.use(compression());
 
 // ============================================
 // CORS Middleware - Handle CORS for all requests

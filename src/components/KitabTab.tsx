@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, Search, ChevronRight, Book, FileText } from 'lucide-react';
+import { imritiContent } from '../data/imritiData';
 
 interface Kitab {
     id: string;
@@ -57,9 +58,9 @@ const KitabTab: React.FC = () => {
     }, [bookmarks]);
 
     const kitabList: Kitab[] = [
-        { 
+        {
             id: 'alfiyah',
-            title: 'Alfiyyah Ibnu Malik', 
+            title: 'Alfiyyah Ibnu Malik',
             titleArab: 'ألفية ابن مالك',
             category: 'Nahwu & Sharaf',
             author: 'Ibnu Malik',
@@ -67,9 +68,9 @@ const KitabTab: React.FC = () => {
             chapters: 68,
             verses: 1000
         },
-        { 
+        {
             id: 'ajurrumiyah',
-            title: 'Al-Ajurrumiyyah', 
+            title: 'Al-Ajurrumiyyah',
             titleArab: 'الآجرومية',
             category: 'Nahwu',
             author: 'Ibnu Ajurrum',
@@ -77,19 +78,19 @@ const KitabTab: React.FC = () => {
             chapters: 12,
             verses: 0
         },
-        { 
+        {
             id: 'imriti',
-            title: 'Nazham Al-Imriti', 
-            titleArab: 'نظم العمريطي',
-            category: 'Sharaf',
-            author: 'Al-Imriti',
-            description: 'Nazham tentang ilmu Sharaf dalam bentuk syair',
-            chapters: 8,
-            verses: 82
+            title: 'Nazham Al-Imriti',
+            titleArab: 'نَظْمُ الْعِمْرِيطِي',
+            category: 'Nahwu',
+            author: 'Syarafuddin Yahya Al-Imriti',
+            description: 'Nazham tentang ilmu Nahwu dalam bentuk syair, merupakan nazham dari kitab Al-Ajurrumiyyah',
+            chapters: 25,
+            verses: 200
         },
-        { 
+        {
             id: 'qawaid',
-            title: 'Qawaid al-Lughah al-Arabiyyah', 
+            title: 'Qawaid al-Lughah al-Arabiyyah',
             titleArab: 'قواعد اللغة العربية',
             category: 'Qawaid',
             author: 'Berbagai Ulama',
@@ -1941,190 +1942,8 @@ const KitabTab: React.FC = () => {
         }
     ];
 
-    const imritiContent: KitabContent[] = [
-        {
-            chapter: 1,
-            title: 'Muqaddimah Nazham',
-            content: [
-                'يَقُولُ رَاجِي رَبِّهِ الْمُهَيْمِنِ',
-                'شَرَفُ بْنُ يَحْيَى الشَّهِيرُ الْعِمْرِيطِي',
-                'الْحَمْدُ لِلَّهِ الْعَظِيمِ الشَّانِ',
-                'ثُمَّ الصَّلَاةُ بَعْدَ ذَا وَالسَّلَمُ',
-                'عَلَى النَّبِيِّ سَيِّدِ الْأَنَامِ',
-                'وَآلِهِ وَصَحْبِهِ الْكِرَامِ',
-            ],
-            translation: [
-                'Berkata yang mengharap Rabbnya Yang Maha Mengawasi',
-                'Syaraf bin Yahya yang masyhur Al-Imrithi',
-                'Segala puji bagi Allah Yang Maha Agung kedudukanNya',
-                'Kemudian shalawat setelah itu dan salam',
-                'Kepada Nabi pemimpin seluruh manusia',
-                'Dan keluarganya serta para sahabatnya yang mulia',
-            ],
-            footnotes: [
-                'Muqaddimah: pembukaan nazham Imrithi dalam ilmu Sharaf',
-                'Syaraf bin Yahya Al-Imrithi: pengarang nazham ini, ulama Maroko abad ke-12 H',
-                'Nazham Imrithi adalah syair terkenal untuk belajar ilmu Sharaf (morfologi Arab)',
-                'Dimulai dengan pujian kepada Allah dan shalawat kepada Nabi Muhammad',
-                'Al-Muhaymin: salah satu Asma Allah yang berarti Yang Maha Mengawasi',
-                'Kitab ini dipelajari setelah menguasai ilmu Nahwu dasar',
-            ]
-        },
-        {
-            chapter: 2,
-            title: 'Bab al-Mizan (Wazan)',
-            content: [
-                'وَزِنْ بِفَا فَعِينَ مَا ثَلَاثِيَّا',
-                'وَإِنْ يَزِدْ زِدْ مِثْلَهُ مَا زَيْدَا',
-                'فَإِنْ يَكُنْ مِنْ حَرْفِ عِلَّةٍ بَدَلْ',
-                'حَرْفُ مِنَ الْمِيزَانِ مِثْلُهُ يُبَدَلْ',
-            ],
-            translation: [
-                'Timbang dengan fa-\'ain apa yang bersuku tiga',
-                'Dan jika bertambah, tambahkan padanya yang serupa dengan yang ditambahkan',
-                'Maka jika ada dari huruf \'illat yang diganti',
-                'Huruf dari timbangan yang serupa diganti',
-            ],
-            footnotes: [
-                'Mizan sharaf: alat untuk menimbang kata dalam ilmu sharaf, menggunakan fa-\'a-la',
-                'Tsulasi (3 huruf): ditimbang dengan fa-\'a-la; contoh: kataba = fa-\'a-la',
-                'Ruba\'i (4 huruf): ditimbang dengan fa-\'la-la; contoh: dah-raja = fa-\'la-la',
-                'Huruf \'illat (waw, ya, alif): jika diganti dalam kata, diganti pula di mizan',
-            ]
-        },
-        {
-            chapter: 3,
-            title: 'Bab al-Mujarrad (Kata Dasar)',
-            content: [
-                'الْمُجَرَّدُ الثُّلَاثِيُّ اثْنَا عَشَرْ',
-                'عَلَى ثَلَاثَةٍ وَزِدْ تِسْعًا تَدُرْ',
-                'فَعَلَ فَعِلَ فَعُلَ ثَلَاثَةُ',
-                'وَتِسْعَةٌ تَلِيهَا مَجْمُوعَةُ',
-            ],
-            translation: [
-                'Mujarrad tsulasi ada dua belas',
-                'Berdasarkan tiga wazan, dan tambahkan sembilan engkau akan dapatkan',
-                'Fa\'ala, fa\'ila, fa\'ula ada tiga',
-                'Dan sembilan mengikutinya terkumpul',
-            ],
-            footnotes: [
-                'Mujarrad tsulasi: fi\'il tsulasi yang tidak ada tambahan huruf (3 huruf asli)',
-                'Ada 12 wazan untuk madhi-mudhari\': 3 wazan utama + 9 wazan lain',
-                'Tiga wazan utama: fa\'ala-yaf\'alu, fa\'ila-yaf\'alu, fa\'ula-yaf\'ulu',
-                'Contoh: dharaba-yadhribu, \'alima-ya\'lamu, karuMA-yakrumu',
-            ]
-        },
-        {
-            chapter: 4,
-            title: 'Bab al-Mazid (Kata Tambahan)',
-            content: [
-                'وَالْمَزِيدُ فِيهِ ثَلَاثَةَ عَشَرْ',
-                'أَفْعَلَ فَعَّلَ وَفَاعَلْ يُشْتَهَرْ',
-                'ثُمَّ انْفَعَلْ وَافْتَعَلْ وَافْعَلَّ',
-                'وَتَفْعَلَلْ وَتَفَعَّلَ وَتَفَاعَلْ',
-            ],
-            translation: [
-                'Dan mazid di dalamnya ada tiga belas',
-                'Af\'ala, fa\'ala, dan faa\'ala yang masyhur',
-                'Kemudian infa\'ala, ifta\'ala, dan if\'alla',
-                'Dan tafa\'lala, tafa\'ala, dan tafaa\'ala',
-            ],
-            footnotes: [
-                'Mazid: fi\'il yang ditambahi huruf ziyadah (tambahan)',
-                'Ada 13 wazan mazid tsulasi: 3 dengan 1 huruf, 6 dengan 2 huruf, 4 dengan 3 huruf',
-                'Ziyadah 1 huruf: af\'ala (akrama), fa\'ala (kasara), faa\'ala (qaatala)',
-                'Ziyadah 2 huruf: infa\'ala, ifta\'ala, if\'alla; Ziyadah 3 huruf: istaf\'ala, if\'awala, if\'awwala, if\'anlala',
-            ]
-        },
-        {
-            chapter: 5,
-            title: 'Bab al-Masdar (Kata Dasar)',
-            content: [
-                'مَصْدَرُ أَفْعَلَ الرُّبَاعِيِّ كَذَا',
-                'إِفْعَالُهُ وَفَعَّلَ التَّفْعِيلَا',
-                'وَفَاعَلَ الْمُفَاعَلَةُ وَالْفِعَالُ',
-                'وَمَصْدَرُ افْتَعَلَ الِافْتِعَالُ',
-            ],
-            translation: [
-                'Mashdar af\'ala yang ruba\'i seperti itu',
-                'If\'aaluhu, dan fa\'ala adalah taf\'iilan',
-                'Dan faa\'ala adalah mufaa\'alah dan fi\'aalun',
-                'Dan mashdar ifta\'ala adalah ifti\'aalun',
-            ],
-            footnotes: [
-                'Mashdar: kata dasar/infinitif dari fi\'il (seperti "menulis" dari "dia menulis")',
-                'Mashdar af\'ala: if\'aalun (contoh: akrama-ikraaman)',
-                'Mashdar fa\'ala: taf\'iilun (contoh: kasara-taksiiran)',
-                'Mashdar faa\'ala: mufaa\'alah/fi\'aalun (contoh: qaatala-muqaatalah/qitaalan)',
-            ]
-        },
-        {
-            chapter: 6,
-            title: 'Bab Isim al-Fa\'il (Kata Pelaku)',
-            content: [
-                'اِسْمُ الْفَاعِلِ مِنْ ثُلَاثِيٍّ كَذَا',
-                'عَلَى فَاعِلٍ أَبَدًا قَدْ وُجِدَا',
-                'وَمِنْ سِوَاهُ فَعَلَى الْمُضَارِعِ',
-                'وَكَسْرُ مَا قَبْلَ الْأَخِيرِ الْوَاقِعِ',
-            ],
-            translation: [
-                'Isim fa\'il dari tsulasi seperti itu',
-                'Pada wazan faa\'ilun selamanya telah ditemukan',
-                'Dan dari selainnya berdasarkan mudhari\'',
-                'Dan kasrah apa sebelum akhir yang terjadi',
-            ],
-            footnotes: [
-                'Isim fa\'il: kata yang menunjukkan pelaku perbuatan (seperti "penulis", "pemukul")',
-                'Dari fi\'il tsulasi: wazan faa\'ilun (contoh: dharaba-dhaaribun, kataba-kaatibun)',
-                'Dari fi\'il ghairu tsulasi: diambil dari mudhari\', kasrah huruf sebelum akhir',
-                'Contoh: akrama-yukrimU-mukriMun, takalama-yatakalamuU-mutakalimun',
-            ]
-        },
-        {
-            chapter: 7,
-            title: 'Bab Isim al-Maf\'ul (Kata Objek)',
-            content: [
-                'وَاسْمُ مَفْعُولٍ مِنَ الثُّلَاثِي',
-                'بِفَتْحِ مِيمٍ ضَمِّ عَيْنٍ يَأْتِي',
-                'مِنْ غَيْرِهِ كَاسْمِ فَاعِلٍ يُصَاغْ',
-                'لَكِنْ بِفَتْحِ مَا لِكَسْرٍ سَاغْ',
-            ],
-            translation: [
-                'Dan isim maf\'ul dari tsulasi',
-                'Dengan fathah mim, dhammah \'ain datang',
-                'Dari selainnya seperti isim fa\'il dibentuk',
-                'Tetapi dengan fathah apa yang untuk kasrah cocok',
-            ],
-            footnotes: [
-                'Isim maf\'ul: kata yang menunjukkan yang dikenai perbuatan (seperti "yang ditulis", "yang dipukul")',
-                'Dari fi\'il tsulasi: wazan maf\'uulun (contoh: dharaba-madhrubun, kataba-maktuubun)',
-                'Dari fi\'il ghairu tsulasi: seperti isim fa\'il, tapi huruf sebelum akhir di-fathah',
-                'Contoh: akrama-yukrimU-muKRAMun, takalama-yatakalamuU-mutaKALAmun',
-            ]
-        },
-        {
-            chapter: 8,
-            title: 'Khatimah (Penutup)',
-            content: [
-                'هَذَا وَأَسْأَلُ الْإِلَهَ الْمُعِينَا',
-                'أَنْ يَجْعَلَ التَّوْفِيقَ لِي قَرِينَا',
-                'وَأَنْ يَنَالَ مَنْ يَقُولُ أَمِينَا',
-                'رِضَاهُ مَعْ جَنَّاتِ عَدْنٍ آمِينَا',
-            ],
-            translation: [
-                'Inilah dan aku memohon kepada Allah Yang Maha Menolong',
-                'Agar menjadikan taufik untukku sebagai teman',
-                'Dan agar mendapatkan siapa yang mengatakan aamiin',
-                'RidhaNya bersama surga \'Adn, aamiin',
-            ],
-            footnotes: [
-                'Khatimah: penutup nazham Imrithi dalam ilmu Sharaf',
-                'Doa pengarang agar diberi taufik dan pahala surga',
-                'Nazham Imrithi adalah syair terkenal untuk belajar ilmu Sharaf',
-                'Kitab ini dipelajari di pesantren-pesantren sebagai dasar ilmu Sharaf',
-            ]
-        }
-    ];
+    // imritiContent is now imported from '../data/imritiData'
+
 
     const qawaidContent: KitabContent[] = [
         {
@@ -2436,7 +2255,7 @@ const KitabTab: React.FC = () => {
     ];
 
     const getKitabContent = (kitabId: string): KitabContent[] => {
-        switch(kitabId) {
+        switch (kitabId) {
             case 'alfiyah': return alfiyahContent;
             case 'ajurrumiyah': return ajurrumiyahContent;
             case 'imriti': return imritiContent;
@@ -2548,21 +2367,19 @@ const KitabTab: React.FC = () => {
                             <div className="flex items-center space-x-3">
                                 <button
                                     onClick={() => setShowTranslation(!showTranslation)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                        showTranslation 
-                                            ? 'bg-sky-500 text-white' 
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    }`}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showTranslation
+                                        ? 'bg-sky-500 text-white'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        }`}
                                 >
                                     {showTranslation ? '✓ ' : ''}Terjemahan
                                 </button>
                                 <button
                                     onClick={() => setShowFootnotes(!showFootnotes)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                        showFootnotes 
-                                            ? 'bg-purple-500 text-white' 
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    }`}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showFootnotes
+                                        ? 'bg-purple-500 text-white'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        }`}
                                 >
                                     {showFootnotes ? '✓ ' : ''}Catatan Kaki
                                 </button>
@@ -2646,11 +2463,10 @@ const KitabTab: React.FC = () => {
                                     <button
                                         key={index}
                                         onClick={() => setSelectedChapter(index)}
-                                        className={`w-full text-left p-3 rounded-lg transition-all ${
-                                            selectedChapter === index
-                                                ? 'bg-amber-100 border-l-4 border-amber-500 text-amber-900 font-semibold'
-                                                : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
-                                        }`}
+                                        className={`w-full text-left p-3 rounded-lg transition-all ${selectedChapter === index
+                                            ? 'bg-amber-100 border-l-4 border-amber-500 text-amber-900 font-semibold'
+                                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
+                                            }`}
                                     >
                                         <div className="text-xs text-slate-500 mb-1">Bab {chapter.chapter}</div>
                                         <div className="text-sm">{chapter.title}</div>
@@ -2683,16 +2499,15 @@ const KitabTab: React.FC = () => {
                                         {currentContent.content.map((line, index) => (
                                             <div
                                                 key={index}
-                                                className={`p-6 rounded-lg border-2 transition-all group relative ${
-                                                    highlightedVerse === index
-                                                        ? 'bg-amber-50 border-amber-400 shadow-lg'
-                                                        : 'bg-slate-50 border-slate-200 hover:border-amber-300'
-                                                }`}
+                                                className={`p-6 rounded-lg border-2 transition-all group relative ${highlightedVerse === index
+                                                    ? 'bg-amber-50 border-amber-400 shadow-lg'
+                                                    : 'bg-slate-50 border-slate-200 hover:border-amber-300'
+                                                    }`}
                                             >
                                                 {/* Teks Arab */}
                                                 <div className="text-right">
-                                                    <p 
-                                                        className="font-arabic leading-loose text-slate-900 mb-3 select-text" 
+                                                    <p
+                                                        className="font-arabic leading-loose text-slate-900 mb-3 select-text"
                                                         dir="rtl"
                                                         style={{ fontSize: `${fontSize}px` }}
                                                     >
