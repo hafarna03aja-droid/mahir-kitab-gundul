@@ -3,6 +3,7 @@ import { BookOpen, Search, ChevronRight, Book, FileText } from 'lucide-react';
 import { imritiContent } from '../data/imritiData';
 import { ajurrumiyahContent } from '../data/ajurrumiyahData';
 import { qawaidContent } from '../data/qawaidData';
+import { aqidatulAwamContent } from '../data/aqidatulAwamData';
 
 interface Kitab {
     id: string;
@@ -99,6 +100,16 @@ const KitabTab: React.FC = () => {
             description: 'Kumpulan kaidah-kaidah bahasa Arab',
             chapters: 15,
             verses: 0
+        },
+        {
+            id: 'aqidatul-awam',
+            title: 'Nadzam Aqidatul Awam',
+            titleArab: 'نَظْمُ عَقِيْدَةِ الْعَوَامِ',
+            category: 'Aqidah',
+            author: 'Syeikh Ahmad Al-Marzuqi Al-Maliki',
+            description: 'Nazham aqidah 57 bait tentang rukun iman, sifat Allah, para nabi, malaikat, dan kitab suci',
+            chapters: 8,
+            verses: 57
         },
     ];
 
@@ -1692,6 +1703,7 @@ const KitabTab: React.FC = () => {
             case 'ajurrumiyah': return ajurrumiyahContent;
             case 'imriti': return imritiContent;
             case 'qawaid': return qawaidContent;
+            case 'aqidatul-awam': return aqidatulAwamContent;
             default: return [];
         }
     };
