@@ -37,7 +37,7 @@ const KitabTab: React.FC = () => {
     const [selectedChapter, setSelectedChapter] = useState<number>(0);
     const [showTranslation, setShowTranslation] = useState(true);
     const [showFootnotes, setShowFootnotes] = useState(true);
-    const [fontSize, setFontSize] = useState(24);
+    const [fontSize, setFontSize] = useState(32);
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
     const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null);
     const [showBookmarkPanel, setShowBookmarkPanel] = useState(false);
