@@ -2,108 +2,129 @@
     "tech_stack": [
         "TypeScript",
         "React 18",
-        "Vite",
-        "TailwindCSS",
-        "Supabase",
-        "Google Generative AI (Gemini)",
-        "OpenAI"
+        "Vite 7",
+        "TailwindCSS 3",
+        "Supabase (PostgreSQL)",
+        "Cloudflare Workers",
+        "Google Gemini AI",
+        "OpenAI",
+        "Midtrans Payment Gateway"
     ],
     "features": [
         {
-            "name": "Landing Page",
-            "description": "Main landing page with hero section, features showcase, pricing, and FAQ",
-            "files": [
-                "src/pages/LandingPage.tsx"
-            ]
-        },
-        {
-            "name": "Authentication",
-            "description": "User login and reset password functionality with Supabase Auth",
-            "files": [
-                "src/components/Login.tsx",
-                "src/components/ResetPassword.tsx",
-                "src/supabaseClient.ts"
-            ]
-        },
-        {
-            "name": "Dashboard",
-            "description": "Main application dashboard with tabbed navigation",
-            "files": [
-                "src/DashboardApp.tsx",
-                "src/components/MainApp.tsx",
-                "src/components/Tabs.tsx"
-            ]
-        },
-        {
             "name": "Arabic Text Analysis",
-            "description": "AI-powered Arabic grammar analysis with Nahwu and Sharaf parsing",
+            "description": "AI-powered grammatical analysis of Arabic text including Nahwu (syntax) and Sharaf (morphology) with detailed explanations in Indonesian",
             "files": [
                 "src/components/AnalysisTab.tsx",
-                "src/components/AnalysisResultDisplay.tsx"
-            ]
-        },
-        {
-            "name": "Kitab Digital",
-            "description": "Digital Islamic book reader with AI explanations",
-            "files": [
-                "src/components/KitabTab.tsx"
-            ]
-        },
-        {
-            "name": "Live AI Tutor",
-            "description": "Interactive AI tutor with voice input/output for Arabic learning",
-            "files": [
-                "src/components/LiveTutorTab.tsx"
-            ]
-        },
-        {
-            "name": "AI Assistant Chat",
-            "description": "General AI assistant for Arabic learning questions",
-            "files": [
-                "src/components/AiAssistantTab.tsx"
-            ]
-        },
-        {
-            "name": "AI Services",
-            "description": "AI provider integration for Gemini and OpenAI",
-            "files": [
+                "src/components/AnalysisResultDisplay.tsx",
                 "src/services/aiService.ts",
                 "src/services/aiProviderFactory.ts"
             ]
         },
         {
-            "name": "Payment Checkout",
-            "description": "Midtrans payment integration for premium access",
+            "name": "Digital Kitab Library",
+            "description": "Interactive digital library of Arabic grammar books (Al-Ajurrumiyyah, Al-Imriti, Qawaid) with search, bookmarks, and footnotes",
             "files": [
-                "src/components/CheckoutButton.tsx"
+                "src/components/KitabTab.tsx",
+                "src/data/ajurrumiyahData.ts",
+                "src/data/imritiData.ts",
+                "src/data/qawaidData.ts"
             ]
         },
         {
-            "name": "API Key Settings",
-            "description": "User configuration for custom AI API keys",
+            "name": "AI Chat Assistant",
+            "description": "Intelligent chatbot for learning Arabic grammar, answering questions about Nahwu, Sharaf, and Balaghah",
             "files": [
-                "src/components/ApiKeySettings.tsx"
+                "src/components/AiAssistantTab.tsx",
+                "src/services/aiService.ts"
             ]
         },
         {
-            "name": "Theme Toggle",
-            "description": "Dark/Light mode switching",
+            "name": "Audio Conversation Tutor",
+            "description": "Interactive voice-based Arabic conversation practice with speech recognition and text-to-speech capabilities",
             "files": [
-                "src/components/ThemeToggle.tsx"
+                "src/components/LiveTutorTab.tsx",
+                "src/services/aiService.ts"
             ]
         },
         {
-            "name": "Privacy Policy",
-            "description": "Privacy policy page",
+            "name": "Authentication System",
+            "description": "User authentication with email/password, signup, login, password reset via Supabase Auth",
             "files": [
-                "src/pages/PrivacyPage.tsx"
+                "src/components/Login.tsx",
+                "src/components/ResetPassword.tsx",
+                "src/supabaseClient.ts",
+                "src/DashboardApp.tsx"
             ]
         },
         {
-            "name": "Terms of Service",
-            "description": "Terms and conditions page",
+            "name": "Payment Integration",
+            "description": "Midtrans payment gateway integration for premium subscriptions with webhook handling",
             "files": [
-                "src/pages/TermsPage.tsx"
+                "src/components/CheckoutButton.tsx",
+                "src/hooks/useMidtrans.ts",
+                "_worker.js",
+                "supabase/functions/midtrans-payment/index.ts",
+                "supabase/functions/midtrans-webhook/index.ts"
+            ]
+        },
+        {
+            "name": "User Profile Management",
+            "description": "Profile system with free/premium status tracking, subscription expiration, and status checking",
+            "files": [
+                "src/DashboardApp.tsx",
+                "src/components/Header.tsx",
+                "src/types.ts"
+            ]
+        },
+        {
+            "name": "AI Provider Configuration",
+            "description": "Multi-provider AI support (Gemini, OpenAI, Maia) with API key management and fallback to Cloudflare KV cache",
+            "files": [
+                "src/components/ApiKeySettings.tsx",
+                "src/services/aiProviderFactory.ts",
+                "src/services/aiService.ts",
+                "_worker.js"
+            ]
+        },
+        {
+            "name": "Dark Mode Theme",
+            "description": "Light/dark theme toggle with persistent user preferences",
+            "files": [
+                "src/components/ThemeToggle.tsx",
+                "src/contexts/ThemeContext.tsx"
+            ]
+        },
+        {
+            "name": "Landing Page",
+            "description": "Marketing landing page with features showcase, pricing, FAQ, and responsive design",
+            "files": [
+                "src/pages/LandingPage.tsx"
+            ]
+        },
+        {
+            "name": "Navigation System",
+            "description": "Tab-based navigation for main app features (Analysis, Kitab, Assistant, Tutor)",
+            "files": [
+                "src/components/Tabs.tsx",
+                "src/components/MainApp.tsx",
+                "src/App.tsx"
+            ]
+        },
+        {
+            "name": "Preview Mode",
+            "description": "Demo mode for non-authenticated users to preview app features with limited functionality",
+            "files": [
+                "src/components/PreviewModeWrapper.tsx",
+                "src/components/Login.tsx"
+            ]
+        },
+        {
+            "name": "Text Conversion",
+            "description": "Indonesian to Arabic text conversion using AI",
+            "files": [
+                "src/components/AnalysisTab.tsx",
+                "src/services/aiService.ts"
             ]
         }
     ]
