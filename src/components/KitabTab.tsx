@@ -4,6 +4,11 @@ import { imritiContent } from '../data/imritiData';
 import { ajurrumiyahContent } from '../data/ajurrumiyahData';
 import { qawaidContent } from '../data/qawaidData';
 import { aqidatulAwamContent } from '../data/aqidatulAwamData';
+import { binaAsasContent } from '../data/binaAsasData';
+import { amtsilahContent } from '../data/amtsilahData';
+import { safinahContent } from '../data/safinahData';
+import { qathrunNadaContent } from '../data/qathrunNadaData';
+import { hidayatushibyanContent } from '../data/hidayatushibyanData';
 
 interface Kitab {
     id: string;
@@ -110,6 +115,56 @@ const KitabTab: React.FC = () => {
             description: 'Nazham aqidah 57 bait tentang rukun iman, sifat Allah, para nabi, malaikat, dan kitab suci',
             chapters: 8,
             verses: 57
+        },
+        {
+            id: 'bina-asas',
+            title: "Al-Bina' wal Asas",
+            titleArab: 'البناء والأساس',
+            category: 'Sharaf',
+            author: "Abdullah bin Ahmad Ba'lawi",
+            description: 'Kitab sharaf paling populer untuk pemula, sistematis dengan banyak contoh praktis',
+            chapters: 10,
+            verses: 0
+        },
+        {
+            id: 'amtsilah',
+            title: 'Al-Amtsilah at-Tashrifiyyah',
+            titleArab: 'الأمثلة التصريفية',
+            category: 'Sharaf',
+            author: "Muhammad Ma'sum bin Ali",
+            description: 'Kitab sharaf standar di 95% pesantren Indonesia, berisi contoh-contoh tashrif lengkap',
+            chapters: 12,
+            verses: 0
+        },
+        {
+            id: 'safinah',
+            title: 'Safinah an-Najah',
+            titleArab: 'سفينة النجاة',
+            category: 'Fiqih',
+            author: 'Salim bin Sumair al-Hadhrami',
+            description: "Kitab fiqih Syafi'i paling populer untuk pemula, mencakup thaharah hingga jinayat",
+            chapters: 12,
+            verses: 0
+        },
+        {
+            id: 'qathrun-nada',
+            title: 'Qathrun Nada',
+            titleArab: 'قطر الندى وبل الصدى',
+            category: 'Nahwu',
+            author: 'Ibnu Hisyam Al-Anshari',
+            description: 'Kitab nahwu tingkat menengah, jembatan antara Ajurrumiyyah dan Alfiyyah',
+            chapters: 12,
+            verses: 0
+        },
+        {
+            id: 'hidayatus-shibyan',
+            title: 'Hidayatus Shibyan',
+            titleArab: 'هداية الصبيان',
+            category: 'Nahwu',
+            author: "Sa'id bin Sa'd Nabhan",
+            description: 'Kitab nahwu dasar untuk pemula absolut, sangat populer di Indonesia',
+            chapters: 12,
+            verses: 0
         },
     ];
 
@@ -1704,6 +1759,11 @@ const KitabTab: React.FC = () => {
             case 'imriti': return imritiContent;
             case 'qawaid': return qawaidContent;
             case 'aqidatul-awam': return aqidatulAwamContent;
+            case 'bina-asas': return binaAsasContent;
+            case 'amtsilah': return amtsilahContent;
+            case 'safinah': return safinahContent;
+            case 'qathrun-nada': return qathrunNadaContent;
+            case 'hidayatus-shibyan': return hidayatushibyanContent;
             default: return [];
         }
     };
