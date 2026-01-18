@@ -74,6 +74,44 @@ export default function TermsPage() {
               </p>
             </section>
 
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">6. Batasan Teknologi AI & Disclaimer</h2>
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p className="font-medium text-yellow-800">⚠️ Penting: Batasan Teknologi AI</p>
+                <p className="mt-2 text-sm text-yellow-700">
+                  Aplikasi Mahir Arab menggunakan teknologi kecerdasan buatan (AI) untuk membantu proses pembelajaran.
+                  Namun, <strong>AI DAPAT MEMBUAT KESALAHAN</strong> dan tidak dapat menggantikan peran guru atau ustadz.
+                </p>
+              </div>
+
+              <p className="font-semibold mb-3">Hal yang perlu Anda ketahui:</p>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>
+                  <strong>AI bukan guru:</strong> Fitur AI hanya berfungsi sebagai <strong>alat bantu pembelajaran</strong>, bukan pengganti bimbingan langsung dari guru atau ustadz yang kompeten.
+                </li>
+                <li>
+                  <strong>Akurasi tidak 100%:</strong> Hasil analisis bahasa Arab (nahwu, sharaf, i'rab, dll) yang dihasilkan AI dapat mengandung kesalahan, terutama pada kasus yang kompleks.
+                </li>
+                <li>
+                  <strong>Kewajiban verifikasi:</strong> Anda <strong>WAJIB memverifikasi</strong> setiap informasi yang diberikan AI dengan merujuk kepada:
+                  <ul className="list-disc pl-5 mt-2 space-y-1">
+                    <li>Guru atau ustadz yang kompeten</li>
+                    <li>Kitab referensi yang mu'tabar</li>
+                    <li>Sumber ilmiah yang terpercaya</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Tanggung jawab pengguna:</strong> Pengguna bertanggung jawab penuh atas penggunaan dan interpretasi hasil AI. Kami tidak bertanggung jawab atas kesalahan pemahaman yang timbul.
+                </li>
+              </ul>
+
+              <div className="mt-4 p-3 bg-blue-50 rounded">
+                <p className="text-sm text-blue-800">
+                  <strong>Kesimpulan:</strong> Gunakan AI sebagai <strong>pendamping belajar</strong>, tetapi selalu <strong>kembali kepada guru</strong> untuk pembelajaran yang benar dan mendalam.
+                </p>
+              </div>
+            </section>
+
             <section className="pt-6 border-t mt-8">
               <p className="text-sm text-gray-500">
                 Jika ada pertanyaan mengenai Syarat & Ketentuan ini, silakan hubungi kami di: <a href="mailto:admin@mahirarab.web.id" className="text-blue-600 hover:underline">admin@mahirarab.web.id</a>
