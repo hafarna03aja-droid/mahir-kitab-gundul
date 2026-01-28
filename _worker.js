@@ -271,10 +271,11 @@ export default {
 
                 // Check rate limit
                 const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD in UTC
+                const now = new Date(); // Current timestamp for subscription check
 
-                // Fetch user's usage data
+                // Fetch user's profile data (status, subscription, usage)
                 const profileResponse = await fetch(
-                  `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=daily_usage_count,last_usage_date`,
+                  `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=status,subscription_expires_at,daily_usage_count,last_usage_date`,
                   {
                     headers: {
                       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
@@ -288,6 +289,44 @@ export default {
 
                   if (profiles && profiles.length > 0) {
                     const profile = profiles[0];
+
+                    // ========================================
+                    // SUBSCRIPTION CHECK
+                    // ========================================
+                    const userStatus = profile?.status;
+                    const subscriptionExpiresAt = profile?.subscription_expires_at;
+
+                    // Check 1: User must be premium
+                    if (userStatus !== 'premium') {
+                      console.log('🚫 Access denied: User not premium:', userId);
+                      return new Response(JSON.stringify({
+                        error: 'Akses ditolak. Silakan upgrade ke premium.',
+                        code: 'NOT_PREMIUM',
+                        status: userStatus
+                      }), { status: 403, headers: corsHeaders });
+                    }
+
+                    // Check 2: Subscription must not be expired (if not lifetime)
+                    if (subscriptionExpiresAt) {
+                      const expiryDate = new Date(subscriptionExpiresAt);
+                      if (now > expiryDate) {
+                        console.log('🚫 Subscription expired for user:', userId, 'expired at:', subscriptionExpiresAt);
+                        return new Response(JSON.stringify({
+                          error: 'Masa aktif habis. Silakan perbarui langganan.',
+                          code: 'SUBSCRIPTION_EXPIRED',
+                          expiredAt: subscriptionExpiresAt
+                        }), { status: 403, headers: corsHeaders });
+                      }
+                    }
+
+                    console.log('✅ Subscription valid for user:', userId);
+                    // ========================================
+                    // END SUBSCRIPTION CHECK
+                    // ========================================
+
+                    // ========================================
+                    // RATE LIMITING CHECK
+                    // ========================================
                     let currentCount = profile?.daily_usage_count || 0;
                     const lastUsageDate = profile?.last_usage_date;
 
@@ -321,6 +360,9 @@ export default {
                     }
 
                     console.log('✅ Rate limit OK for user:', userId, 'usage:', currentCount, '/100');
+                    // ========================================
+                    // END RATE LIMITING CHECK
+                    // ========================================
                   }
                 }
               }
@@ -369,53 +411,63 @@ export default {
           source = 'api_user';
           console.log('🔑 Using USER API Key');
         } else {
-          // Try multiple env variable names for compatibility
-          const serverApiKey = env.GOOGLE_API_KEY || env.VITE_GEMINI_API_KEY;
+          // Use Maia Router API Key from environment
+          const serverApiKey = env.MAIA_API_KEY || env.VITE_MAIA_API_KEY;
           if (!serverApiKey) {
             return new Response(JSON.stringify({
               error: 'API Key not configured',
-              message: 'Server API key is not set. Please provide your own API key or configure GOOGLE_API_KEY in environment.'
+              message: 'Server API key is not set. Please configure MAIA_API_KEY in environment.'
             }), { status: 500, headers: corsHeaders });
           }
           activeApiKey = serverApiKey;
-          source = 'api_app';
-          console.log('🔑 Using APP API Key');
+          source = 'api_maia';
+          console.log('🔑 Using MAIA API Key');
         }
 
 
-        // Build Gemini request
-        const geminiPayload = {
-          contents: [{ parts: [{ text: fullPrompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-          }
+        // Build Maia Router request (OpenAI-compatible format)
+        const messages = [];
+
+        if (systemInstruction) {
+          messages.push({ role: 'system', content: systemInstruction });
+        }
+
+        messages.push({ role: 'user', content: prompt });
+
+        const maiaPayload = {
+          model: 'maia/gemini-1.5-flash',
+          messages: messages,
+          temperature: 0.3
         };
 
         // Add JSON mode if requested
         if (jsonMode) {
-          geminiPayload.generationConfig.responseMimeType = 'application/json';
+          maiaPayload.response_format = { type: 'json_object' };
         }
 
-        // Call Gemini API
-        console.log('🤖 Calling Gemini API...');
-        const geminiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${activeApiKey}`,
+        // Call Maia Router API
+        console.log('🤖 Calling Maia Router API...');
+        const maiaResponse = await fetch(
+          'https://api.maiarouter.ai/v1/chat/completions',
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(geminiPayload)
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${activeApiKey}`
+            },
+            body: JSON.stringify(maiaPayload)
           }
         );
 
-        const geminiData = await geminiResponse.json();
+        const maiaData = await maiaResponse.json();
 
-        if (!geminiResponse.ok) {
-          const errorMsg = geminiData.error?.message || 'Gemini API error';
-          console.error('❌ Gemini Error:', errorMsg);
+        if (!maiaResponse.ok) {
+          const errorMsg = maiaData.error?.message || 'Maia Router API error';
+          console.error('❌ Maia Router Error:', errorMsg);
 
           // Handle specific errors
           let statusCode = 500;
-          if (errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('invalid')) {
+          if (errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('invalid') || errorMsg.includes('Unauthorized')) {
             statusCode = 401;
           } else if (errorMsg.includes('quota') || errorMsg.includes('limit')) {
             statusCode = 429;
@@ -427,7 +479,7 @@ export default {
           }), { status: statusCode, headers: corsHeaders });
         }
 
-        const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text = maiaData.choices?.[0]?.message?.content;
 
         if (!text) {
           return new Response(JSON.stringify({
