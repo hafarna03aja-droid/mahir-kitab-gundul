@@ -195,7 +195,7 @@ async function handleMaiaRouter(
 
     // Buat request ke Maia Router
     const completionParams: any = {
-        model: "maia/gemini-1.5-flash",
+        model: "maia/gemini-1.5-flash-001",
         messages: openaiMessages,
         temperature: temperature,
     };
