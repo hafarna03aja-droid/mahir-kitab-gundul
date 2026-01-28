@@ -36,10 +36,10 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
     const today = getTodayUTC();
 
-    // Fetch user's current usage data
+    // Fetch user's current usage data and subscription status
     const { data: profile, error: fetchError } = await supabaseClient
         .from('profiles')
-        .select('daily_usage_count, last_usage_date')
+        .select('daily_usage_count, last_usage_date, subscription_expires_at')
         .eq('id', userId)
         .single();
 
@@ -51,6 +51,18 @@ export async function checkRateLimit(
             remainingQuota: 0,
             error: 'Gagal memeriksa kuota pengguna'
         };
+    }
+
+    // CHECK SUBSCRIPTION: If active, bypass rate limit
+    if (profile?.subscription_expires_at) {
+        const expiresAt = new Date(profile.subscription_expires_at);
+        if (expiresAt > new Date()) {
+            return {
+                allowed: true,
+                currentCount: profile.daily_usage_count || 0,
+                remainingQuota: 999999 // Unlimited
+            };
+        }
     }
 
     let currentCount = profile?.daily_usage_count || 0;
