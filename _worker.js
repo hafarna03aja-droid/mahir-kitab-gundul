@@ -243,6 +243,98 @@ export default {
           }), { status: 400, headers: corsHeaders });
         }
 
+        // ========================================
+        // RATE LIMITING (100 requests/day/user)
+        // ========================================
+        const authHeader = request.headers.get('Authorization');
+        let userId = null;
+
+        // Only apply rate limiting if Authorization header is present
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          try {
+            const token = authHeader.replace('Bearer ', '');
+            const SUPABASE_URL = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
+            const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY;
+
+            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+              // Verify user via Supabase Auth
+              const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+                headers: {
+                  'Authorization': authHeader,
+                  'apikey': SUPABASE_ANON_KEY
+                }
+              });
+
+              if (authResponse.ok) {
+                const { id: verifiedUserId } = await authResponse.json();
+                userId = verifiedUserId;
+
+                // Check rate limit
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD in UTC
+
+                // Fetch user's usage data
+                const profileResponse = await fetch(
+                  `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=daily_usage_count,last_usage_date`,
+                  {
+                    headers: {
+                      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                      'apikey': SUPABASE_ANON_KEY
+                    }
+                  }
+                );
+
+                if (profileResponse.ok) {
+                  const profiles = await profileResponse.json();
+
+                  if (profiles && profiles.length > 0) {
+                    const profile = profiles[0];
+                    let currentCount = profile?.daily_usage_count || 0;
+                    const lastUsageDate = profile?.last_usage_date;
+
+                    // RESET LOGIC: If last usage date != today, reset counter
+                    if (lastUsageDate !== today) {
+                      await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                          'apikey': SUPABASE_ANON_KEY
+                        },
+                        body: JSON.stringify({
+                          daily_usage_count: 0,
+                          last_usage_date: today
+                        })
+                      });
+                      currentCount = 0;
+                      console.log('🔄 Daily usage counter reset for user:', userId);
+                    }
+
+                    // CHECK LOGIC: If count >= 100, deny access
+                    if (currentCount >= 100) {
+                      console.log('🚫 Rate limit exceeded for user:', userId, 'count:', currentCount);
+                      return new Response(JSON.stringify({
+                        error: 'Kuota harian habis. Silakan coba lagi besok.',
+                        code: 'RATE_LIMIT_EXCEEDED',
+                        remaining: 0,
+                        resetDate: new Date(today + 'T00:00:00Z').toISOString()
+                      }), { status: 429, headers: corsHeaders });
+                    }
+
+                    console.log('✅ Rate limit OK for user:', userId, 'usage:', currentCount, '/100');
+                  }
+                }
+              }
+            }
+          } catch (rateLimitError) {
+            // If rate limiting check fails, log but continue
+            // This ensures the API still works even if Supabase is down
+            console.warn('⚠️ Rate limit check failed, allowing request:', rateLimitError.message);
+          }
+        }
+        // ========================================
+        // END RATE LIMITING
+        // ========================================
+
         // Build full prompt with system instruction if provided
         const fullPrompt = systemInstruction
           ? `${systemInstruction}\n\nUser: ${prompt}`
@@ -354,6 +446,57 @@ export default {
             console.warn('⚠️ KV write error:', kvError.message);
           }
         }
+
+        // ========================================
+        // INCREMENT USAGE COUNTER
+        // ========================================
+        if (userId) {
+          try {
+            const SUPABASE_URL = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
+            const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY;
+            const today = new Date().toISOString().split('T')[0];
+
+            // Fetch current count
+            const profileResponse = await fetch(
+              `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=daily_usage_count`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                  'apikey': SUPABASE_ANON_KEY
+                }
+              }
+            );
+
+            if (profileResponse.ok) {
+              const profiles = await profileResponse.json();
+              if (profiles && profiles.length > 0) {
+                const currentCount = profiles[0]?.daily_usage_count || 0;
+
+                // Update with incremented value
+                await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'apikey': SUPABASE_ANON_KEY
+                  },
+                  body: JSON.stringify({
+                    daily_usage_count: currentCount + 1,
+                    last_usage_date: today
+                  })
+                });
+
+                console.log('📊 Usage incremented for user:', userId, 'new count:', currentCount + 1);
+              }
+            }
+          } catch (incrementError) {
+            // Non-blocking: don't fail the request if increment fails
+            console.warn('⚠️ Failed to increment usage counter:', incrementError.message);
+          }
+        }
+        // ========================================
+        // END INCREMENT USAGE
+        // ========================================
 
         console.log('✅ Chat response generated, source:', source);
 
