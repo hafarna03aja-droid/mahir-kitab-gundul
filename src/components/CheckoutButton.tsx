@@ -179,7 +179,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                     headers: headers,
                     body: JSON.stringify({
                         email: email,
-                        amount: 1000,
+                        amount: 49000,
                         item_name: 'Mahir Arab Gundul - Lifetime Access'
                     }),
                     signal: controller.signal
@@ -249,7 +249,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                             transaction_status: 'settlement',
                             fraud_status: 'accept',
                             status_code: '200',
-                            gross_amount: '1000.00',
+                            gross_amount: '49000.00',
                             payment_type: result.payment_type || 'manual_trigger',
                             transaction_time: new Date().toISOString(),
                             customer_details: {
@@ -459,7 +459,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-slate-600">Total Pembayaran:</span>
-                                <span className="text-2xl font-bold text-emerald-600">Rp 1.000</span>
+                                <span className="text-2xl font-bold text-emerald-600">Rp 49.000</span>
                             </div>
                             <p className="text-xs text-slate-500">
                                 ✅ Lifetime Access • No Monthly Fees
@@ -488,106 +488,109 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                             Pembayaran aman via Midtrans
                         </p>
                     </div>
-                </div>
-            )}
+                </div >
+            )
+            }
 
             {/* Payment Success Modal with Signup */}
-            {showSuccessModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8">
-                        {/* Success Icon */}
-                        <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
+            {
+                showSuccessModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8">
+                            {/* Success Icon */}
+                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
 
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center">
-                            🎉 Pembayaran Berhasil!
-                        </h2>
+                            <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center">
+                                🎉 Pembayaran Berhasil!
+                            </h2>
 
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-4 text-center">
-                            <p className="text-xs text-slate-500">Email:</p>
-                            <p className="font-bold text-emerald-700">{email}</p>
-                        </div>
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-4 text-center">
+                                <p className="text-xs text-slate-500">Email:</p>
+                                <p className="font-bold text-emerald-700">{email}</p>
+                            </div>
 
-                        {/* Signup Form */}
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
-                            <h3 className="font-bold text-slate-800 mb-3 text-center">
-                                📝 Buat Password untuk Login
-                            </h3>
+                            {/* Signup Form */}
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
+                                <h3 className="font-bold text-slate-800 mb-3 text-center">
+                                    📝 Buat Password untuk Login
+                                </h3>
 
-                            <div className="relative mb-3">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSignup()}
-                                    placeholder="Buat password (min. 6 karakter)"
-                                    className="w-full pl-10 pr-10 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none text-slate-900"
-                                />
+                                <div className="relative mb-3">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handleSignup()}
+                                        placeholder="Buat password (min. 6 karakter)"
+                                        className="w-full pl-10 pr-10 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none text-slate-900"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                    >
+                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
+
                                 <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                    onClick={handleSignup}
+                                    disabled={signupLoading || !password}
+                                    className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    {signupLoading ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Memproses...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                            </svg>
+                                            Buat Akun & Masuk
+                                        </>
+                                    )}
+                                </button>
+
+                                {signupMessage && (
+                                    <p className={`mt-3 text-sm text-center ${signupMessage.includes('✅') ? 'text-emerald-600' :
+                                        signupMessage.includes('⚠️') ? 'text-amber-600' : 'text-red-600'
+                                        }`}>
+                                        {signupMessage}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Divider */}
+                            <div className="flex items-center gap-3 my-4">
+                                <div className="flex-1 border-t border-slate-200"></div>
+                                <span className="text-xs text-slate-400">atau</span>
+                                <div className="flex-1 border-t border-slate-200"></div>
+                            </div>
+
+                            {/* Alternative Actions */}
+                            <div className="space-y-2">
+                                <button
+                                    onClick={() => window.location.href = '/app'}
+                                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors text-sm"
+                                >
+                                    Sudah punya akun? Login
                                 </button>
                             </div>
 
-                            <button
-                                onClick={handleSignup}
-                                disabled={signupLoading || !password}
-                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {signupLoading ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        Memproses...
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                        </svg>
-                                        Buat Akun & Masuk
-                                    </>
-                                )}
-                            </button>
-
-                            {signupMessage && (
-                                <p className={`mt-3 text-sm text-center ${signupMessage.includes('✅') ? 'text-emerald-600' :
-                                    signupMessage.includes('⚠️') ? 'text-amber-600' : 'text-red-600'
-                                    }`}>
-                                    {signupMessage}
-                                </p>
-                            )}
+                            <p className="text-xs text-slate-400 mt-4 text-center">
+                                Butuh bantuan? admin@mahirarab.web.id
+                            </p>
                         </div>
-
-                        {/* Divider */}
-                        <div className="flex items-center gap-3 my-4">
-                            <div className="flex-1 border-t border-slate-200"></div>
-                            <span className="text-xs text-slate-400">atau</span>
-                            <div className="flex-1 border-t border-slate-200"></div>
-                        </div>
-
-                        {/* Alternative Actions */}
-                        <div className="space-y-2">
-                            <button
-                                onClick={() => window.location.href = '/app'}
-                                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors text-sm"
-                            >
-                                Sudah punya akun? Login
-                            </button>
-                        </div>
-
-                        <p className="text-xs text-slate-400 mt-4 text-center">
-                            Butuh bantuan? admin@mahirarab.web.id
-                        </p>
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 }
