@@ -45,7 +45,8 @@ serve(async (req: Request) => {
 
         const token = authHeader.replace('Bearer ', '');
         const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || '';
+        // Panggil SERVICE_ROLE_KEY (nama baru yang kita buat tadi)
+        const supabaseKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || '';
 
         // Use SERVICE_ROLE_KEY if available to bypass RLS for incrementing, or ensure RLS allows update
         const supabase = createSupabaseClient(supabaseUrl, supabaseKey, token);
