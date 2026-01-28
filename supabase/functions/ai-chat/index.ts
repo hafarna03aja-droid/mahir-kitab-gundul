@@ -45,11 +45,14 @@ serve(async (req: Request) => {
 
         const token = authHeader.replace('Bearer ', '');
         const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-        // Panggil SERVICE_ROLE_KEY (nama baru yang kita buat tadi)
-        const supabaseKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || '';
+        const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+        const serviceRoleKey = Deno.env.get('SERVICE_ROLE_KEY') || '';
 
-        // Use SERVICE_ROLE_KEY if available to bypass RLS for incrementing, or ensure RLS allows update
-        const supabase = createSupabaseClient(supabaseUrl, supabaseKey, token);
+        // Client User: untuk auth.getUser() dan checkRateLimit() - mengikuti RLS
+        const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, token);
+
+        // Client Admin: untuk incrementUsage() - bypass RLS dengan SERVICE_ROLE_KEY
+        const supabaseAdmin = createSupabaseClient(supabaseUrl, serviceRoleKey);
 
         // Verify token and get user
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
@@ -84,7 +87,7 @@ serve(async (req: Request) => {
             apiKey = Deno.env.get('MAIAROUTER_API_KEY') || "";
             if (!apiKey) throw new Error("API Key Maia Router tidak ditemukan.");
 
-            return await handleMaiaRouter(apiKey, messages, temperature, response_format, supabase, user.id);
+            return await handleMaiaRouter(apiKey, messages, temperature, response_format, supabaseAdmin, user.id);
         } else if (provider === "openai") {
             const userKey = req.headers.get('x-openai-api-key');
             apiKey = (userKey && userKey.trim() !== '') ? userKey : Deno.env.get('OPENAI_API_KEY') || "";
@@ -98,7 +101,7 @@ serve(async (req: Request) => {
                 temperature,
                 response_format,
                 {},
-                supabase,
+                supabaseAdmin,
                 user.id
             );
         } else if (provider === "openrouter") {
@@ -117,7 +120,7 @@ serve(async (req: Request) => {
                     "HTTP-Referer": "https://mahirarab.web.id",
                     "X-Title": "Mahir Arab AI"
                 },
-                supabase,
+                supabaseAdmin,
                 user.id
             );
         } else if (provider === "maia") {
@@ -134,7 +137,7 @@ serve(async (req: Request) => {
                 temperature,
                 response_format,
                 {},
-                supabase,
+                supabaseAdmin,
                 user.id
             );
         } else {

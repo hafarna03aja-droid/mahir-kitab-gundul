@@ -138,12 +138,20 @@ export async function incrementUsage(
 
 /**
  * Create a Supabase client for Edge Functions
+ * @param authToken - Optional. If provided, creates a User client with Authorization header.
+ *                    If omitted, creates an Admin client (no Authorization header = bypasses RLS with SERVICE_ROLE_KEY).
  */
 export function createSupabaseClient(
     supabaseUrl: string,
     supabaseKey: string,
-    authToken: string
+    authToken?: string
 ): SupabaseClient {
+    // Mode Admin: Tanpa authToken = bypass RLS (gunakan dengan SERVICE_ROLE_KEY)
+    if (!authToken) {
+        return createClient(supabaseUrl, supabaseKey);
+    }
+
+    // Mode User: Dengan authToken = mengikuti RLS
     return createClient(supabaseUrl, supabaseKey, {
         global: {
             headers: {
