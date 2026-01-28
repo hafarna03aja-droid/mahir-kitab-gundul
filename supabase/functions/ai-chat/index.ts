@@ -6,7 +6,7 @@ import { checkRateLimit, incrementUsage, createSupabaseClient } from '../_shared
 // Konfigurasi CORS
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-gemini-api-key, x-openai-api-key, x-openrouter-api-key, x-amai-api-key, x-ai-provider, x-custom-base-url',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-gemini-api-key, x-openai-api-key, x-openrouter-api-key, x-maia-api-key, x-ai-provider, x-custom-base-url',
 };
 
 interface ChatMessage {
@@ -19,8 +19,8 @@ interface RequestBody {
     model?: string;
     temperature?: number;
     response_format?: { type: "json_object" };
-    provider?: "gemini" | "openai" | "openrouter" | "amai";
-    apiBaseUrl?: string; // Optional custom base URL for 'amai' or others
+    provider?: "gemini" | "openai" | "openrouter" | "maia";
+    apiBaseUrl?: string; // Optional custom base URL for 'maia' or others
 }
 
 serve(async (req: Request) => {
@@ -119,16 +119,16 @@ serve(async (req: Request) => {
                 supabase,
                 user.id
             );
-        } else if (provider === "amai") {
-            const userKey = req.headers.get('x-amai-api-key');
-            apiKey = (userKey && userKey.trim() !== '') ? userKey : Deno.env.get('AMAI_API_KEY') || "";
+        } else if (provider === "maia") {
+            const userKey = req.headers.get('x-maia-api-key');
+            apiKey = (userKey && userKey.trim() !== '') ? userKey : Deno.env.get('MAIA_API_KEY') || "";
 
-            const targetUrl = apiBaseUrl || "https://api.amai.io/v1/chat/completions";
+            const targetUrl = apiBaseUrl || "https://api.maiarouter.ai/v1/chat/completions";
 
             return await handleOpenAICompatible(
                 targetUrl,
                 apiKey,
-                body.model || "amaigpt-default",
+                body.model || "maia/gemini-1.5-flash-001",
                 messages,
                 temperature,
                 response_format,
