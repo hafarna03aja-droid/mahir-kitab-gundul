@@ -7,6 +7,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import type { AnalysisResult } from '../types';
 import { supabase } from '../supabaseClient';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 
 // Custom Error Classes for UI handling
 export class DailyLimitError extends Error {
@@ -331,6 +332,11 @@ export class AIProviderFactory {
             });
 
             if (error) {
+                // Check if this is a 429 (rate limit) error FIRST
+                if (error instanceof FunctionsHttpError && error.context?.status === 429) {
+                    throw new DailyLimitError();
+                }
+
                 console.error('Supabase Edge Function Error:', error);
                 // throw new Error(error.message || 'Edge Function call failed');
                 throw error;
@@ -403,6 +409,11 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
             });
 
             if (error) {
+                // Check if this is a 429 (rate limit) error FIRST
+                if (error instanceof FunctionsHttpError && error.context?.status === 429) {
+                    throw new DailyLimitError();
+                }
+
                 console.error('Supabase Edge Function Error:', error);
                 // throw new Error(error.message || 'Edge Function call failed');
                 throw error;
@@ -455,6 +466,11 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
             });
 
             if (error) {
+                // Check if this is a 429 (rate limit) error FIRST
+                if (error instanceof FunctionsHttpError && error.context?.status === 429) {
+                    throw new DailyLimitError();
+                }
+
                 console.error('Supabase Edge Function Error:', error);
                 // throw new Error(error.message || 'Edge Function call failed');
                 throw error;
