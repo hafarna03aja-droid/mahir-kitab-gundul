@@ -104,7 +104,23 @@ export async function checkRateLimit(
     }
 
     // CHECK LOGIC: 
-    // 1. Check Monthly Limit First
+    // 0. Check Subscription Expiration FIRST
+    const subscriptionExpiresAt = profile?.subscription_expires_at;
+    if (subscriptionExpiresAt) {
+        const expiryDate = new Date(subscriptionExpiresAt);
+        const now = new Date();
+
+        if (now > expiryDate) {
+            return {
+                allowed: false,
+                currentCount: dailyCount,
+                remainingQuota: 0,
+                error: 'SUBSCRIPTION_EXPIRED'
+            };
+        }
+    }
+
+    // 1. Check Monthly Limit
     if (monthlyCount >= MONTHLY_LIMIT) {
         return {
             allowed: false,
