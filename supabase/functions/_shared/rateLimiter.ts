@@ -82,7 +82,7 @@ export async function checkRateLimit(
             allowed: false,
             currentCount: currentCount,
             remainingQuota: 0,
-            error: 'Batas harian tercapai (100 request). Silakan kembali besok.'
+            error: 'Batas penggunaan harian tercapai. Coba lagi besok.'
         };
     }
 
