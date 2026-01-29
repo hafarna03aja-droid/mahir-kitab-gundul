@@ -4,7 +4,7 @@ import { CATEGORIZED_EXAMPLES } from '../constants';
 import type { AnalysisResult } from '../types';
 import AnalysisResultDisplay from './AnalysisResultDisplay';
 import LimitModal from './LimitModal';
-import { DailyLimitError, SubscriptionExpiredError } from '../services/aiProviderFactory';
+import { DailyLimitError, MonthlyLimitError, SubscriptionExpiredError } from '../services/aiProviderFactory';
 
 const LoadingSpinner: React.FC = () => (
     <div className="flex flex-col items-center justify-center p-8 text-slate-500">
@@ -27,7 +27,7 @@ const AnalysisTab: React.FC = () => {
     const [conversionError, setConversionError] = useState<string | null>(null);
     const [history, setHistory] = useState<string[]>([]);
     const [showLimitModal, setShowLimitModal] = useState(false);
-    const [limitType, setLimitType] = useState<'daily' | 'expired' | null>(null);
+    const [limitType, setLimitType] = useState<'daily' | 'monthly' | 'expired' | null>(null);
 
     useEffect(() => {
         try {
@@ -70,6 +70,9 @@ const AnalysisTab: React.FC = () => {
             // Handle specific error types with modals
             if (err instanceof DailyLimitError) {
                 setLimitType('daily');
+                setShowLimitModal(true);
+            } else if (err instanceof MonthlyLimitError) {
+                setLimitType('monthly');
                 setShowLimitModal(true);
             } else if (err instanceof SubscriptionExpiredError) {
                 setLimitType('expired');

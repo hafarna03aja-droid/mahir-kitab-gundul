@@ -13,10 +13,16 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 
 // Rate limit configuration
 const DAILY_LIMIT = 100;
+const MONTHLY_LIMIT = 3000;
 
 // Get today's date in UTC (YYYY-MM-DD format)
 function getTodayUTC(): string {
     return new Date().toISOString().split('T')[0];
+}
+
+// Get current month in UTC (YYYY-MM format)
+function getCurrentMonthUTC(): string {
+    return new Date().toISOString().slice(0, 7);
 }
 
 interface RateLimitResult {
@@ -35,11 +41,12 @@ export async function checkRateLimit(
     userId: string
 ): Promise<RateLimitResult> {
     const today = getTodayUTC();
+    const currentMonth = getCurrentMonthUTC();
 
     // Fetch user's current usage data and subscription status
     const { data: profile, error: fetchError } = await supabaseClient
         .from('profiles')
-        .select('daily_usage_count, last_usage_date, subscription_expires_at')
+        .select('daily_usage_count, monthly_usage_count, last_usage_date, subscription_expires_at')
         .eq('id', userId)
         .single();
 
@@ -56,31 +63,62 @@ export async function checkRateLimit(
     // NOTE: Premium users are now also subject to rate limit (100/day)
     // Subscription status is kept for reference but not used for bypass
 
-    let currentCount = profile?.daily_usage_count || 0;
+    let dailyCount = profile?.daily_usage_count || 0;
+    let monthlyCount = profile?.monthly_usage_count || 0;
     const lastUsageDate = profile?.last_usage_date;
 
-    // RESET LOGIC: If last usage date != today, reset counter
+    // Helper to get month from YYYY-MM-DD
+    const lastUsageMonth = lastUsageDate ? lastUsageDate.slice(0, 7) : '';
+
+    // RESET LOGIC:
+    // 1. Daily Reset
     if (lastUsageDate !== today) {
-        const { error: resetError } = await supabaseClient
-            .from('profiles')
-            .update({
-                daily_usage_count: 0,
-                last_usage_date: today
-            })
-            .eq('id', userId);
-
-        if (resetError) {
-            console.error('Error resetting daily counter:', resetError);
-        }
-
-        currentCount = 0;
+        dailyCount = 0;
     }
 
-    // CHECK LOGIC: If count >= limit, deny access
-    if (currentCount >= DAILY_LIMIT) {
+    // 2. Monthly Reset
+    if (lastUsageMonth !== currentMonth) {
+        monthlyCount = 0;
+    }
+
+    // Perform database update if reset occurred
+    if (dailyCount === 0 || monthlyCount === 0) {
+        // If simply skipping reset because values are already 0, we can avoid DB write?
+        // But we need to ensure tracking is correct. 
+        // Simplest: If dates mismatch, update DB reset.
+        if (lastUsageDate !== today) {
+            const updates: any = { daily_usage_count: 0, last_usage_date: today };
+            if (lastUsageMonth !== currentMonth) {
+                updates.monthly_usage_count = 0;
+            }
+
+            const { error: resetError } = await supabaseClient
+                .from('profiles')
+                .update(updates)
+                .eq('id', userId);
+
+            if (resetError) {
+                console.error('Error resetting counters:', resetError);
+            }
+        }
+    }
+
+    // CHECK LOGIC: 
+    // 1. Check Monthly Limit First
+    if (monthlyCount >= MONTHLY_LIMIT) {
         return {
             allowed: false,
-            currentCount: currentCount,
+            currentCount: monthlyCount,
+            remainingQuota: 0,
+            error: 'Batas penggunaan bulanan tercapai. Silakan upgrade plan Anda atau tunggu bulan depan.'
+        };
+    }
+
+    // 2. Check Daily Limit
+    if (dailyCount >= DAILY_LIMIT) {
+        return {
+            allowed: false,
+            currentCount: dailyCount,
             remainingQuota: 0,
             error: 'Batas penggunaan harian tercapai. Coba lagi besok.'
         };
@@ -88,8 +126,8 @@ export async function checkRateLimit(
 
     return {
         allowed: true,
-        currentCount: currentCount,
-        remainingQuota: DAILY_LIMIT - currentCount
+        currentCount: dailyCount,
+        remainingQuota: DAILY_LIMIT - dailyCount
     };
 }
 
@@ -106,17 +144,19 @@ export async function incrementUsage(
     // Fetch current count first
     const { data: profile } = await supabaseClient
         .from('profiles')
-        .select('daily_usage_count')
+        .select('daily_usage_count, monthly_usage_count')
         .eq('id', userId)
         .single();
 
-    const currentCount = profile?.daily_usage_count || 0;
+    const dailyCount = profile?.daily_usage_count || 0;
+    const monthlyCount = profile?.monthly_usage_count || 0;
 
     // Update with incremented value
     const { error } = await supabaseClient
         .from('profiles')
         .update({
-            daily_usage_count: currentCount + 1,
+            daily_usage_count: dailyCount + 1,
+            monthly_usage_count: monthlyCount + 1,
             last_usage_date: today
         })
         .eq('id', userId);

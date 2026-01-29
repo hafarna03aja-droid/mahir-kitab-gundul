@@ -16,6 +16,13 @@ export class DailyLimitError extends Error {
     }
 }
 
+export class MonthlyLimitError extends Error {
+    constructor(message: string = 'Batas penggunaan bulanan tercapai. Silakan upgrade plan Anda.') {
+        super(message);
+        this.name = 'MonthlyLimitError';
+    }
+}
+
 export class SubscriptionExpiredError extends Error {
     constructor(message: string = 'Masa aktif langganan Anda telah berakhir.') {
         super(message);
@@ -270,6 +277,43 @@ export class AIProviderFactory {
     }
 
     /**
+     * Helper to handle common Supabase Function errors (including monthly limit)
+     */
+    private static handleSupabaseError(error: any): never {
+        const errorMsg = error.message || '';
+        const dataError = error.context?.json?.error || '';
+
+        // 1. Monthly Limit
+        if (errorMsg.includes('Batas penggunaan bulanan') || dataError.includes('Batas penggunaan bulanan')) {
+            throw new MonthlyLimitError();
+        }
+
+        // 2. Daily Limit
+        if (error.status === 429 ||
+            errorMsg.includes('Batas harian') ||
+            errorMsg.includes('Batas penggunaan harian') ||
+            errorMsg.includes('rate limit') ||
+            errorMsg.includes('limit') ||
+            errorMsg.includes('Kuota') ||
+            dataError.includes('Batas harian') ||
+            dataError.includes('rate limit')) {
+            throw new DailyLimitError();
+        }
+
+        // 3. Subscription Expired
+        else if (errorMsg.includes('expired') || errorMsg.includes('subscription ended') || errorMsg.includes('berakhir') || errorMsg.includes('Langganan')) {
+            throw new SubscriptionExpiredError();
+        }
+
+        // 4. Auth Issues
+        else if (errorMsg.includes('Invalid Token') || errorMsg.includes('Unauthorized') || errorMsg.includes('Missing Auth')) {
+            throw new Error('Anda belum login. Silakan login terlebih dahulu untuk menggunakan fitur ini.');
+        }
+
+        throw error;
+    }
+
+    /**
      * High-level API: Ask AI Assistant
      * Uses Supabase Edge Function for rate limiting and usage tracking
      */
@@ -306,21 +350,10 @@ export class AIProviderFactory {
             return responseText;
         } catch (error: any) {
             console.error('Ask Assistant Failed:', error);
-
-            const errorMsg = error.message || '';
-            const dataError = error.context?.json?.error || ''; // Check if Supabase client attached the response body
-
-            // Check for rate limit / daily quota exceeded (HTTP 429)
-            if (error.status === 429 ||
-                errorMsg.includes('Batas harian') ||
-                errorMsg.includes('rate limit') ||
-                errorMsg.includes('limit') ||
-                errorMsg.includes('Kuota') ||
-                dataError.includes('Batas harian') ||
-                dataError.includes('rate limit')) {
-                throw new DailyLimitError();
-            } else if (errorMsg.includes('Invalid Token') || errorMsg.includes('Unauthorized') || errorMsg.includes('Missing Auth')) {
-                throw new Error('Anda belum login. Silakan login terlebih dahulu untuk menggunakan fitur ini.');
+            try {
+                this.handleSupabaseError(error);
+            } catch (handledError) {
+                throw handledError;
             }
             throw new Error('Gagal mendapatkan jawaban. Periksa koneksi atau coba lagi.');
         }
@@ -392,34 +425,11 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
             return validateAnalysisResult(rawResult, arabicText);
         } catch (error: any) {
             console.error('Analysis Failed:', error);
-
-            // Throw specific error types for UI handling
-            const errorMsg = error.message || '';
-            const dataError = error.context?.json?.error || ''; // Check if Supabase client attached the response body
-
-            // Check for rate limit / daily quota exceeded (HTTP 429)
-            if (error.status === 429 ||
-                errorMsg.includes('Batas harian') ||
-                errorMsg.includes('rate limit') ||
-                errorMsg.includes('limit') ||
-                errorMsg.includes('Kuota') ||
-                errorMsg.includes('429') ||
-                dataError.includes('Batas harian') ||
-                dataError.includes('rate limit')) {
-                throw new DailyLimitError();
+            try {
+                this.handleSupabaseError(error); // This will throw handling known errors
+            } catch (handledError) {
+                throw handledError;
             }
-
-            // Check for subscription expired
-            if (errorMsg.includes('expired') || errorMsg.includes('subscription ended') || errorMsg.includes('berakhir') || errorMsg.includes('Langganan')) {
-                throw new SubscriptionExpiredError();
-            }
-
-            // Check for auth issues
-            if (errorMsg.includes('Invalid Token') || errorMsg.includes('Unauthorized') || errorMsg.includes('Missing Auth')) {
-                throw new Error('Anda belum login. Silakan login terlebih dahulu untuk menggunakan fitur ini.');
-            }
-
-            // Generic error
             throw new Error('Gagal menganalisis teks. Periksa koneksi atau coba lagi.');
         }
     }
@@ -462,21 +472,10 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
             return responseText.trim();
         } catch (error: any) {
             console.error('Convert to Arab Gundul Failed:', error);
-
-            const errorMsg = error.message || '';
-            const dataError = error.context?.json?.error || ''; // Check if Supabase client attached the response body
-
-            // Check for rate limit / daily quota exceeded (HTTP 429)
-            if (error.status === 429 ||
-                errorMsg.includes('Batas harian') ||
-                errorMsg.includes('rate limit') ||
-                errorMsg.includes('limit') ||
-                errorMsg.includes('Kuota') ||
-                dataError.includes('Batas harian') ||
-                dataError.includes('rate limit')) {
-                throw new DailyLimitError();
-            } else if (errorMsg.includes('Invalid Token') || errorMsg.includes('Unauthorized') || errorMsg.includes('Missing Auth')) {
-                throw new Error('Anda belum login. Silakan login terlebih dahulu untuk menggunakan fitur ini.');
+            try {
+                this.handleSupabaseError(error);
+            } catch (handledError) {
+                throw handledError;
             }
             throw new Error('Gagal mengkonversi teks. Periksa koneksi atau coba lagi.');
         }
