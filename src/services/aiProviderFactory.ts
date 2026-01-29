@@ -284,12 +284,22 @@ export class AIProviderFactory {
         const errorMsg = error.message || '';
         const dataError = error.context?.json?.error || '';
 
-        // 1. Monthly Limit
+        // 1. Subscription Expired (check FIRST before daily/monthly)
+        if (dataError === 'SUBSCRIPTION_EXPIRED' ||
+            errorMsg.includes('SUBSCRIPTION_EXPIRED') ||
+            errorMsg.includes('expired') ||
+            errorMsg.includes('subscription ended') ||
+            errorMsg.includes('berakhir') ||
+            errorMsg.includes('Langganan')) {
+            throw new SubscriptionExpiredError();
+        }
+
+        // 2. Monthly Limit
         if (errorMsg.includes('Batas penggunaan bulanan') || dataError.includes('Batas penggunaan bulanan')) {
             throw new MonthlyLimitError();
         }
 
-        // 2. Daily Limit
+        // 3. Daily Limit
         if (error.status === 429 ||
             errorMsg.includes('Batas harian') ||
             errorMsg.includes('Batas penggunaan harian') ||
@@ -301,13 +311,8 @@ export class AIProviderFactory {
             throw new DailyLimitError();
         }
 
-        // 3. Subscription Expired
-        else if (errorMsg.includes('expired') || errorMsg.includes('subscription ended') || errorMsg.includes('berakhir') || errorMsg.includes('Langganan')) {
-            throw new SubscriptionExpiredError();
-        }
-
         // 4. Auth Issues
-        else if (errorMsg.includes('Invalid Token') || errorMsg.includes('Unauthorized') || errorMsg.includes('Missing Auth')) {
+        if (errorMsg.includes('Invalid Token') || errorMsg.includes('Unauthorized') || errorMsg.includes('Missing Auth')) {
             throw new Error('Anda belum login. Silakan login terlebih dahulu untuk menggunakan fitur ini.');
         }
 
