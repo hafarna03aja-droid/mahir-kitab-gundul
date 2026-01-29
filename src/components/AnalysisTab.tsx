@@ -3,6 +3,8 @@ import { analyzeArabicText, convertToArabGundul } from '../services/aiService';
 import { CATEGORIZED_EXAMPLES } from '../constants';
 import type { AnalysisResult } from '../types';
 import AnalysisResultDisplay from './AnalysisResultDisplay';
+import LimitModal from './LimitModal';
+import { DailyLimitError, SubscriptionExpiredError } from '../services/aiProviderFactory';
 
 const LoadingSpinner: React.FC = () => (
     <div className="flex flex-col items-center justify-center p-8 text-slate-500">
@@ -24,6 +26,8 @@ const AnalysisTab: React.FC = () => {
     const [isConverting, setIsConverting] = useState(false);
     const [conversionError, setConversionError] = useState<string | null>(null);
     const [history, setHistory] = useState<string[]>([]);
+    const [showLimitModal, setShowLimitModal] = useState(false);
+    const [limitType, setLimitType] = useState<'daily' | 'expired' | null>(null);
 
     useEffect(() => {
         try {
@@ -63,7 +67,16 @@ const AnalysisTab: React.FC = () => {
                 return newHistory.slice(0, 20); // Limit history to 20 items
             });
         } catch (err) {
-            setError((err as Error).message || 'Terjadi kesalahan yang tidak diketahui.');
+            // Handle specific error types with modals
+            if (err instanceof DailyLimitError) {
+                setLimitType('daily');
+                setShowLimitModal(true);
+            } else if (err instanceof SubscriptionExpiredError) {
+                setLimitType('expired');
+                setShowLimitModal(true);
+            } else {
+                setError((err as Error).message || 'Terjadi kesalahan yang tidak diketahui.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -109,8 +122,8 @@ const AnalysisTab: React.FC = () => {
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
                                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-offset-slate-800 ${selectedCategory === category
-                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-                                        : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600'
+                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
+                                    : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600'
                                     }`}
                             >
                                 {category}
@@ -219,6 +232,21 @@ const AnalysisTab: React.FC = () => {
                     <p className="text-sm text-slate-500 italic">Belum ada riwayat analisis.</p>
                 )}
             </div>
+
+            {/* Limit Modal */}
+            <LimitModal
+                isOpen={showLimitModal}
+                type={limitType}
+                onClose={() => {
+                    setShowLimitModal(false);
+                    setLimitType(null);
+                }}
+                onUpgrade={() => {
+                    setShowLimitModal(false);
+                    setLimitType(null);
+                    window.location.href = '/pricing';
+                }}
+            />
         </div>
     );
 };

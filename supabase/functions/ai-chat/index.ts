@@ -12,13 +12,14 @@ serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
     // --- VARIABEL DEBUG (PENAMPUNG LAPORAN) ---
-    let debugInfo = {
+    let debugInfo: any = {
         step: "Start",
         hasAuth: false,
         userId: null,
         adminKeyExists: false,
         incrementError: null,
-        counterUpdated: false
+        counterUpdated: false,
+        aiError: null
     };
 
     try {
@@ -26,7 +27,12 @@ serve(async (req) => {
 
         // 1. AUTH CHECK
         const authHeader = req.headers.get('Authorization');
-        if (!authHeader) throw new Error("Missing Auth Header");
+        if (!authHeader) {
+            return new Response(JSON.stringify({
+                error: "Missing Auth Header - Silakan login terlebih dahulu",
+                debug: debugInfo
+            }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
 
         debugInfo.hasAuth = true;
         const token = authHeader.replace('Bearer ', '');
@@ -45,29 +51,57 @@ serve(async (req) => {
 
         // Cek User
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) throw new Error("Invalid Token");
+        if (authError || !user) {
+            return new Response(JSON.stringify({
+                error: "Invalid Token - Silakan login ulang",
+                debug: { ...debugInfo, authError: authError?.message }
+            }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
         debugInfo.userId = user.id;
 
         // 2. RATE LIMIT CHECK
         debugInfo.step = "Checking Rate Limit";
-        const rateLimit = await checkRateLimit(supabase, user.id);
+        const rateLimit = await checkRateLimit(supabaseAdmin, user.id);
         if (!rateLimit.allowed) {
             return new Response(JSON.stringify({ error: rateLimit.error }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         // 3. AI PROCESSING (Maia Router)
         debugInfo.step = "Calling AI";
-        const maia = new OpenAI({
-            apiKey: Deno.env.get('MAIAROUTER_API_KEY'),
-            baseURL: "https://api.maiarouter.ai/v1"
-        });
 
-        const completion = await maia.chat.completions.create({
-            model: "maia/gemini-1.5-flash-001",
-            messages: messages
-        });
+        const maiaApiKey = Deno.env.get('MAIAROUTER_API_KEY');
+        if (!maiaApiKey) {
+            return new Response(JSON.stringify({
+                error: "Server configuration error: Missing AI API key",
+                debug: debugInfo
+            }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
 
-        const aiResponseText = completion.choices[0].message.content;
+        let aiResponseText: string;
+        try {
+            const maia = new OpenAI({
+                apiKey: maiaApiKey,
+                baseURL: "https://api.maiarouter.ai/v1"
+            });
+
+            const completion = await maia.chat.completions.create({
+                model: "maia/gemini-2.5-flash",
+                messages: messages
+            });
+
+            aiResponseText = completion.choices[0]?.message?.content || '';
+
+            if (!aiResponseText) {
+                throw new Error("Empty response from AI");
+            }
+        } catch (aiError: any) {
+            console.error("AI API Error:", aiError);
+            debugInfo.aiError = aiError.message || String(aiError);
+            return new Response(JSON.stringify({
+                error: "Gagal menghubungi layanan AI. Coba lagi nanti.",
+                debug: debugInfo
+            }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
 
         // 4. INCREMENT COUNTER (CRITICAL STEP)
         debugInfo.step = "Incrementing Counter";
@@ -75,7 +109,7 @@ serve(async (req) => {
             // PENTING: Pakai supabaseAdmin (bukan supabase biasa)
             await incrementUsage(supabaseAdmin, user.id);
             debugInfo.counterUpdated = true;
-        } catch (incError) {
+        } catch (incError: any) {
             console.error("Increment Gagal:", incError);
             debugInfo.incrementError = incError.message || JSON.stringify(incError);
         }
@@ -89,9 +123,10 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
 
-    } catch (error) {
+    } catch (error: any) {
+        console.error("Unhandled Error:", error);
         return new Response(JSON.stringify({
-            error: error.message,
+            error: error.message || "An unexpected error occurred",
             debug: debugInfo
         }), {
             status: 500,

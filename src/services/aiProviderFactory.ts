@@ -8,6 +8,21 @@ import OpenAI from 'openai';
 import type { AnalysisResult } from '../types';
 import { supabase } from '../supabaseClient';
 
+// Custom Error Classes for UI handling
+export class DailyLimitError extends Error {
+    constructor(message: string = 'Kuota harian 100 request telah habis. Silakan kembali lagi besok.') {
+        super(message);
+        this.name = 'DailyLimitError';
+    }
+}
+
+export class SubscriptionExpiredError extends Error {
+    constructor(message: string = 'Masa aktif langganan Anda telah berakhir.') {
+        super(message);
+        this.name = 'SubscriptionExpiredError';
+    }
+}
+
 export type AIProvider = 'gemini' | 'openai' | 'openrouter' | 'maia';
 
 interface ProviderConfig {
@@ -276,6 +291,12 @@ export class AIProviderFactory {
                 throw new Error(error.message || 'Edge Function call failed');
             }
 
+            // Check if Edge Function returned an error in the response body
+            if (data?.error) {
+                console.error('Edge Function Response Error:', data.error, data.debug);
+                throw new Error(data.error);
+            }
+
             const responseText = data?.choices?.[0]?.message?.content || '';
 
             if (!responseText) {
@@ -286,8 +307,10 @@ export class AIProviderFactory {
         } catch (error: any) {
             console.error('Ask Assistant Failed:', error);
 
-            if (error.message?.includes('rate limit') || error.message?.includes('limit')) {
+            if (error.message?.includes('rate limit') || error.message?.includes('limit') || error.message?.includes('Kuota')) {
                 throw new Error('Batas penggunaan harian tercapai. Silakan upgrade ke premium atau coba lagi besok.');
+            } else if (error.message?.includes('Invalid Token') || error.message?.includes('Unauthorized') || error.message?.includes('Missing Auth')) {
+                throw new Error('Anda belum login. Silakan login terlebih dahulu untuk menggunakan fitur ini.');
             }
             throw new Error('Gagal mendapatkan jawaban. Periksa koneksi atau coba lagi.');
         }
@@ -340,6 +363,12 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
                 throw new Error(error.message || 'Edge Function call failed');
             }
 
+            // Check if Edge Function returned an error in the response body
+            if (data?.error) {
+                console.error('Edge Function Response Error:', data.error, data.debug);
+                throw new Error(data.error);
+            }
+
             // Extract text from OpenAI-compatible response format
             const responseText = data?.choices?.[0]?.message?.content || '';
 
@@ -354,17 +383,26 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
         } catch (error: any) {
             console.error('Analysis Failed:', error);
 
-            // Provide more specific error message for rate limit
-            const errorMessage = error.message?.includes('rate limit') || error.message?.includes('limit')
-                ? "Batas penggunaan harian tercapai. Silakan upgrade ke premium atau coba lagi besok."
-                : "Gagal menganalisis teks. Periksa koneksi atau coba lagi.";
+            // Throw specific error types for UI handling
+            const errorMsg = error.message || '';
 
-            return {
-                originalText: arabicText,
-                vocalizedText: arabicText,
-                translation: errorMessage,
-                irab: []
-            };
+            // Check for rate limit / daily quota exceeded (HTTP 429)
+            if (errorMsg.includes('Batas harian') || errorMsg.includes('rate limit') || errorMsg.includes('limit') || errorMsg.includes('Kuota') || errorMsg.includes('429')) {
+                throw new DailyLimitError();
+            }
+
+            // Check for subscription expired
+            if (errorMsg.includes('expired') || errorMsg.includes('subscription ended') || errorMsg.includes('berakhir') || errorMsg.includes('Langganan')) {
+                throw new SubscriptionExpiredError();
+            }
+
+            // Check for auth issues
+            if (errorMsg.includes('Invalid Token') || errorMsg.includes('Unauthorized') || errorMsg.includes('Missing Auth')) {
+                throw new Error('Anda belum login. Silakan login terlebih dahulu untuk menggunakan fitur ini.');
+            }
+
+            // Generic error
+            throw new Error('Gagal menganalisis teks. Periksa koneksi atau coba lagi.');
         }
     }
 
@@ -391,6 +429,12 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
                 throw new Error(error.message || 'Edge Function call failed');
             }
 
+            // Check if Edge Function returned an error in the response body
+            if (data?.error) {
+                console.error('Edge Function Response Error:', data.error, data.debug);
+                throw new Error(data.error);
+            }
+
             const responseText = data?.choices?.[0]?.message?.content || '';
 
             if (!responseText) {
@@ -401,8 +445,10 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
         } catch (error: any) {
             console.error('Convert to Arab Gundul Failed:', error);
 
-            if (error.message?.includes('rate limit') || error.message?.includes('limit')) {
+            if (error.message?.includes('rate limit') || error.message?.includes('limit') || error.message?.includes('Kuota')) {
                 throw new Error('Batas penggunaan harian tercapai. Silakan upgrade ke premium atau coba lagi besok.');
+            } else if (error.message?.includes('Invalid Token') || error.message?.includes('Unauthorized') || error.message?.includes('Missing Auth')) {
+                throw new Error('Anda belum login. Silakan login terlebih dahulu untuk menggunakan fitur ini.');
             }
             throw new Error('Gagal mengkonversi teks. Periksa koneksi atau coba lagi.');
         }

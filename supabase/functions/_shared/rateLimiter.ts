@@ -53,17 +53,8 @@ export async function checkRateLimit(
         };
     }
 
-    // CHECK SUBSCRIPTION: If active, bypass rate limit
-    if (profile?.subscription_expires_at) {
-        const expiresAt = new Date(profile.subscription_expires_at);
-        if (expiresAt > new Date()) {
-            return {
-                allowed: true,
-                currentCount: profile.daily_usage_count || 0,
-                remainingQuota: 999999 // Unlimited
-            };
-        }
-    }
+    // NOTE: Premium users are now also subject to rate limit (100/day)
+    // Subscription status is kept for reference but not used for bypass
 
     let currentCount = profile?.daily_usage_count || 0;
     const lastUsageDate = profile?.last_usage_date;
@@ -91,7 +82,7 @@ export async function checkRateLimit(
             allowed: false,
             currentCount: currentCount,
             remainingQuota: 0,
-            error: 'Kuota harian habis. Silakan coba lagi besok.'
+            error: 'Batas harian tercapai (100 request). Silakan kembali besok.'
         };
     }
 
