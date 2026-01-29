@@ -63,7 +63,10 @@ serve(async (req) => {
         debugInfo.step = "Checking Rate Limit";
         const rateLimit = await checkRateLimit(supabaseAdmin, user.id);
         if (!rateLimit.allowed) {
-            return new Response(JSON.stringify({ error: rateLimit.error }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ error: rateLimit.error }), {
+                status: rateLimit.status || 429, // Use dynamic status code (403 for expired, 429 for limits)
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
         }
 
         // 3. AI PROCESSING (Maia Router)

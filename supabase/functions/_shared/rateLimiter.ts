@@ -30,6 +30,7 @@ interface RateLimitResult {
     currentCount: number;
     remainingQuota: number;
     error?: string;
+    status?: number; // HTTP status code
 }
 
 /**
@@ -115,7 +116,8 @@ export async function checkRateLimit(
                 allowed: false,
                 currentCount: dailyCount,
                 remainingQuota: 0,
-                error: 'SUBSCRIPTION_EXPIRED'
+                error: 'SUBSCRIPTION_EXPIRED',
+                status: 403
             };
         }
     }
@@ -126,7 +128,8 @@ export async function checkRateLimit(
             allowed: false,
             currentCount: monthlyCount,
             remainingQuota: 0,
-            error: 'Batas penggunaan bulanan tercapai. Silakan upgrade plan Anda atau tunggu bulan depan.'
+            error: 'Batas penggunaan bulanan tercapai. Silakan upgrade plan Anda atau tunggu bulan depan.',
+            status: 429
         };
     }
 
@@ -136,7 +139,8 @@ export async function checkRateLimit(
             allowed: false,
             currentCount: dailyCount,
             remainingQuota: 0,
-            error: 'Batas penggunaan harian tercapai. Coba lagi besok.'
+            error: 'Batas penggunaan harian tercapai. Coba lagi besok.',
+            status: 429
         };
     }
 
