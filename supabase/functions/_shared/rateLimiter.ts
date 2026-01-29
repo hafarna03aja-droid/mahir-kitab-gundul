@@ -1,12 +1,18 @@
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-// KITA KEMBALIKAN KE FORMAT STANDARD (URL, KEY, TOKEN) AGAR TIDAK CRASH
-export const createSupabaseClient = (supabaseUrl: string, supabaseKey: string, token: string) => {
-    return new SupabaseClient(supabaseUrl, supabaseKey, {
-        global: {
+// KITA UPDATE BAGIAN INI AGAR TOKEN BERSIFAT OPSIONAL
+export const createSupabaseClient = (supabaseUrl: string, supabaseKey: string, token?: string) => {
+    const options: any = {};
+
+    // Jika ada token (User), pakai Authorization header
+    if (token) {
+        options.global = {
             headers: { Authorization: `Bearer ${token}` },
-        },
-    });
+        };
+    }
+
+    // Jika tidak ada token (Admin), biarkan kosong (dia akan pakai Key sebagai auth)
+    return new SupabaseClient(supabaseUrl, supabaseKey, options);
 };
 
 export async function checkRateLimit(supabase: SupabaseClient, userId: string) {
