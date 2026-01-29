@@ -61,30 +61,26 @@ export async function checkRateLimit(supabase: SupabaseClient, userId: string) {
 }
 
 export async function incrementUsage(supabaseAdmin: SupabaseClient, userId: string) {
-    // Pakai RPC (Stored Procedure) atau update biasa. 
-    // Update biasa lebih aman jika RLS sudah dibuka untuk service role.
-    const { error } = await supabaseAdmin
-        .from('profiles')
-        .update({
-            daily_usage_count:  // Increment manual (fetch + update) rawan race condition, tapi oke untuk skala kecil.
-                // Idealnya pakai rpc('increment_usage') 
-                // Untuk sekarang kita pakai trik SQL raw via rpc jika ada, atau update biasa:
-                // Kita asumsikan update dilakukan setelah fetch di checkRateLimit, 
-                // tapi incrementUsage biasanya dipanggil terpisah.
-                // Agar simpel dan pasti jalan:
-                last_usage_date: new Date().toISOString()
-        })
-        .eq('id', userId); // PENTING: increment logic harusnya atomic, 
-    // tapi di sini kita hanya update timestamp dulu.
-    // INCREMENT SEBENARNYA:
-
+    // Use RPC (Stored Procedure) for atomic increment
     const { error: rpcError } = await supabaseAdmin.rpc('increment_daily_usage', { user_id: userId });
+
     if (rpcError) {
         console.error("RPC Error:", rpcError);
-        // Fallback manual increment (Not Atomic)
-        const { data } = await supabaseAdmin.from('profiles').select('daily_usage_count').eq('id', userId).single();
+        // Fallback: manual increment (not atomic, but works)
+        const { data } = await supabaseAdmin
+            .from('profiles')
+            .select('daily_usage_count')
+            .eq('id', userId)
+            .single();
+
         if (data) {
-            await supabaseAdmin.from('profiles').update({ daily_usage_count: data.daily_usage_count + 1 }).eq('id', userId);
+            await supabaseAdmin
+                .from('profiles')
+                .update({
+                    daily_usage_count: data.daily_usage_count + 1,
+                    last_usage_date: new Date().toISOString()
+                })
+                .eq('id', userId);
         }
     }
 }
