@@ -1,27 +1,18 @@
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-export const createSupabaseClient = (req: Request) => {
-    return new SupabaseClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        {
-            global: { headers: { Authorization: req.headers.get('Authorization')! } },
-        }
-    )
-}
-
-// Client Admin (Bypass RLS) untuk update counter
-export const createAdminClient = () => {
-    return new SupabaseClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-}
+// KITA KEMBALIKAN KE FORMAT STANDARD (URL, KEY, TOKEN) AGAR TIDAK CRASH
+export const createSupabaseClient = (supabaseUrl: string, supabaseKey: string, token: string) => {
+    return new SupabaseClient(supabaseUrl, supabaseKey, {
+        global: {
+            headers: { Authorization: `Bearer ${token}` },
+        },
+    });
+};
 
 export async function checkRateLimit(supabase: SupabaseClient, userId: string) {
     const MAX_DAILY_LIMIT = 100;
 
-    // 1. Ambil Data User
+    // 1. Ambil Data User (Limit & Tanggal Expired)
     const { data: profile, error } = await supabase
         .from('profiles')
         .select('daily_usage_count, subscription_expires_at')
@@ -29,49 +20,43 @@ export async function checkRateLimit(supabase: SupabaseClient, userId: string) {
         .single();
 
     if (error || !profile) {
-        console.error("Profile Error:", error);
-        // Jika profil tidak ketemu, blokir demi keamanan
+        console.error("Profile Check Error:", error);
+        // Jika profil tidak ditemukan, anggap error auth/security
         return { allowed: false, error: "Profile not found", status: 401 };
     }
 
-    // Debugging Log (Cek ini di Supabase Dashboard jika error)
-    console.log(`User: ${userId} | Count: ${profile.daily_usage_count} | Exp: ${profile.subscription_expires_at}`);
+    console.log(`[RateLimit] User: ${userId} | Count: ${profile.daily_usage_count} | Exp: ${profile.subscription_expires_at}`);
 
     // 2. CEK PRIORITAS UTAMA: Apakah Expired?
-    const now = new Date();
-    const expiresAt = new Date(profile.subscription_expires_at);
+    // Kita cek apakah tanggal expired ada dan apakah sudah lewat
+    if (profile.subscription_expires_at) {
+        const now = new Date();
+        const expiresAt = new Date(profile.subscription_expires_at);
 
-    // Validasi tanggal (jaga-jaga jika null)
-    if (!profile.subscription_expires_at || isNaN(expiresAt.getTime())) {
-        // Jika tidak ada tanggal expire, anggap expired (atau ubah logic ini sesuai kebutuhan bisnis)
-        return { allowed: false, error: "SUBSCRIPTION_INVALID", status: 403 };
-    }
-
-    if (now > expiresAt) {
-        return { allowed: false, error: "SUBSCRIPTION_EXPIRED", status: 403 };
+        if (now > expiresAt) {
+            // BLOKIR KARENA EXPIRED (Status 403)
+            return { allowed: false, error: "SUBSCRIPTION_EXPIRED", status: 403 };
+        }
     }
 
     // 3. CEK KEDUA: Apakah Kuota Habis?
     if (profile.daily_usage_count >= MAX_DAILY_LIMIT) {
+        // BLOKIR KARENA KUOTA (Status 429)
         return { allowed: false, error: "DAILY_LIMIT_REACHED", status: 429 };
     }
 
-    // 4. Lolos Semua Cek
+    // 4. Lolos Semua Cek (Aman)
     return { allowed: true };
 }
 
 export async function incrementUsage(supabaseAdmin: SupabaseClient, userId: string) {
-    // Use RPC (Stored Procedure) for atomic increment
+    // Coba panggil RPC (jika Anda punya stored procedure 'increment_daily_usage')
     const { error: rpcError } = await supabaseAdmin.rpc('increment_daily_usage', { user_id: userId });
 
     if (rpcError) {
-        console.error("RPC Error:", rpcError);
-        // Fallback: manual increment (not atomic, but works)
-        const { data } = await supabaseAdmin
-            .from('profiles')
-            .select('daily_usage_count')
-            .eq('id', userId)
-            .single();
+        // Fallback: Manual update jika RPC tidak ada
+        // Ambil dulu data terakhir
+        const { data } = await supabaseAdmin.from('profiles').select('daily_usage_count').eq('id', userId).single();
 
         if (data) {
             await supabaseAdmin
