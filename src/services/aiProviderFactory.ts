@@ -6,6 +6,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import type { AnalysisResult } from '../types';
+import { supabase } from '../supabaseClient';
 
 export type AIProvider = 'gemini' | 'openai' | 'openrouter' | 'maia';
 
@@ -255,21 +256,48 @@ export class AIProviderFactory {
 
     /**
      * High-level API: Ask AI Assistant
+     * Uses Supabase Edge Function for rate limiting and usage tracking
      */
-    static async askAssistant(config: ProviderConfig, userMessage: string): Promise<string> {
-        const provider = this.createProvider(config);
+    static async askAssistant(_config: ProviderConfig, userMessage: string): Promise<string> {
         const systemInstruction = "Kamu adalah asisten pakar Bahasa Arab (Nahwu, Sharaf, Balaghah). Jawab ringkas, jelas, gunakan referensi kaidah.";
 
-        const response = await provider.generate(userMessage, systemInstruction, false);
-        return response.text;
+        try {
+            const { data, error } = await supabase.functions.invoke('ai-chat', {
+                body: {
+                    messages: [
+                        { role: "system", content: systemInstruction },
+                        { role: "user", content: userMessage }
+                    ]
+                }
+            });
+
+            if (error) {
+                console.error('Supabase Edge Function Error:', error);
+                throw new Error(error.message || 'Edge Function call failed');
+            }
+
+            const responseText = data?.choices?.[0]?.message?.content || '';
+
+            if (!responseText) {
+                throw new Error('Empty response from AI');
+            }
+
+            return responseText;
+        } catch (error: any) {
+            console.error('Ask Assistant Failed:', error);
+
+            if (error.message?.includes('rate limit') || error.message?.includes('limit')) {
+                throw new Error('Batas penggunaan harian tercapai. Silakan upgrade ke premium atau coba lagi besok.');
+            }
+            throw new Error('Gagal mendapatkan jawaban. Periksa koneksi atau coba lagi.');
+        }
     }
 
     /**
      * High-level API: Analyze Arabic Text
+     * Uses Supabase Edge Function for rate limiting and usage tracking
      */
-    static async analyzeText(config: ProviderConfig, arabicText: string): Promise<AnalysisResult> {
-        const provider = this.createProvider(config);
-
+    static async analyzeText(_config: ProviderConfig, arabicText: string): Promise<AnalysisResult> {
         const systemInstruction = "You are an expert Arabic grammarian. Analyze the following text and output strictly valid JSON as requested.";
 
         const prompt = `Analisis struktur gramatikal (I'rab) kalimat Arab berikut: "${arabicText}".
@@ -297,15 +325,44 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
 }`;
 
         try {
-            const response = await provider.generate(prompt, systemInstruction, true);
-            const rawResult = JSON.parse(response.text);
+            // Call Supabase Edge Function for rate limiting and usage tracking
+            const { data, error } = await supabase.functions.invoke('ai-chat', {
+                body: {
+                    messages: [
+                        { role: "system", content: systemInstruction },
+                        { role: "user", content: prompt }
+                    ]
+                }
+            });
+
+            if (error) {
+                console.error('Supabase Edge Function Error:', error);
+                throw new Error(error.message || 'Edge Function call failed');
+            }
+
+            // Extract text from OpenAI-compatible response format
+            const responseText = data?.choices?.[0]?.message?.content || '';
+
+            if (!responseText) {
+                throw new Error('Empty response from AI');
+            }
+
+            // Clean and parse JSON response
+            const cleanedText = cleanJsonOutput(responseText);
+            const rawResult = JSON.parse(cleanedText);
             return validateAnalysisResult(rawResult, arabicText);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Analysis Failed:', error);
+
+            // Provide more specific error message for rate limit
+            const errorMessage = error.message?.includes('rate limit') || error.message?.includes('limit')
+                ? "Batas penggunaan harian tercapai. Silakan upgrade ke premium atau coba lagi besok."
+                : "Gagal menganalisis teks. Periksa koneksi atau coba lagi.";
+
             return {
                 originalText: arabicText,
                 vocalizedText: arabicText,
-                translation: "Gagal menganalisis teks. Periksa koneksi atau API Key.",
+                translation: errorMessage,
                 irab: []
             };
         }
@@ -313,14 +370,41 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
 
     /**
      * High-level API: Convert to Arab Gundul
+     * Uses Supabase Edge Function for rate limiting and usage tracking
      */
-    static async convertToArabGundul(config: ProviderConfig, indonesianText: string): Promise<string> {
-        const provider = this.createProvider(config);
-
+    static async convertToArabGundul(_config: ProviderConfig, indonesianText: string): Promise<string> {
         const systemInstruction = "You are an expert Arabic translator. Convert the following text to accurate Arab Gundul (unvocalized Arabic script).";
         const prompt = `Ubah kalimat Indonesia ini ke Arab Gundul (tanpa harakat) yang benar secara gramatikal: "${indonesianText}". Hanya output teks Arabnya saja.`;
 
-        const response = await provider.generate(prompt, systemInstruction, false);
-        return response.text.trim();
+        try {
+            const { data, error } = await supabase.functions.invoke('ai-chat', {
+                body: {
+                    messages: [
+                        { role: "system", content: systemInstruction },
+                        { role: "user", content: prompt }
+                    ]
+                }
+            });
+
+            if (error) {
+                console.error('Supabase Edge Function Error:', error);
+                throw new Error(error.message || 'Edge Function call failed');
+            }
+
+            const responseText = data?.choices?.[0]?.message?.content || '';
+
+            if (!responseText) {
+                throw new Error('Empty response from AI');
+            }
+
+            return responseText.trim();
+        } catch (error: any) {
+            console.error('Convert to Arab Gundul Failed:', error);
+
+            if (error.message?.includes('rate limit') || error.message?.includes('limit')) {
+                throw new Error('Batas penggunaan harian tercapai. Silakan upgrade ke premium atau coba lagi besok.');
+            }
+            throw new Error('Gagal mengkonversi teks. Periksa koneksi atau coba lagi.');
+        }
     }
 }
