@@ -1,5 +1,3 @@
-// supabase/functions/ai-chat/index.ts
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.28.0";
 import { checkRateLimit, incrementUsage, createSupabaseClient } from '../_shared/rateLimiter.ts';
@@ -13,7 +11,7 @@ serve(async (req) => {
     // Handle CORS
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-    // Variabel Debug (Penampung Laporan)
+    // --- VARIABEL DEBUG (PENAMPUNG LAPORAN) ---
     let debugInfo = {
         step: "Start",
         hasAuth: false,
@@ -24,7 +22,7 @@ serve(async (req) => {
     };
 
     try {
-        const { messages, model } = await req.json();
+        const { messages } = await req.json();
 
         // 1. AUTH CHECK
         const authHeader = req.headers.get('Authorization');
@@ -33,21 +31,21 @@ serve(async (req) => {
         debugInfo.hasAuth = true;
         const token = authHeader.replace('Bearer ', '');
 
-        // Setup Clients
+        // SETUP CLIENTS
         const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
         const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-        const serviceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''; // Cek kedua kemungkinan nama
+        // Cek Service Key (Admin)
+        const serviceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
-        // Lapor apakah kunci admin terdeteksi
+        // Lapor status kunci admin
         debugInfo.adminKeyExists = !!serviceKey && serviceKey.length > 10;
 
-        const supabase = createSupabaseClient(supabaseUrl, anonKey, token); // Client User
-        const supabaseAdmin = createSupabaseClient(supabaseUrl, serviceKey); // Client Admin (Tanpa Token)
+        const supabase = createSupabaseClient(supabaseUrl, anonKey, token); // Client User (untuk cek profil)
+        const supabaseAdmin = createSupabaseClient(supabaseUrl, serviceKey); // Client Admin (KHUSUS UPDATE COUNTER)
 
         // Cek User
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error("Invalid Token");
-
         debugInfo.userId = user.id;
 
         // 2. RATE LIMIT CHECK
@@ -64,7 +62,6 @@ serve(async (req) => {
             baseURL: "https://api.maiarouter.ai/v1"
         });
 
-        // Paksa ke model -001
         const completion = await maia.chat.completions.create({
             model: "maia/gemini-1.5-flash-001",
             messages: messages
@@ -72,23 +69,22 @@ serve(async (req) => {
 
         const aiResponseText = completion.choices[0].message.content;
 
-        // 4. INCREMENT COUNTER (Bagian Kritis!)
+        // 4. INCREMENT COUNTER (CRITICAL STEP)
         debugInfo.step = "Incrementing Counter";
         try {
-            // Kita panggil incrementUsage tapi tangkap errornya jika ada
+            // PENTING: Pakai supabaseAdmin (bukan supabase biasa)
             await incrementUsage(supabaseAdmin, user.id);
             debugInfo.counterUpdated = true;
         } catch (incError) {
             console.error("Increment Gagal:", incError);
-            // Simpan pesan error untuk dikirim ke frontend
             debugInfo.incrementError = incError.message || JSON.stringify(incError);
         }
 
         // 5. SEND RESPONSE + DEBUG INFO
-        // Kita selipkan 'debug' object ke dalam JSON response agar bisa dibaca di browser
+        // Kita bungkus responsenya agar Debug Info terbawa
         return new Response(JSON.stringify({
             choices: [{ message: { content: aiResponseText } }],
-            debug: debugInfo // <--- INI MATATA-MATANYA
+            debug: debugInfo // <--- INI MATA-MATANYA
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
