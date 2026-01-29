@@ -332,7 +332,8 @@ export class AIProviderFactory {
 
             if (error) {
                 console.error('Supabase Edge Function Error:', error);
-                throw new Error(error.message || 'Edge Function call failed');
+                // throw new Error(error.message || 'Edge Function call failed');
+                throw error;
             }
 
             // Check if Edge Function returned an error in the response body
@@ -403,7 +404,8 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
 
             if (error) {
                 console.error('Supabase Edge Function Error:', error);
-                throw new Error(error.message || 'Edge Function call failed');
+                // throw new Error(error.message || 'Edge Function call failed');
+                throw error;
             }
 
             // Check if Edge Function returned an error in the response body
@@ -454,7 +456,8 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
 
             if (error) {
                 console.error('Supabase Edge Function Error:', error);
-                throw new Error(error.message || 'Edge Function call failed');
+                // throw new Error(error.message || 'Edge Function call failed');
+                throw error;
             }
 
             // Check if Edge Function returned an error in the response body
