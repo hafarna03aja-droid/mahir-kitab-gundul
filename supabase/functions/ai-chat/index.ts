@@ -61,10 +61,15 @@ serve(async (req) => {
 
         // 2. RATE LIMIT CHECK
         debugInfo.step = "Checking Rate Limit";
-        const rateLimit = await checkRateLimit(supabaseAdmin, user.id);
+        const rateLimit = await checkRateLimit(supabase, user.id);
+
         if (!rateLimit.allowed) {
-            return new Response(JSON.stringify({ error: rateLimit.error }), {
-                status: rateLimit.status || 429, // Use dynamic status code (403 for expired, 429 for limits)
+            // KIRIM STATUS YANG SPESIFIK (403 atau 429)
+            return new Response(JSON.stringify({
+                error: rateLimit.error,
+                debug: debugInfo
+            }), {
+                status: rateLimit.status || 429, // Default ke 429 jika status kosong
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
         }
