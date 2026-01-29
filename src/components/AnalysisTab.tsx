@@ -4,6 +4,7 @@ import { CATEGORIZED_EXAMPLES } from '../constants';
 import type { AnalysisResult } from '../types';
 import AnalysisResultDisplay from './AnalysisResultDisplay';
 import LimitModal from './LimitModal';
+import PaymentModal from './PaymentModal';
 import { DailyLimitError, MonthlyLimitError, SubscriptionExpiredError } from '../services/aiProviderFactory';
 
 const LoadingSpinner: React.FC = () => (
@@ -28,6 +29,7 @@ const AnalysisTab: React.FC = () => {
     const [history, setHistory] = useState<string[]>([]);
     const [showLimitModal, setShowLimitModal] = useState(false);
     const [limitType, setLimitType] = useState<'daily' | 'monthly' | 'expired' | null>(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     useEffect(() => {
         try {
@@ -247,8 +249,14 @@ const AnalysisTab: React.FC = () => {
                 onUpgrade={() => {
                     setShowLimitModal(false);
                     setLimitType(null);
-                    window.location.href = '/pricing';
+                    setShowPaymentModal(true);
                 }}
+            />
+
+            {/* Payment Modal */}
+            <PaymentModal
+                isOpen={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
             />
         </div>
     );
