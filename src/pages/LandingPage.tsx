@@ -101,7 +101,7 @@ export default function LandingPage() {
                         />
 
                         <p className="mt-4 text-sm text-slate-500">
-                            🔒 Tanpa Langganan Bulanan • <span className="font-semibold text-emerald-600">1x Bayar untuk Selamanya</span>
+                            🔒 Akses Penuh Seluruh Fitur • <span className="font-semibold text-emerald-600">Investasi Terbaik Belajar Kitab</span>
                         </p>
                     </div>
                 </div>
@@ -285,7 +285,6 @@ export default function LandingPage() {
 
                             <div className="text-center mb-6 mt-4">
                                 <h3 className="text-2xl font-bold text-slate-900 mb-2">MAHIR ARAB PRO</h3>
-                                <p className="text-amber-600 font-semibold text-lg">(LIFETIME ACCESS)</p>
                             </div>
 
                             {/* Ramadan Promo Badge */}
@@ -321,7 +320,7 @@ export default function LandingPage() {
                                         </span>
                                     </div>
                                 </div>
-                                <p className="text-slate-500 mt-3 font-semibold">Sekali bayar, akses selamanya ✨</p>
+                                <p className="text-slate-500 mt-3 font-semibold">Dapatkan akses penuh sekarang juga ✨</p>
                             </div>
 
                             <div className="space-y-4 mb-8">
@@ -329,7 +328,7 @@ export default function LandingPage() {
                                     'Akses Full Fitur AI (Analisis I\'rab, Terjemahan, Harakat)',
                                     'Akses Perpustakaan Kitab Digital Lengkap',
                                     'Smart Caching Technology (Pencarian Super Cepat)',
-                                    'Free Update Selamanya',
+                                    'Update Fitur Berkala',
                                     'BONUS: E-book Panduan Belajar Nahwu-Sharaf'
                                 ].map((feature, i) => (
                                     <div key={i} className="flex items-start gap-3">
