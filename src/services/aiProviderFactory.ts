@@ -7,7 +7,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import type { AnalysisResult } from '../types';
 import { supabase } from '../supabaseClient';
-import { FunctionsHttpError } from '@supabase/supabase-js';
 
 // Custom Error Classes for UI handling
 export class DailyLimitError extends Error {
@@ -337,8 +336,17 @@ export class AIProviderFactory {
             });
 
             if (error) {
-                // Check if this is a 429 (rate limit) error FIRST
-                if (error instanceof FunctionsHttpError && error.context?.status === 429) {
+                // Check status code for specific errors
+                const status = error.context?.status || error.status;
+                const errorMsg = error.message || '';
+
+                // Check for subscription expiration (403)
+                if (status === 403 || errorMsg.includes("SUBSCRIPTION_EXPIRED")) {
+                    throw new SubscriptionExpiredError();
+                }
+
+                // Check for rate limit (429)
+                if (status === 429 || errorMsg.includes("DAILY_LIMIT")) {
                     throw new DailyLimitError();
                 }
 
@@ -414,8 +422,17 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
             });
 
             if (error) {
-                // Check if this is a 429 (rate limit) error FIRST
-                if (error instanceof FunctionsHttpError && error.context?.status === 429) {
+                // Check status code for specific errors
+                const status = error.context?.status || error.status;
+                const errorMsg = error.message || '';
+
+                // Check for subscription expiration (403)
+                if (status === 403 || errorMsg.includes("SUBSCRIPTION_EXPIRED")) {
+                    throw new SubscriptionExpiredError();
+                }
+
+                // Check for rate limit (429)
+                if (status === 429 || errorMsg.includes("DAILY_LIMIT")) {
                     throw new DailyLimitError();
                 }
 
@@ -471,8 +488,17 @@ Output WAJIB berupa JSON Object dengan struktur persis seperti ini:
             });
 
             if (error) {
-                // Check if this is a 429 (rate limit) error FIRST
-                if (error instanceof FunctionsHttpError && error.context?.status === 429) {
+                // Check status code for specific errors
+                const status = error.context?.status || error.status;
+                const errorMsg = error.message || '';
+
+                // Check for subscription expiration (403)
+                if (status === 403 || errorMsg.includes("SUBSCRIPTION_EXPIRED")) {
+                    throw new SubscriptionExpiredError();
+                }
+
+                // Check for rate limit (429)
+                if (status === 429 || errorMsg.includes("DAILY_LIMIT")) {
                     throw new DailyLimitError();
                 }
 
