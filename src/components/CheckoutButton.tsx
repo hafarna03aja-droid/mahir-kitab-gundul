@@ -461,9 +461,7 @@ export default function CheckoutButton({ className = '', onSuccess }: CheckoutBu
                                 <span className="text-slate-600">Total Pembayaran:</span>
                                 <span className="text-2xl font-bold text-emerald-600">Rp 49.000</span>
                             </div>
-                            <p className="text-xs text-slate-500">
-                                ✅ Lifetime Access • No Monthly Fees
-                            </p>
+
                         </div>
 
                         <button
