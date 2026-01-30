@@ -69,7 +69,7 @@ Setelah klik tombol "Ambil Promo Sekarang", muncul modal:
 
 **Elemen Modal:**
 - 📧 Input field untuk email
-- 💰 Tampilan harga: **Rp 1.000** (Lifetime Access)
+- 💰 Tampilan harga: **Rp 49.000** (Lifetime Access)
 - ✅ Tombol "Lanjut ke Pembayaran"
 - ❌ Tombol close (X)
 

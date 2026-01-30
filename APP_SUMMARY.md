@@ -139,7 +139,7 @@ Percakapan real-time dengan AI tutor menggunakan suara:
 
 **Sistem Premium:**
 - 💳 Integrasi Midtrans Payment Gateway
-- 💰 Lifetime access: Rp 1.000
+- 💰 Lifetime access: Rp 49.000
 - ✅ Auto-upgrade setelah pembayaran
 - 🔄 Webhook untuk konfirmasi otomatis
 - 📊 Dashboard status akun

@@ -316,7 +316,7 @@ export default function LandingPage() {
                                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 blur-xl opacity-30 animate-pulse"></div>
                                     <div className="relative flex items-baseline justify-center gap-2 bg-gradient-to-br from-emerald-50 to-teal-50 px-8 py-4 rounded-2xl border-2 border-emerald-200">
                                         <span className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                            Rp 1.000
+                                            Rp 49.000
                                         </span>
                                     </div>
                                 </div>

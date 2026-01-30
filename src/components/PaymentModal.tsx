@@ -57,7 +57,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) => {
                             </div>
                             <div className="relative inline-block">
                                 <span className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                    Rp 1.000
+                                    Rp 49.000
                                 </span>
                             </div>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
