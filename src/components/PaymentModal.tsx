@@ -12,13 +12,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div 
+            <div
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto transform transition-all animate-in zoom-in-95 duration-200 relative"
                 role="dialog"
                 aria-modal="true"
             >
                 {/* Close Button */}
-                <button 
+                <button
                     onClick={onClose}
                     className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors z-10"
                 >
@@ -42,8 +42,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) => {
 
                     {/* Pricing Card */}
                     <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-xl border-2 border-amber-400 p-6 shadow-lg mb-6 relative overflow-hidden">
-                         {/* Promo Badge */}
-                         <div className="absolute top-0 right-0 bg-amber-400 text-slate-900 px-3 py-1 text-xs font-bold rounded-bl-xl shadow-sm">
+                        {/* Promo Badge */}
+                        <div className="absolute top-0 right-0 bg-amber-400 text-slate-900 px-3 py-1 text-xs font-bold rounded-bl-xl shadow-sm">
                             POPULER
                         </div>
 
@@ -57,7 +57,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) => {
                             </div>
                             <div className="relative inline-block">
                                 <span className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                    Rp 49.000
+                                    Rp 1.000
                                 </span>
                             </div>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
@@ -84,15 +84,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) => {
                         </div>
 
                         {/* Checkout Button */}
-                        <CheckoutButton 
+                        <CheckoutButton
                             className="w-full py-3 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                             onSuccess={() => {
                                 // Close modal and refresh or update state
                                 onClose();
-                                window.location.reload(); 
+                                window.location.reload();
                             }}
                         />
-                         <p className="text-center text-[10px] text-slate-400 mt-3">
+                        <p className="text-center text-[10px] text-slate-400 mt-3">
                             Pembayaran aman via Midtrans • Garansi 7 hari
                         </p>
                     </div>

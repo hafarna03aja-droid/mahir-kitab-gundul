@@ -109,7 +109,7 @@ VITE_SUPABASE_ANON_KEY=[configured] ✅
 ```bash
 curl -X POST https://viywfnjhpnunwhakhnrj.supabase.co/functions/v1/midtrans-payment \
   -H "Authorization: Bearer [ANON_KEY]" \
-  -d '{"email":"test@example.com","amount":49000,"item_name":"Test"}'
+  -d '{"email":"test@example.com","amount":1000,"item_name":"Test"}'
 ```
 
 **Response:**

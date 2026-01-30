@@ -149,7 +149,7 @@ npx supabase functions logs midtrans-webhook --tail
 ```bash
 curl -X POST https://mahirarab.web.id/webhook/midtrans \
   -H "Content-Type: application/json" \
-  -d '{"order_id":"TEST-123","transaction_status":"settlement","fraud_status":"accept","status_code":"200","gross_amount":"49000"}'
+  -d '{"order_id":"TEST-123","transaction_status":"settlement","fraud_status":"accept","status_code":"200","gross_amount":"1000"}'
 ```
 
 **Expected:** Webhook receives and processes ✅
