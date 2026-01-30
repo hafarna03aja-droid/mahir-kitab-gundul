@@ -18,40 +18,37 @@ export const createSupabaseClient = (supabaseUrl: string, supabaseKey: string, t
 export async function checkRateLimit(supabase: SupabaseClient, userId: string) {
     const MAX_DAILY_LIMIT = 100;
 
-    // 1. Ambil Data User (Limit & Tanggal Expired)
+    // 1. Ambil Data (TAMBAHKAN 'last_usage_date')
     const { data: profile, error } = await supabase
         .from('profiles')
-        .select('daily_usage_count, subscription_expires_at')
+        .select('daily_usage_count, subscription_expires_at, last_usage_date')
         .eq('id', userId)
         .single();
 
-    if (error || !profile) {
-        console.error("Profile Check Error:", error);
-        // Jika profil tidak ditemukan, anggap error auth/security
-        return { allowed: false, error: "Profile not found", status: 401 };
-    }
+    if (error || !profile) return { allowed: false, error: "Profile error", status: 401 };
 
-    console.log(`[RateLimit] User: ${userId} | Count: ${profile.daily_usage_count} | Exp: ${profile.subscription_expires_at}`);
-
-    // 2. CEK PRIORITAS UTAMA: Apakah Expired?
-    // Kita cek apakah tanggal expired ada dan apakah sudah lewat
+    // 2. CEK EXPIRED (Prioritas Utama)
     if (profile.subscription_expires_at) {
-        const now = new Date();
-        const expiresAt = new Date(profile.subscription_expires_at);
-
-        if (now > expiresAt) {
-            // BLOKIR KARENA EXPIRED (Status 403)
+        if (new Date() > new Date(profile.subscription_expires_at)) {
             return { allowed: false, error: "SUBSCRIPTION_EXPIRED", status: 403 };
         }
     }
 
-    // 3. CEK KEDUA: Apakah Kuota Habis?
+    // 3. LOGIKA RESET HARIAN (Kunci Jawaban Anda)
+    const today = new Date().toISOString().split('T')[0]; // Ambil tanggal hari ini (YYYY-MM-DD)
+
+    // Jika last_usage_date kosong ATAU tanggalnya BUKAN hari ini
+    if (!profile.last_usage_date || profile.last_usage_date !== today) {
+        // Anggap user ini bersih (count 0), jadi BOLEH LEWAT.
+        // Nanti fungsi SQL 'increment' yang akan mereset angkanya jadi 1 di database.
+        return { allowed: true };
+    }
+
+    // 4. CEK KUOTA (Hanya jika tanggalnya masih SAMA dengan hari ini)
     if (profile.daily_usage_count >= MAX_DAILY_LIMIT) {
-        // BLOKIR KARENA KUOTA (Status 429)
         return { allowed: false, error: "DAILY_LIMIT_REACHED", status: 429 };
     }
 
-    // 4. Lolos Semua Cek (Aman)
     return { allowed: true };
 }
 
