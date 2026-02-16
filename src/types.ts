@@ -1,5 +1,19 @@
 export type TabId = 'analisis' | 'kitab' | 'asisten' | 'tutor';
 
+export type UserLevel = 'pemula' | 'pelajar';
+
+export interface BeginnerWordEntry {
+  word: string;
+  vocalized_word: string;
+  meaning: string;
+}
+
+export interface BeginnerAnalysisResult {
+  originalText: string;
+  translation: string;
+  words: BeginnerWordEntry[];
+}
+
 export interface Tab {
   id: TabId;
   label: string;

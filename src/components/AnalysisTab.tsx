@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { analyzeArabicText, convertToArabGundul } from '../services/aiService';
+import { analyzeArabicText, analyzeArabicTextBeginner, convertToArabGundul } from '../services/aiService';
 import { CATEGORIZED_EXAMPLES } from '../constants';
-import type { AnalysisResult } from '../types';
+import type { AnalysisResult, BeginnerAnalysisResult, UserLevel } from '../types';
 import AnalysisResultDisplay from './AnalysisResultDisplay';
+import BeginnerResultDisplay from './BeginnerResultDisplay';
 import LimitModal from './LimitModal';
 import PaymentModal from './PaymentModal';
 import { DailyLimitError, MonthlyLimitError, SubscriptionExpiredError } from '../services/aiProviderFactory';
@@ -20,6 +21,10 @@ const LoadingSpinner: React.FC = () => (
 const AnalysisTab: React.FC = () => {
     const [inputText, setInputText] = useState('');
     const [result, setResult] = useState<AnalysisResult | null>(null);
+    const [beginnerResult, setBeginnerResult] = useState<BeginnerAnalysisResult | null>(null);
+    const [userLevel, setUserLevel] = useState<UserLevel>(() => {
+        return (localStorage.getItem('user_analysis_level') as UserLevel) || 'pemula';
+    });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>(Object.keys(CATEGORIZED_EXAMPLES)[0]);
@@ -30,6 +35,15 @@ const AnalysisTab: React.FC = () => {
     const [showLimitModal, setShowLimitModal] = useState(false);
     const [limitType, setLimitType] = useState<'daily' | 'monthly' | 'expired' | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+    const handleLevelChange = (level: UserLevel) => {
+        setUserLevel(level);
+        localStorage.setItem('user_analysis_level', level);
+        // Clear previous results when switching levels
+        setResult(null);
+        setBeginnerResult(null);
+        setError(null);
+    };
 
     useEffect(() => {
         try {
@@ -59,10 +73,16 @@ const AnalysisTab: React.FC = () => {
         setIsLoading(true);
         setError(null);
         setResult(null);
+        setBeginnerResult(null);
 
         try {
-            const analysisResult = await analyzeArabicText(textToAnalyze);
-            setResult(analysisResult);
+            if (userLevel === 'pemula') {
+                const beginnerAnalysis = await analyzeArabicTextBeginner(textToAnalyze);
+                setBeginnerResult(beginnerAnalysis);
+            } else {
+                const analysisResult = await analyzeArabicText(textToAnalyze);
+                setResult(analysisResult);
+            }
             // Add to history
             setHistory(prevHistory => {
                 const newHistory = [textToAnalyze, ...prevHistory.filter(item => item !== textToAnalyze)];
@@ -117,6 +137,34 @@ const AnalysisTab: React.FC = () => {
                     <p>
                         Masukkan teks Arab (dengan atau tanpa harakat) di bawah ini untuk mendapatkan analisis gramatikal (I'rab) yang mendalam, teks yang sudah divokalisasi, dan terjemahannya.
                     </p>
+                </div>
+
+                {/* Level Toggle */}
+                <div className="mt-6 flex items-center gap-3">
+                    <span className="text-sm font-medium text-slate-600">Level:</span>
+                    <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-sm">
+                        <button
+                            onClick={() => handleLevelChange('pemula')}
+                            className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${userLevel === 'pemula'
+                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md'
+                                    : 'text-slate-600 hover:text-slate-800 hover:bg-white/60'
+                                }`}
+                        >
+                            🌱 Pemula
+                        </button>
+                        <button
+                            onClick={() => handleLevelChange('pelajar')}
+                            className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${userLevel === 'pelajar'
+                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
+                                    : 'text-slate-600 hover:text-slate-800 hover:bg-white/60'
+                                }`}
+                        >
+                            📚 Pelajar
+                        </button>
+                    </div>
+                    <span className="text-xs text-slate-400 hidden sm:inline">
+                        {userLevel === 'pemula' ? 'Arti per-kata sederhana' : 'Analisis gramatikal lengkap'}
+                    </span>
                 </div>
 
                 <div className="mt-6">
@@ -206,7 +254,8 @@ const AnalysisTab: React.FC = () => {
 
                 <div className="mt-8">
                     {isLoading && <LoadingSpinner />}
-                    {result && <AnalysisResultDisplay result={result} />}
+                    {userLevel === 'pemula' && beginnerResult && <BeginnerResultDisplay result={beginnerResult} />}
+                    {userLevel === 'pelajar' && result && <AnalysisResultDisplay result={result} />}
                 </div>
             </div>
 

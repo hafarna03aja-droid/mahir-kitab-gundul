@@ -1,4 +1,4 @@
-import type { AnalysisResult } from '../types';
+import type { AnalysisResult, BeginnerAnalysisResult } from '../types';
 import { AIProviderFactory, type AIProvider } from './aiProviderFactory';
 
 // Default Env Keys (Function-level secrets are preferred, but these can be fallbacks)
@@ -61,4 +61,9 @@ export async function convertToArabGundul(indonesianText: string): Promise<strin
     const config = getAIConfig();
     // No need to check for API key - factory handles fallback to Cloudflare/KV cache
     return await AIProviderFactory.convertToArabGundul(config, indonesianText);
+}
+
+export async function analyzeArabicTextBeginner(arabicText: string): Promise<BeginnerAnalysisResult> {
+    const config = getAIConfig();
+    return await AIProviderFactory.analyzeTextBeginner(config, arabicText);
 }
