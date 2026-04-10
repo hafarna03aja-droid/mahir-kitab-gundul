@@ -96,7 +96,7 @@ export default function LandingPage() {
                         </p>
 
                         <CheckoutButton
-                            className="group px-8 py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-3"
+                            className="group px-6 py-3 sm:px-8 sm:py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-base sm:text-lg rounded-xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-3"
                             onSuccess={() => window.location.href = '/app'}
                         />
 
@@ -123,8 +123,8 @@ export default function LandingPage() {
                             { title: 'Sulit Paham Arti', desc: 'Lelah buka kamus satu per satu, tapi kalimatnya tetap sulit dimengerti.' },
                             { title: 'Belajar Tanpa Arah', desc: 'Bingung harus mulai dari mana dan tidak ada tempat bertanya saat kesulitan.' }
                         ].map((problem, i) => (
-                            <div key={i} className="flex gap-4 p-6 bg-slate-50 rounded-xl border-2 border-slate-200 hover:border-red-300 transition-all">
-                                <XCircle className="w-8 h-8 text-red-500 flex-shrink-0 mt-1" />
+                            <div key={i} className="flex gap-3 sm:gap-4 p-4 sm:p-6 bg-slate-50 rounded-xl border-2 border-slate-200 hover:border-red-300 transition-all">
+                                <XCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-500 flex-shrink-0 mt-1" />
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 mb-2">{problem.title}</h3>
                                     <p className="text-slate-600">{problem.desc}</p>
@@ -150,7 +150,7 @@ export default function LandingPage() {
                         <div className="order-2 lg:order-1">
                             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-emerald-100">
                                 {/* Tabs Mockup */}
-                                <div className="flex items-center gap-6 px-6 py-4 border-b border-slate-100 bg-white overflow-x-auto">
+                                <div className="flex items-center gap-6 px-6 py-4 border-b border-slate-100 bg-white overflow-x-auto hide-scrollbar">
                                     <div className="flex items-center gap-2 text-slate-400 text-sm font-medium whitespace-nowrap">
                                         <Search className="w-4 h-4" />
                                         <span>Analisis Teks</span>
@@ -266,30 +266,30 @@ export default function LandingPage() {
                                     <div className="mb-2">
                                         <p className="text-sm font-semibold text-slate-700 mb-3">Pilih Contoh Teks dari Kategori:</p>
                                         <div className="flex flex-wrap gap-2 mb-2">
-                                            <div className="bg-gradient-to-r from-orange-400 to-amber-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
+                                            <div className="bg-gradient-to-r from-orange-400 to-amber-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-sm">
                                                 Al-Quran
                                             </div>
-                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm transition-colors">
+                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm transition-colors">
                                                 Hadits
                                             </div>
-                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm transition-colors cursor-default">
+                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm transition-colors cursor-default">
                                                 Amtsal (Peribahasa)
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap gap-2 mb-6">
-                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm transition-colors">
+                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm transition-colors">
                                                 Kalimat Sederhana
                                             </div>
                                         </div>
                                         
-                                        <div className="border-t border-slate-200 pt-6 flex flex-wrap gap-3">
-                                            <div className="bg-slate-100/90 text-slate-600 px-5 py-2 rounded-full text-sm font-medium">
+                                        <div className="border-t border-slate-200 pt-6 flex flex-wrap gap-2 sm:gap-3">
+                                            <div className="bg-slate-100/90 text-slate-600 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
                                                 Al-Fatihah 1-2
                                             </div>
-                                            <div className="bg-slate-100/90 text-slate-600 px-5 py-2 rounded-full text-sm font-medium">
+                                            <div className="bg-slate-100/90 text-slate-600 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
                                                 Al-Ikhlas
                                             </div>
-                                            <div className="bg-slate-100/90 text-slate-600 px-5 py-2 rounded-full text-sm font-medium">
+                                            <div className="bg-slate-100/90 text-slate-600 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
                                                 Al-Baqarah 255
                                             </div>
                                         </div>
@@ -372,14 +372,14 @@ export default function LandingPage() {
                             <div className="bg-[#efeae2] rounded-3xl shadow-2xl overflow-hidden border-[6px] border-slate-800 w-full max-w-[380px] flex flex-col h-[600px] relative">
                                 {/* WA Header */}
                                 <div className="bg-[#075e54] text-white px-3 py-3 flex items-center justify-between shadow-sm z-10">
-                                    <div className="flex items-center gap-2">
-                                        <ArrowLeft className="w-5 h-5 cursor-pointer" />
-                                        <div className="w-9 h-9 bg-indigo-900 rounded-full flex items-center justify-center font-bold text-white text-xs overflow-hidden flex-shrink-0">
-                                            <span className="text-[9px]">MAOSANI</span>
+                                    <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden">
+                                        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer flex-shrink-0" />
+                                        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-indigo-900 rounded-full flex items-center justify-center font-bold text-white text-xs overflow-hidden flex-shrink-0">
+                                            <span className="text-[8px] sm:text-[9px]">MAOS</span>
                                         </div>
-                                        <div className="leading-tight cursor-pointer">
-                                            <div className="font-semibold text-[15px]">Ustaz Indra Kurnia</div>
-                                            <div className="text-[12px] text-white/90">online</div>
+                                        <div className="leading-tight cursor-pointer min-w-0">
+                                            <div className="font-semibold text-[14px] sm:text-[15px] truncate">Ustaz Indra Kurnia</div>
+                                            <div className="text-[11px] sm:text-[12px] text-white/90 truncate">online</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -456,17 +456,17 @@ export default function LandingPage() {
                                 </div>
 
                                 {/* WA Footer */}
-                                <div className="bg-[#f0f2f5] px-2 py-2.5 flex items-center gap-2 z-10 w-full relative">
-                                    <div className="flex-1 bg-white rounded-full flex items-center px-4 py-2.5 gap-3 text-slate-500 shadow-sm">
-                                        <Smile className="w-6 h-6 flex-shrink-0 cursor-pointer text-slate-400" />
-                                        <input type="text" placeholder="Tulis pesan" className="flex-1 bg-transparent outline-none text-[16px] text-slate-700 placeholder:text-slate-500" disabled />
-                                        <div className="flex items-center gap-4 text-slate-400">
-                                            <Camera className="w-5 h-5 flex-shrink-0 cursor-pointer" />
-                                            <Mic className="w-5 h-5 flex-shrink-0 cursor-pointer" />
+                                <div className="bg-[#f0f2f5] px-2 py-2.5 flex items-center gap-1.5 sm:gap-2 z-10 w-full relative">
+                                    <div className="flex-1 bg-white rounded-full flex items-center px-3 sm:px-4 py-2.5 gap-2 sm:gap-3 text-slate-500 shadow-sm overflow-hidden">
+                                        <Smile className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 cursor-pointer text-slate-400" />
+                                        <input type="text" placeholder="Tulis pesan" className="flex-1 bg-transparent outline-none text-[14px] sm:text-[16px] text-slate-700 placeholder:text-slate-500 min-w-0" disabled />
+                                        <div className="flex items-center gap-2 sm:gap-4 text-slate-400">
+                                            <Camera className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 cursor-pointer" />
+                                            <Mic className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 cursor-pointer hidden sm:block" />
                                         </div>
                                     </div>
-                                    <div className="w-12 h-12 bg-[#00a884] rounded-full flex items-center justify-center flex-shrink-0 text-white shadow-sm cursor-pointer shadow-md">
-                                        <Send className="w-5 h-5 ml-1" />
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#00a884] rounded-full flex items-center justify-center flex-shrink-0 text-white shadow-sm cursor-pointer shadow-md">
+                                        <Send className="w-4 h-4 sm:w-5 sm:h-5 sm:ml-1" />
                                     </div>
                                 </div>
                             </div>
@@ -556,7 +556,7 @@ export default function LandingPage() {
                             </div>
 
                             <CheckoutButton
-                                className="w-full py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                                className="w-full py-3 sm:py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-base sm:text-lg rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 sm:gap-3"
                                 onSuccess={() => window.location.href = '/app'}
                             />
 
@@ -645,7 +645,7 @@ export default function LandingPage() {
                             Bergabunglah dengan ribuan penuntut ilmu lainnya
                         </p>
                         <CheckoutButton
-                            className="px-8 py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-3"
+                            className="px-6 py-3 sm:px-8 sm:py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-base sm:text-lg rounded-xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-3"
                             onSuccess={() => window.location.href = '/app'}
                         />
                     </div>
