@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, Sparkles, Rocket, Bot, Zap, Check, ChevronDown, XCircle, Menu, X, MessageCircle } from 'lucide-react';
+import { BookOpen, Sparkles, Rocket, Bot, Zap, Check, ChevronDown, XCircle, Menu, X, MessageCircle, MessageSquare, Search, Mic, Send, ArrowLeft, Video, Phone, MoreVertical, Smile, Camera } from 'lucide-react';
 import CheckoutButton from '../components/CheckoutButton';
 
 export default function LandingPage() {
@@ -146,43 +146,52 @@ export default function LandingPage() {
             <section className="py-20 bg-gradient-to-br from-slate-50 to-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        {/* CSS Mockup Chat UI */}
+                        {/* CSS Mockup AI Assistant UI */}
                         <div className="order-2 lg:order-1">
-                            <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl shadow-2xl p-6 border-4 border-emerald-400">
-                                {/* Chat Header */}
-                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-4 flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                                        <Bot className="w-6 h-6 text-emerald-600" />
+                            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-emerald-100">
+                                {/* Tabs Mockup */}
+                                <div className="flex items-center gap-6 px-6 py-4 border-b border-slate-100 bg-white overflow-x-auto">
+                                    <div className="flex items-center gap-2 text-slate-400 text-sm font-medium whitespace-nowrap">
+                                        <Search className="w-4 h-4" />
+                                        <span>Analisis Teks</span>
                                     </div>
-                                    <div>
-                                        <p className="text-white font-bold">AI Assistant</p>
-                                        <p className="text-emerald-100 text-xs">Online 24 jam</p>
+                                    <div className="flex items-center gap-2 text-slate-400 text-sm font-medium whitespace-nowrap">
+                                        <BookOpen className="w-4 h-4" />
+                                        <span>Kitab Digital</span>
                                     </div>
-                                </div>
-
-                                {/* User Message */}
-                                <div className="flex justify-end mb-3">
-                                    <div className="bg-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%] shadow-lg">
-                                        <p className="text-slate-800 text-sm">ما هو الفاعل؟</p>
+                                    <div className="flex items-center gap-2 text-amber-500 text-sm font-medium border-b-2 border-amber-500 pb-4 -mb-4 whitespace-nowrap">
+                                        <MessageSquare className="w-4 h-4" />
+                                        <span>Asisten AI</span>
                                     </div>
-                                </div>
-
-                                {/* AI Response */}
-                                <div className="flex justify-start mb-3">
-                                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%]">
-                                        <p className="text-white text-sm leading-relaxed">
-                                            <span className="font-bold">Fa'il (الفاعل)</span> adalah kata yang menunjukkan
-                                            pelaku dari suatu perbuatan. Contoh: <span className="font-arabic">كَتَبَ الطَّالِبُ</span>
-                                        </p>
+                                    <div className="flex items-center gap-2 text-slate-400 text-sm font-medium whitespace-nowrap">
+                                        <Mic className="w-4 h-4" />
+                                        <span>AI Audio</span>
                                     </div>
                                 </div>
 
-                                {/* Typing Indicator */}
-                                <div className="flex justify-start">
-                                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-3 flex gap-1">
-                                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                {/* Chat Content Mockup */}
+                                <div className="bg-slate-50 p-6">
+                                    <div className="flex justify-start mb-6">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                                <MessageSquare className="w-5 h-5 text-amber-500" />
+                                            </div>
+                                            <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm max-w-[90%]">
+                                                <p className="text-slate-700 leading-relaxed text-sm">
+                                                    Assalamualaikum! Saya Asisten Cerdas Anda. Silakan tanyakan apa saja tentang kaidah Nahwu, Sharaf, atau Balaghah.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Input Mockup */}
+                                    <div className="mt-8 relative hidden md:block">
+                                        <div className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-slate-300 text-xs flex justify-end items-center">
+                                            <span>Tekan tombol "Prnt Scrn" di Keyboard untuk mengambil screenshot...</span>
+                                        </div>
+                                        <div className="absolute right-3 bottom-0 translate-y-1/2 flex gap-2">
+                                            <div className="w-10 h-8 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center opacity-50"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -204,6 +213,89 @@ export default function LandingPage() {
                                 <span className="font-bold text-emerald-600">Revolusi Cara Belajar</span>.
                                 Mahir Arab menggabungkan kekayaan literatur Islam klasik dengan AI tercanggih.
                             </p>
+                        </div>
+                    </div>
+
+                    {/* Second Feature Row: Analisis Teks */}
+                    <div className="grid lg:grid-cols-2 gap-12 items-center mt-24">
+                        {/* Content */}
+                        <div className="order-1">
+                            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+                                Analisis Teks <span className="text-emerald-600">Terpercaya</span>
+                            </h2>
+
+                            <p className="text-2xl font-semibold text-slate-700 mb-4">
+                                Harakat, I'rab, dan Terjemahan dalam Satu Tampilan
+                            </p>
+
+                            <p className="text-lg text-slate-600 leading-relaxed mb-6">
+                                Tidak perlu lagi membolak-balik literatur tebal. Masukkan teks gundul apapun, dan biarkan teknologi AI kami menyusun analisis i'rab mendalam secara instan dari setiap kata, dilengkapi dengan terjemahan dan referensi teks-teks klasik.
+                            </p>
+                        </div>
+
+                        {/* CSS Mockup Analisis Teks UI */}
+                        <div className="order-2">
+                            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-emerald-100">
+                                {/* Tabs Mockup */}
+                                <div className="flex items-center gap-6 px-6 py-4 border-b border-slate-100 bg-white overflow-x-auto hide-scrollbar">
+                                    <div className="flex items-center gap-2 text-amber-500 text-sm font-medium border-b-2 border-amber-500 pb-4 -mb-4 whitespace-nowrap">
+                                        <Search className="w-4 h-4" />
+                                        <span>Analisis Teks</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-slate-400 text-sm font-medium whitespace-nowrap">
+                                        <BookOpen className="w-4 h-4" />
+                                        <span>Kitab Digital</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-slate-400 text-sm font-medium whitespace-nowrap">
+                                        <MessageSquare className="w-4 h-4" />
+                                        <span>Asisten AI</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-slate-400 text-sm font-medium whitespace-nowrap">
+                                        <Mic className="w-4 h-4" />
+                                        <span>AI Audio</span>
+                                    </div>
+                                </div>
+
+                                {/* Analisis Teks Content Mockup */}
+                                <div className="p-6 md:p-8 bg-slate-50/30">
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Penganalisis Teks Arab</h3>
+                                    <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                        Masukkan teks Arab (dengan atau tanpa harakat) di bawah ini untuk mendapatkan analisis gramatikal (I'rab) yang mendalam, teks yang sudah divokalisasi, dan terjemahannya.
+                                    </p>
+                                    
+                                    <div className="mb-2">
+                                        <p className="text-sm font-semibold text-slate-700 mb-3">Pilih Contoh Teks dari Kategori:</p>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            <div className="bg-gradient-to-r from-orange-400 to-amber-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
+                                                Al-Quran
+                                            </div>
+                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm transition-colors">
+                                                Hadits
+                                            </div>
+                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm transition-colors cursor-default">
+                                                Amtsal (Peribahasa)
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mb-6">
+                                            <div className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm transition-colors">
+                                                Kalimat Sederhana
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="border-t border-slate-200 pt-6 flex flex-wrap gap-3">
+                                            <div className="bg-slate-100/90 text-slate-600 px-5 py-2 rounded-full text-sm font-medium">
+                                                Al-Fatihah 1-2
+                                            </div>
+                                            <div className="bg-slate-100/90 text-slate-600 px-5 py-2 rounded-full text-sm font-medium">
+                                                Al-Ikhlas
+                                            </div>
+                                            <div className="bg-slate-100/90 text-slate-600 px-5 py-2 rounded-full text-sm font-medium">
+                                                Al-Baqarah 255
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -256,6 +348,129 @@ export default function LandingPage() {
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+            </section>
+
+            {/* Testimonial Section (WhatsApp UI Mockup) */}
+            <section className="py-20 bg-slate-50 border-t border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        {/* Text Content */}
+                        <div className="order-1">
+                            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+                                Apa Kata Mereka Tentang <br/>
+                                <span className="text-emerald-600">Mahir Arab Gundul?</span>
+                            </h2>
+                            <p className="text-lg text-slate-600 leading-relaxed mb-6">
+                                Mulai dari pemula yang baru belajar, santri, hingga pengajar bahasa Arab telah membuktikan kemudahan belajar via aplikasi kami. Berikut adalah salah satu ulasan nyata dari pengguna kami.
+                            </p>
+                        </div>
+                        
+                        {/* WhatsApp Mockup */}
+                        <div className="order-2 flex justify-center">
+                            <div className="bg-[#efeae2] rounded-3xl shadow-2xl overflow-hidden border-[6px] border-slate-800 w-full max-w-[380px] flex flex-col h-[600px] relative">
+                                {/* WA Header */}
+                                <div className="bg-[#075e54] text-white px-3 py-3 flex items-center justify-between shadow-sm z-10">
+                                    <div className="flex items-center gap-2">
+                                        <ArrowLeft className="w-5 h-5 cursor-pointer" />
+                                        <div className="w-9 h-9 bg-indigo-900 rounded-full flex items-center justify-center font-bold text-white text-xs overflow-hidden flex-shrink-0">
+                                            <span className="text-[9px]">MAOSANI</span>
+                                        </div>
+                                        <div className="leading-tight cursor-pointer">
+                                            <div className="font-semibold text-[15px]">Ustaz Indra Kurnia</div>
+                                            <div className="text-[12px] text-white/90">online</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <Video className="w-5 h-5 cursor-pointer" />
+                                        <Phone className="w-5 h-5 fill-current cursor-pointer" />
+                                        <MoreVertical className="w-5 h-5 cursor-pointer" />
+                                    </div>
+                                </div>
+
+                                {/* WA Chat Area */}
+                                <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[url('https://web.whatsapp.com/img/bg-chat-tile-dark_a4be512e7195b6b733d9110b408f075d.png')] bg-repeat bg-[length:400px] hidden-scrollbar">
+                                    
+                                    {/* Msg 1 */}
+                                    <div className="flex justify-start">
+                                        <div className="bg-white rounded-lg rounded-tl-none px-3 py-2 max-w-[88%] shadow-sm relative text-[14.5px] leading-snug text-[#111b21]">
+                                            <div className="font-bold text-[#029688] text-[13px] mb-0.5">Ustaz Indra Kurnia</div>
+                                            Assalamu'alaikum, tim 24 Learning Center. Saya sudah coba aplikasi Mahir Arab Gundul. Jujur, saya sangat terkesan. Saya sangat merekomendasikan aplikasi ini untuk pemula yang ingin serius belajar membaca Al-Qur'an.
+                                            <div className="text-[10.5px] text-[#667781] text-right mt-1.5 -mb-0.5">10:05</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Msg 2 */}
+                                    <div className="flex justify-end">
+                                        <div className="bg-[#d9fdd3] rounded-lg rounded-tr-none px-3 py-2 max-w-[88%] shadow-sm relative text-[14.5px] leading-snug text-[#111b21]">
+                                            <div className="font-bold text-[#1ca665] text-[13px] mb-0.5">Admin 24 Learning Center</div>
+                                            Wa'alaikumussalam, Ustaz Indra. Alhamdulillah, sebuah kehormatan bagi kami. Bagian mana yang menurut Ustaz paling menonjol?
+                                            <div className="text-[10.5px] text-[#667781] text-right mt-1.5 -mb-0.5 flex items-center justify-end gap-1">
+                                                10:07
+                                                <svg viewBox="0 0 16 11" width="16" height="11" className=""><path d="M11.832 2.115l-4.73 4.708-2.181-2.155L3.633 5.92l3.468 3.426 6.019-5.992-1.288-1.239z" fill="#53bdeb"></path><path d="M15.42 2.115l-4.73 4.708-1.636-1.616-1.288 1.24 2.924 2.887 6.018-5.99-1.288-1.239z" fill="#53bdeb"></path></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Msg 3 */}
+                                    <div className="flex justify-start">
+                                        <div className="bg-white rounded-lg rounded-tl-none px-3 py-2 max-w-[88%] shadow-sm relative text-[14.5px] leading-snug text-[#111b21]">
+                                            Penyampaian materinya sangat sistematis dan ringkas. Fitur latihan i'rab-nya juga sangat membantu untuk menguji pemahaman secara langsung.
+                                            <div className="my-2"></div>
+                                            Saya sudah sampaikan ke beberapa kolega dan santri, kalau ini adalah aplikasi pendamping terbaik untuk belajar bahasa Arab secara mandiri saat ini. Pertahankan terus kinerjanya!
+                                            <div className="text-[10.5px] text-[#667781] text-right mt-1.5 -mb-0.5">10:12</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Msg 4 */}
+                                    <div className="flex justify-end">
+                                        <div className="bg-[#d9fdd3] rounded-lg rounded-tr-none px-3 py-2 max-w-[88%] shadow-sm relative text-[14.5px] leading-snug text-[#111b21]">
+                                            Masya Allah, terima kasih banyak atas apresiasi dan rekomendasinya, Ustaz. Ini suntikan semangat yang luar biasa untuk tim kami agar terus mengembangkan fitur-fitur baru.
+                                            <div className="text-[10.5px] text-[#667781] text-right mt-1.5 -mb-0.5 flex items-center justify-end gap-1">
+                                                10:15
+                                                <svg viewBox="0 0 16 11" width="16" height="11" className=""><path d="M11.832 2.115l-4.73 4.708-2.181-2.155L3.633 5.92l3.468 3.426 6.019-5.992-1.288-1.239z" fill="#53bdeb"></path><path d="M15.42 2.115l-4.73 4.708-1.636-1.616-1.288 1.24 2.924 2.887 6.018-5.99-1.288-1.239z" fill="#53bdeb"></path></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Msg 5 */}
+                                    <div className="flex justify-start">
+                                        <div className="bg-white rounded-lg rounded-tl-none px-3 py-2 max-w-[88%] shadow-sm relative text-[14.5px] leading-snug text-[#111b21]">
+                                            Waiyyakum. Semoga menjadi sarana dakwah yang luas. Sukses terus untuk 24 Learning Center. 👍
+                                            <div className="text-[10.5px] text-[#667781] text-right mt-1.5 -mb-0.5">10:16</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Msg 6 */}
+                                    <div className="flex justify-end">
+                                        <div className="bg-[#d9fdd3] rounded-lg rounded-tr-none px-3 py-2 max-w-[88%] shadow-sm relative text-[14.5px] leading-snug text-[#111b21]">
+                                            Amin. Terima kasih banyak, Ustaz! 🙏
+                                            <div className="text-[10.5px] text-[#667781] text-right mt-1.5 -mb-0.5 flex items-center justify-end gap-1">
+                                                10:17
+                                                <svg viewBox="0 0 16 11" width="16" height="11" className=""><path d="M11.832 2.115l-4.73 4.708-2.181-2.155L3.633 5.92l3.468 3.426 6.019-5.992-1.288-1.239z" fill="#53bdeb"></path><path d="M15.42 2.115l-4.73 4.708-1.636-1.616-1.288 1.24 2.924 2.887 6.018-5.99-1.288-1.239z" fill="#53bdeb"></path></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+
+                                {/* WA Footer */}
+                                <div className="bg-[#f0f2f5] px-2 py-2.5 flex items-center gap-2 z-10 w-full relative">
+                                    <div className="flex-1 bg-white rounded-full flex items-center px-4 py-2.5 gap-3 text-slate-500 shadow-sm">
+                                        <Smile className="w-6 h-6 flex-shrink-0 cursor-pointer text-slate-400" />
+                                        <input type="text" placeholder="Tulis pesan" className="flex-1 bg-transparent outline-none text-[16px] text-slate-700 placeholder:text-slate-500" disabled />
+                                        <div className="flex items-center gap-4 text-slate-400">
+                                            <Camera className="w-5 h-5 flex-shrink-0 cursor-pointer" />
+                                            <Mic className="w-5 h-5 flex-shrink-0 cursor-pointer" />
+                                        </div>
+                                    </div>
+                                    <div className="w-12 h-12 bg-[#00a884] rounded-full flex items-center justify-center flex-shrink-0 text-white shadow-sm cursor-pointer shadow-md">
+                                        <Send className="w-5 h-5 ml-1" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
