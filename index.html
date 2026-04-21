@@ -17,7 +17,96 @@
     Note: Script is loaded dynamically via useMidtrans hook with client key from environment variable.
     The hook ensures the correct production URL (https://app.midtrans.com/snap/snap.js) is used.
   -->
+
+  <!-- ============================================================ -->
+  <!-- META DOMAIN VERIFICATION                                      -->
+  <!-- Ganti: DOMAIN_VERIFICATION_CODE → kode dari Meta Business    -->
+  <!-- ============================================================ -->
+  <meta name="facebook-domain-verification" content="DOMAIN_VERIFICATION_CODE" />
+
+  <!-- ============================================================ -->
+  <!-- META PIXEL BASE CODE                                          -->
+  <!-- Ganti: PIXEL_ID → ID Pixel dari Meta Events Manager          -->
+  <!-- ============================================================ -->
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+          n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', 'PIXEL_ID');
+    fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=PIXEL_ID&ev=PageView&noscript=1" /></noscript>
+  <!-- END META PIXEL -->
+
 </head>
+
+<!-- ============================================================ -->
+<!-- META PIXEL + CAPI TRACKING SCRIPT                           -->
+<!-- Pasang di dalam <body>, sebelum </body>                     -->
+<!--                                                             -->
+<!-- Yang perlu diganti:                                         -->
+<!--   PIXEL_ID      → ID Pixel dari Meta Events Manager        -->
+<!--   WORKER_URL    → URL Cloudflare Worker CAPI kamu          -->
+<!-- ============================================================ -->
+<script id="meta-capi-tracker">
+  // --- Helper: Generate Event ID unik untuk deduplikasi Pixel vs CAPI ---
+  function generateEventId() {
+    return 'event_' + new Date().getTime() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  // --- Fungsi utama tracking: panggil dari tombol CTA ---
+  // Contoh pemakaian: onclick="trackMetaEvent(event, this, 'NamaButton')"
+  function trackMetaEvent(event, element, buttonName) {
+    console.log('[META] CTA Clicked:', buttonName);
+    const eventId = generateEventId();
+
+    // 1. Kirim ke Meta Pixel (Browser-side)
+    if (typeof fbq === 'function') {
+      fbq('track', 'Contact', {
+        content_name: 'Mahir Arab Lead',
+        content_category: buttonName
+      }, { eventID: eventId });
+    }
+
+    // 2. Kirim ke CAPI via Cloudflare Worker (Server-side, deduplikasi)
+    const WORKER_URL = 'https://WORKER_URL'; // <-- Ganti dengan URL Worker kamu
+
+    fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventName: 'Contact',
+        eventId: eventId,
+        buttonName: buttonName,
+        sourceUrl: window.location.href
+      })
+    }).then(() => {
+      console.log('[CAPI] Event dikirim:', eventId);
+    }).catch(err => console.error('[CAPI] Error:', err));
+
+    // 3. (Opsional) Kirim lead tracker ke n8n via Worker proxy
+    fetch(WORKER_URL + '/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_id: eventId,
+        button_name: buttonName,
+        source_url: window.location.href,
+        referrer: document.referrer || 'direct',
+        timestamp: new Date().toISOString()
+      })
+    }).catch(err => console.error('[Lead Tracker] Error:', err));
+  }
+</script>
 
 <body>
   <div id="root"></div>

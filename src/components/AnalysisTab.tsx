@@ -7,6 +7,7 @@ import BeginnerResultDisplay from './BeginnerResultDisplay';
 import LimitModal from './LimitModal';
 import PaymentModal from './PaymentModal';
 import { DailyLimitError, MonthlyLimitError, SubscriptionExpiredError } from '../services/aiProviderFactory';
+import { useQuota } from '../hooks/useQuota';
 
 const LoadingSpinner: React.FC = () => (
     <div className="flex flex-col items-center justify-center p-8 text-slate-500">
@@ -35,6 +36,7 @@ const AnalysisTab: React.FC = () => {
     const [showLimitModal, setShowLimitModal] = useState(false);
     const [limitType, setLimitType] = useState<'daily' | 'monthly' | 'expired' | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const { refreshQuota } = useQuota();
 
     const handleLevelChange = (level: UserLevel) => {
         setUserLevel(level);
@@ -88,6 +90,7 @@ const AnalysisTab: React.FC = () => {
                 const newHistory = [textToAnalyze, ...prevHistory.filter(item => item !== textToAnalyze)];
                 return newHistory.slice(0, 20); // Limit history to 20 items
             });
+            refreshQuota();
         } catch (err) {
             // Handle specific error types with modals
             if (err instanceof DailyLimitError) {
@@ -117,6 +120,7 @@ const AnalysisTab: React.FC = () => {
         try {
             const arabGundulText = await convertToArabGundul(indonesianInput);
             setInputText(arabGundulText);
+            refreshQuota();
         } catch (err) {
             setConversionError((err as Error).message || 'Terjadi kesalahan saat konversi.');
         } finally {

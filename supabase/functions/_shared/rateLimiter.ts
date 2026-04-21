@@ -59,14 +59,17 @@ export async function incrementUsage(supabaseAdmin: SupabaseClient, userId: stri
     if (rpcError) {
         // Fallback: Manual update jika RPC tidak ada
         // Ambil dulu data terakhir
-        const { data } = await supabaseAdmin.from('profiles').select('daily_usage_count').eq('id', userId).single();
+        const { data } = await supabaseAdmin.from('profiles').select('daily_usage_count, last_usage_date').eq('id', userId).single();
 
         if (data) {
+            const today = new Date().toISOString().split('T')[0];
+            const isToday = data.last_usage_date === today;
+            
             await supabaseAdmin
                 .from('profiles')
                 .update({
-                    daily_usage_count: data.daily_usage_count + 1,
-                    last_usage_date: new Date().toISOString()
+                    daily_usage_count: isToday ? data.daily_usage_count + 1 : 1,
+                    last_usage_date: today
                 })
                 .eq('id', userId);
         }

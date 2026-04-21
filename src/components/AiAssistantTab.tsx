@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { askAiAssistant } from '../services/aiService';
+import { DailyLimitError, SubscriptionExpiredError } from '../services/aiProviderFactory';
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from './icons/TabIcons';
+import LimitModal from './LimitModal';
+import { useQuota } from '../hooks/useQuota';
 
 // Komponen kecil untuk merender Markdown dengan gaya
 const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
@@ -54,7 +57,12 @@ const AiAssistantTab: React.FC = () => {
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [limitModal, setLimitModal] = useState<{ open: boolean; type: 'daily' | 'monthly' | 'expired' | null }>({
+        open: false,
+        type: null,
+    });
     const chatEndRef = useRef<HTMLDivElement>(null);
+    const { refreshQuota } = useQuota();
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,15 +80,34 @@ const AiAssistantTab: React.FC = () => {
         try {
             const aiResponse = await askAiAssistant(input);
             setMessages(prev => [...prev, { sender: 'ai', text: aiResponse }]);
+            // Refresh quota counter setelah berhasil
+            refreshQuota();
         } catch (error) {
+            if (error instanceof DailyLimitError) {
+                setLimitModal({ open: true, type: 'daily' });
+                setMessages(prev => prev.slice(0, -1)); // hapus pesan user yang baru dikirim
+                return;
+            }
+            if (error instanceof SubscriptionExpiredError) {
+                setLimitModal({ open: true, type: 'expired' });
+                setMessages(prev => prev.slice(0, -1));
+                return;
+            }
             const errorMessage = (error instanceof Error) ? error.message : 'Maaf, terjadi kesalahan.';
-            setMessages(prev => [...prev, { sender: 'ai', text: `Error: ${errorMessage}` }]);
+            setMessages(prev => [...prev, { sender: 'ai', text: `⚠️ ${errorMessage}` }]);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
+        <>
+        <LimitModal
+            isOpen={limitModal.open}
+            type={limitModal.type}
+            onClose={() => setLimitModal({ open: false, type: null })}
+            onUpgrade={() => { window.location.href = '/'; }}
+        />
         <div className="bg-white rounded-lg shadow-lg flex flex-col h-[75vh]">
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
                 {messages.map((msg, index) => (
@@ -132,6 +159,7 @@ const AiAssistantTab: React.FC = () => {
                 </form>
             </div>
         </div>
+        </>
     );
 };
 
