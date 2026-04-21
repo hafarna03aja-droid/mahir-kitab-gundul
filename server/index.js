@@ -99,10 +99,10 @@ app.post('/api/payment', async (req, res) => {
                 gross_amount: amount
             },
             item_details: [{
-                id: 'MAG-LIFETIME',
+                id: 'MAG-PREMIUM',
                 price: amount,
                 quantity: 1,
-                name: item_name || 'Mahir Arab Gundul - Lifetime Access'
+                name: item_name || 'Mahir Arab Gundul - Akses Premium'
             }],
             customer_details: {
                 email: email,
