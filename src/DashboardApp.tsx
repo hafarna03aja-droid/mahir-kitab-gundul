@@ -81,7 +81,7 @@ export default function DashboardApp({ session }: DashboardAppProps) {
 
                 if (!createError && newProfile) {
                     console.log('New profile created:', newProfile);
-                    setProfile(newProfile);
+                    setProfile({ status: newProfile.status, subscription_expires_at: newProfile.subscription_expires_at ?? null });
                 } else {
                     console.error('Failed to create profile:', createError);
                 }
@@ -105,7 +105,7 @@ export default function DashboardApp({ session }: DashboardAppProps) {
             // PRIORITAS: Cek by email dulu (menggunakan maybeSingle untuk avoid error)
             let { data, error } = await supabase
                 .from('profiles')
-                .select('status, email, created_at')
+                .select('status, subscription_expires_at, email, created_at')
                 .eq('email', user.email)
                 .maybeSingle(); // PENTING: maybeSingle() tidak throw error jika tidak ada data
 
@@ -120,7 +120,7 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                 console.log('🔄 Profile not found by email, trying by user ID...');
                 const result = await supabase
                     .from('profiles')
-                    .select('status, email, created_at')
+                    .select('status, subscription_expires_at, email, created_at')
                     .eq('id', user.id)
                     .maybeSingle(); // PENTING: maybeSingle() tidak throw error jika tidak ada data
 
@@ -182,7 +182,7 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                 }
 
                 console.log('✅ New profile created:', newProfile);
-                setProfile(newProfile);
+                setProfile({ status: 'free', subscription_expires_at: null });
 
                 alert('ℹ️ Profile dibuat dengan status FREE.\n\nJika Anda sudah melakukan pembayaran:\n1. Pastikan email yang digunakan SAMA: ' + user.email + '\n2. Tunggu 1-2 menit untuk konfirmasi webhook\n3. Klik "Cek Status Pembayaran" lagi\n\nJika masih FREE setelah 5 menit, hubungi admin dengan menyertakan email Anda.');
             }
