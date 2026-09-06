@@ -9,6 +9,7 @@ interface DashboardAppProps {
 
 interface Profile {
     status: string;
+    subscription_expires_at: string | null;
 }
 
 export default function DashboardApp({ session }: DashboardAppProps) {
@@ -28,7 +29,7 @@ export default function DashboardApp({ session }: DashboardAppProps) {
             // PRIORITAS: Cek by email dulu (untuk payment-first users)
             let { data, error } = await supabase
                 .from('profiles')
-                .select('status')
+                .select('status, subscription_expires_at')
                 .eq('email', user.email)
                 .maybeSingle(); // PENTING: maybeSingle() tidak throw error jika tidak ada data
 
@@ -39,7 +40,7 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                 console.log('Trying by user ID...');
                 const result = await supabase
                     .from('profiles')
-                    .select('status')
+                    .select('status, subscription_expires_at')
                     .eq('id', user.id)
                     .maybeSingle(); // PENTING: maybeSingle() tidak throw error jika tidak ada data
 
@@ -236,8 +237,12 @@ export default function DashboardApp({ session }: DashboardAppProps) {
         </div>
     );
 
-    // --- TAMPILAN JIKA BELUM BAYAR (FREE) ---
-    if (!profile || profile.status !== 'premium') {
+    // --- TAMPILAN JIKA BELUM BAYAR (FREE) ATAU EXPIRED ---
+    const isExpired = profile?.status === 'premium'
+        && !!profile?.subscription_expires_at
+        && new Date() > new Date(profile.subscription_expires_at);
+
+    if (!profile || profile.status !== 'premium' || isExpired) {
         return (
             <div style={{
                 maxWidth: '600px',
@@ -262,10 +267,12 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                     margin: '0 auto 20px'
                 }}>🔒</div>
 
-                <h1 style={{ color: '#111827', marginBottom: '10px' }}>Akses Premium Diperlukan</h1>
+                <h1 style={{ color: '#111827', marginBottom: '10px' }}>{isExpired ? 'Langganan Anda Sudah Berakhir' : 'Akses Premium Diperlukan'}</h1>
                 <p style={{ color: '#6b7280', fontSize: '1.1rem', lineHeight: '1.6' }}>
-                    Mohon maaf, aplikasi ini khusus untuk member Premium.<br />
-                    Silakan selesaikan pembayaran untuk mendapatkan akses penuh.
+                    {isExpired
+                        ? <>Langganan 1 bulan Anda telah habis.<br />Silakan perpanjang untuk melanjutkan akses.</>
+                        : <>Mohon maaf, aplikasi ini khusus untuk member Premium.<br />Silakan selesaikan pembayaran untuk mendapatkan akses penuh.</>
+                    }
                 </p>
 
                 {/* --- KOTAK PERINGATAN EMAIL (PENTING) --- */}
@@ -278,9 +285,12 @@ export default function DashboardApp({ session }: DashboardAppProps) {
                     margin: '30px 0',
                     textAlign: 'left'
                 }}>
-                    <strong style={{ display: 'block', marginBottom: '10px' }}>ℹ️ Status Akun Anda: FREE</strong>
+                    <strong style={{ display: 'block', marginBottom: '10px' }}>{isExpired ? '⚠️ Status Akun Anda: EXPIRED' : 'ℹ️ Status Akun Anda: FREE'}</strong>
                     <p style={{ margin: '0' }}>
-                        Jika Anda sudah melakukan pembayaran, silakan klik tombol <strong>"Cek Status Pembayaran"</strong> di bawah ini. Pastikan Anda login dengan email yang sama saat membayar.
+                        {isExpired
+                            ? 'Langganan Anda telah berakhir. Klik tombol di bawah untuk perpanjang akses.'
+                            : <>Jika Anda sudah melakukan pembayaran, silakan klik tombol <strong>"Cek Status Pembayaran"</strong> di bawah ini. Pastikan Anda login dengan email yang sama saat membayar.</>
+                        }
                     </p>
                 </div>
 
